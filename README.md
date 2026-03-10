@@ -1,73 +1,180 @@
-# React + TypeScript + Vite
+# Pogudina Studio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Personal portfolio site for Valentina Pogudina, built with Vite, React, TypeScript, Tailwind CSS, and React Router.
 
-Currently, two official plugins are available:
+Production URL:
+`https://baabochka.github.io/pogudina-studio/`
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Stack
 
-## React Compiler
+- Vite
+- React
+- TypeScript
+- Tailwind CSS v4
+- React Router
+- GitHub Pages via GitHub Actions
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Local development
 
-## Expanding the ESLint configuration
+Install dependencies:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Start the dev server:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+npm run dev
+```
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Build for production:
+
+```bash
+npm run build
+```
+
+Run ESLint:
+
+```bash
+npm run lint
+```
+
+Preview the production build locally:
+
+```bash
+npm run preview
+```
+
+## GitHub Pages deployment
+
+This repo is configured for GitHub Pages project-site hosting at:
+
+`https://baabochka.github.io/pogudina-studio/`
+
+Deployment is handled by the workflow in
+[.github/workflows/deploy.yml](/Users/baabochka/Workplace/pogudina_website/.github/workflows/deploy.yml).
+
+Important setup details:
+
+- Vite `base` is set to `/pogudina-studio/`
+- React Router uses `basename: import.meta.env.BASE_URL`
+- `public/404.html` provides SPA fallback support for `BrowserRouter`
+
+## How to update the live site
+
+Any push to `main` triggers a new GitHub Pages deployment.
+
+Typical update flow:
+
+```bash
+git status
+git add .
+git commit -m "Update portfolio content"
+git push
+```
+
+Then:
+
+1. Open the GitHub repository.
+2. Go to the `Actions` tab.
+3. Wait for the deploy workflow to finish.
+4. Refresh the live site.
+
+If the site does not update immediately, wait a minute or two and hard refresh the browser.
+
+## Useful git commands
+
+Check current changes:
+
+```bash
+git status
+```
+
+See changed files:
+
+```bash
+git diff
+```
+
+Stage everything:
+
+```bash
+git add .
+```
+
+Stage one file:
+
+```bash
+git add src/pages/AboutPage.tsx
+```
+
+Create a commit:
+
+```bash
+git commit -m "Update about page"
+```
+
+Push changes:
+
+```bash
+git push
+```
+
+Pull remote changes with rebase:
+
+```bash
+git pull --rebase origin main
+```
+
+Fetch remote changes without modifying local files:
+
+```bash
+git fetch origin
+```
+
+See recent commit history:
+
+```bash
+git log --oneline --decorate -n 10
+```
+
+## If a push is rejected
+
+If GitHub says the remote contains work you do not have locally:
+
+```bash
+git pull --rebase origin main
+git push
+```
+
+If there is a conflict:
+
+1. Edit the conflicted file.
+2. Save the resolved version.
+3. Stage it with `git add <file>`.
+4. Continue with:
+
+```bash
+git rebase --continue
+```
+
+## Repository structure
+
+```text
+src/
+  components/
+    layout/
+    ui/
+  context/
+  data/
+  pages/
+  App.tsx
+  index.css
+  main.tsx
+  router.tsx
+public/
+  404.html
+.github/workflows/
+  deploy.yml
 ```
