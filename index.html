@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Starter personal portfolio built with React, TypeScript, Tailwind CSS, and accessible semantic structure."
+    />
+    <script>
+      (function (location) {
+        if (!location.search.startsWith('?/')) {
+          return;
+        }
+
+        const decoded = location.search
+          .slice(1)
+          .split('&')
+          .map(function (part) {
+            return part.replace(/~and~/g, '&');
+          })
+          .join('?');
+
+        window.history.replaceState(null, '', location.pathname.slice(0, -1) + decoded + location.hash);
+      })(window.location);
+    </script>
+    <script>
+      (function () {
+        const storageKey = 'portfolio-theme';
+        const theme = window.localStorage.getItem(storageKey);
+        const allowedThemes = ['light', 'dark', 'forest', 'sunset'];
+
+        if (theme && allowedThemes.includes(theme)) {
+          document.documentElement.dataset.theme = theme;
+          return;
+        }
+
+        document.documentElement.dataset.theme = 'light';
+      })();
+    </script>
+    <title>Portfolio Starter</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
