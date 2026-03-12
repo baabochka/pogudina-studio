@@ -22,6 +22,67 @@ export type CatBallIllustrationTokens = SharedIllustrationTokens & {
   ball: TwoTonePalette
 }
 
+export type CatMouseIllustrationTokens = SharedIllustrationTokens & {
+  mouse: TwoTonePalette
+}
+
+export type CatPillowIllustrationTokens = SharedIllustrationTokens & {
+  pillow: TwoTonePalette
+}
+
+export type CheeseBallIllustrationTokens = {
+  outline: string
+  black: string
+  white: string
+  cheese: TwoTonePalette
+  ball: TwoTonePalette
+  accent: TwoTonePalette
+}
+
+export type MouseCheeseIllustrationTokens = {
+  outline: string
+  black: string
+  white: string
+  mouse: TwoTonePalette
+  cheese: TwoTonePalette
+  accent: TwoTonePalette
+}
+
+export type MouseBallIllustrationTokens = {
+  outline: string
+  black: string
+  white: string
+  mouse: TwoTonePalette
+  ball: TwoTonePalette
+  accent: TwoTonePalette
+}
+
+export type PillowBallIllustrationTokens = {
+  outline: string
+  black: string
+  white: string
+  pillow: TwoTonePalette
+  ball: TwoTonePalette
+  accent: TwoTonePalette
+}
+
+export type PillowCheeseIllustrationTokens = {
+  outline: string
+  black: string
+  white: string
+  pillow: TwoTonePalette
+  cheese: TwoTonePalette
+}
+
+export type PillowMouseIllustrationTokens = {
+  outline: string
+  black: string
+  white: string
+  pillow: TwoTonePalette
+  mouse: TwoTonePalette
+  accent: TwoTonePalette
+}
+
 export const basePalettes: Record<BasePaletteName, TwoTonePalette> = {
   red: { light: '#D7172F', shade: '#9E0918' },
   orange: { light: '#F7941D', shade: '#DE761C' },

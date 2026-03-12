@@ -1,11 +1,11 @@
 import type { CSSProperties } from 'react'
 
-import rawSvg from '../../features/games/cat-cheese/assets/cat_ball_svg.svg?raw'
-import type { CatBallIllustrationTokens } from '../palettes'
+import rawSvg from '../../features/games/cat-cheese/assets/cat_mouse_svg.svg?raw'
+import type { CatMouseIllustrationTokens } from '../palettes'
 import { extractSvgBody } from './extractSvgBody'
 
-type CatBallIllustrationProps = {
-  tokens: CatBallIllustrationTokens
+type CatMouseIllustrationProps = {
+  tokens: CatMouseIllustrationTokens
   className?: string
 }
 
@@ -15,8 +15,8 @@ type SvgVariables = CSSProperties & {
   '--white': string
   '--cat-light': string
   '--cat-shade': string
-  '--ball-light': string
-  '--ball-shade': string
+  '--mouse-light': string
+  '--mouse-shade': string
   '--accent-light': string
   '--accent-shade': string
   '--nose-fixed': string
@@ -25,15 +25,15 @@ type SvgVariables = CSSProperties & {
 
 const markup = extractSvgBody(rawSvg)
 
-export function CatBallIllustration({ tokens, className }: CatBallIllustrationProps) {
+export function CatMouseIllustration({ tokens, className }: CatMouseIllustrationProps) {
   const style: SvgVariables = {
     '--outline': tokens.outline,
     '--black': tokens.black,
     '--white': tokens.white,
     '--cat-light': tokens.cat.light,
     '--cat-shade': tokens.cat.shade,
-    '--ball-light': tokens.ball.light,
-    '--ball-shade': tokens.ball.shade,
+    '--mouse-light': tokens.mouse.light,
+    '--mouse-shade': tokens.mouse.shade,
     '--accent-light': tokens.accent.light,
     '--accent-shade': tokens.accent.shade,
     '--nose-fixed': tokens.nose,
@@ -46,7 +46,7 @@ export function CatBallIllustration({ tokens, className }: CatBallIllustrationPr
       viewBox="0 0 288 431.15"
       className={className}
       style={style}
-      aria-label="Cat with ball illustration"
+      aria-label="Cat and mouse illustration"
       role="img"
     >
       <defs>
@@ -57,8 +57,8 @@ export function CatBallIllustration({ tokens, className }: CatBallIllustrationPr
             .fill-black { fill: var(--black); }
             .fill-cat-light { fill: var(--cat-light); }
             .fill-cat-shade { fill: var(--cat-shade); }
-            .fill-ball-light { fill: var(--ball-light); }
-            .fill-ball-shade { fill: var(--ball-shade); }
+            .fill-mouse-light { fill: var(--mouse-light); }
+            .fill-mouse-shade { fill: var(--mouse-shade); }
             .fill-accent-light { fill: var(--accent-light); }
             .fill-accent-shade { fill: var(--accent-shade); }
             .fill-nose-fixed { fill: var(--nose-fixed); }
