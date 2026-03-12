@@ -1,0 +1,27 @@
+.card-svg .fill-none { fill: none; }
+.card-svg .fill-white { fill: var(--white); }
+.card-svg .fill-black { fill: var(--black); }
+
+.card-svg .fill-accent-light { fill: var(--accent-light); }
+.card-svg .fill-accent-shade { fill: var(--accent-shade); }
+
+.card-svg .fill-nose { fill: var(--nose-color); }
+.card-svg .fill-collar-tag { fill: var(--tag-color); }
+
+.card-svg .stroke-outline { stroke: var(--outline); }
+
+.card-svg .round {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.card-svg .miter { stroke-miterlimit: 10; }
+
+.card-svg .stroke-0 { stroke-width: 0px; }
+.card-svg .stroke-1 { stroke-width: 1px; }
+.card-svg .stroke-2 { stroke-width: 2px; }
+.card-svg .stroke-3 { stroke-width: 3px; }
+
+.card-svg .non-scaling-stroke {
+  vector-effect: non-scaling-stroke;
+}

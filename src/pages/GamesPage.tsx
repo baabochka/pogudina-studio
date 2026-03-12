@@ -1,4 +1,4 @@
-import { CardDemo } from '../cards/demo/CardDemo'
+import { CardDemo } from '../features/games/paws_and_think/demo/CardDemo'
 import { Section } from '../components/ui/Section'
 
 export function GamesPage() {
