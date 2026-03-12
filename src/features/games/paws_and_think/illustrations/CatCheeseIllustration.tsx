@@ -1,15 +1,12 @@
-import rawSvg from '../assets/cat_cheese_svg.svg?raw'
+import Svg from '../assets/cat_cheese_svg.svg?react'
 import type { CatCheeseIllustrationTokens } from '../palettes'
 import { RawSvgIllustration } from './RawSvgIllustration'
-import { extractSvgBody } from './extractSvgBody'
 import type { CatCheeseSvgVariables } from './svgVariables'
 
 type CatCheeseIllustrationProps = {
   tokens: CatCheeseIllustrationTokens
   className?: string
 }
-
-const markup = extractSvgBody(rawSvg)
 
 export function CatCheeseIllustration({ tokens, className }: CatCheeseIllustrationProps) {
   const style: CatCheeseSvgVariables = {
@@ -26,5 +23,5 @@ export function CatCheeseIllustration({ tokens, className }: CatCheeseIllustrati
     '--tag-color': tokens.white,
   }
 
-  return <RawSvgIllustration markup={markup} ariaLabel="Cat and cheese illustration" className={className} style={style} />
+  return <RawSvgIllustration Svg={Svg} ariaLabel="Cat and cheese illustration" className={className} style={style} />
 }

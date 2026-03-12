@@ -1,14 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 431.15">
-  <defs>
-    <style>
-      .fill-ball-light { fill: var(--ball-light); }
-      .fill-ball-shade { fill: var(--ball-shade); }
-      .fill-mouse-light { fill: var(--mouse-light); }
-      .fill-mouse-shade { fill: var(--mouse-shade); }
-    </style>
-  </defs>
-  <g id="Ball">
+<g id="Ball">
     <g id="Ball_light">
       <circle class="fill-ball-light stroke-outline miter stroke-3" cx="143.42" cy="258.83" r="48.08"/>
     </g>

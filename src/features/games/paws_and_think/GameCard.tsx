@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import cardFrame from "./assets/card_frame.png";
 import { Card } from "./ui/Card";
 
 type GameCardProps = {
@@ -12,8 +13,19 @@ export function GameCard({ title, description, children }: GameCardProps) {
   return (
     <Card className="h-full bg-[linear-gradient(180deg,var(--surface),color-mix(in_srgb,var(--accent)_12%,var(--surface)))]">
       <div className="flex h-full flex-col gap-5">
-        <div className="rounded-4xl border border-border bg-background/70 p-5 sm:p-6">
-          {children}
+        <div className="mx-auto w-full max-w-[340px]">
+          <div className="relative">
+            <img
+              src={cardFrame}
+              alt=""
+              aria-hidden="true"
+              className="pointer-events-none block h-auto w-full select-none"
+            />
+
+            <div className="absolute inset-[7.5%] flex items-center justify-center overflow-hidden rounded-[2rem]">
+              {children}
+            </div>
+          </div>
         </div>
 
         <div className="text-center">

@@ -1,14 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 431.15">
-    <defs>
-    <style>
-      .fill-cat-light { fill: var(--cat-light); }
-      .fill-cat-shade { fill: var(--cat-shade); }
-      .fill-cheese-light { fill: var(--cheese-light); }
-      .fill-cheese-shade { fill: var(--cheese-shade); }
-    </style>
-  </defs>
-  <g id="ears">
+<g id="ears">
     <path class="fill-cat-shade stroke-outline round stroke-3" d="m192.93,141.79c1.69-20.47,3.63-42.69,3.63-42.69,0,0-15.74,14.58-24.89,23.3l21.26,19.39Z"/>
     <polygon class="fill-cat-shade stroke-outline round stroke-3" points="112.96 139.56 109.64 98.86 134.53 122.17 112.96 139.56 112.96 139.56"/>
   </g>

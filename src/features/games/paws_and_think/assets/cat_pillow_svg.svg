@@ -1,14 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 431.15">
-  <defs>
-    <style>
-      .fill-cat-light { fill: var(--cat-light); }
-      .fill-cat-shade { fill: var(--cat-shade); }
-      .fill-pillow-light { fill: var(--pillow-light); }
-      .fill-pillow-shade { fill: var(--pillow-shade); }
-    </style>
-  </defs>
-  <g id="Pillow_shade">
+<g id="Pillow_shade">
     <polygon class="fill-pillow-shade stroke-outline round stroke-2" points="44.89 295.2 201.88 303.67 208.38 297.74 227.29 190.45 44.89 295.2"/>
   </g>
   <g id="Pillow_light">

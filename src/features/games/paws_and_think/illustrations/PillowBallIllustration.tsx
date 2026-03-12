@@ -1,15 +1,12 @@
-import rawSvg from '../assets/pillow_ball.svg?raw'
+import Svg from '../assets/pillow_ball.svg?react'
 import type { PillowBallIllustrationTokens } from '../palettes'
 import { RawSvgIllustration } from './RawSvgIllustration'
-import { extractSvgBody } from './extractSvgBody'
 import type { PillowBallSvgVariables } from './svgVariables'
 
 type PillowBallIllustrationProps = {
   tokens: PillowBallIllustrationTokens
   className?: string
 }
-
-const markup = extractSvgBody(rawSvg)
 
 export function PillowBallIllustration({ tokens, className }: PillowBallIllustrationProps) {
   const style: PillowBallSvgVariables = {
@@ -24,5 +21,5 @@ export function PillowBallIllustration({ tokens, className }: PillowBallIllustra
     '--accent-shade': tokens.accent.shade,
   }
 
-  return <RawSvgIllustration markup={markup} ariaLabel="Pillow and ball illustration" className={className} style={style} />
+  return <RawSvgIllustration Svg={Svg} ariaLabel="Pillow and ball illustration" className={className} style={style} />
 }

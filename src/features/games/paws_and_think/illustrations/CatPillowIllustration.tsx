@@ -1,15 +1,12 @@
-import rawSvg from '../assets/cat_pillow_svg.svg?raw'
+import Svg from '../assets/cat_pillow_svg.svg?react'
 import type { CatPillowIllustrationTokens } from '../palettes'
 import { RawSvgIllustration } from './RawSvgIllustration'
-import { extractSvgBody } from './extractSvgBody'
 import type { CatPillowSvgVariables } from './svgVariables'
 
 type CatPillowIllustrationProps = {
   tokens: CatPillowIllustrationTokens
   className?: string
 }
-
-const markup = extractSvgBody(rawSvg)
 
 export function CatPillowIllustration({ tokens, className }: CatPillowIllustrationProps) {
   const style: CatPillowSvgVariables = {
@@ -26,5 +23,5 @@ export function CatPillowIllustration({ tokens, className }: CatPillowIllustrati
     '--tag-color': tokens.white,
   }
 
-  return <RawSvgIllustration markup={markup} ariaLabel="Cat and pillow illustration" className={className} style={style} />
+  return <RawSvgIllustration Svg={Svg} ariaLabel="Cat and pillow illustration" className={className} style={style} />
 }

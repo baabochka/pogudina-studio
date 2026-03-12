@@ -1,15 +1,12 @@
-import rawSvg from '../assets/cat_mouse_svg.svg?raw'
+import Svg from '../assets/cat_mouse_svg.svg?react'
 import type { CatMouseIllustrationTokens } from '../palettes'
 import { RawSvgIllustration } from './RawSvgIllustration'
-import { extractSvgBody } from './extractSvgBody'
 import type { CatMouseSvgVariables } from './svgVariables'
 
 type CatMouseIllustrationProps = {
   tokens: CatMouseIllustrationTokens
   className?: string
 }
-
-const markup = extractSvgBody(rawSvg)
 
 export function CatMouseIllustration({ tokens, className }: CatMouseIllustrationProps) {
   const style: CatMouseSvgVariables = {
@@ -26,5 +23,5 @@ export function CatMouseIllustration({ tokens, className }: CatMouseIllustration
     '--tag-color': tokens.white,
   }
 
-  return <RawSvgIllustration markup={markup} ariaLabel="Cat and mouse illustration" className={className} style={style} />
+  return <RawSvgIllustration Svg={Svg} ariaLabel="Cat and mouse illustration" className={className} style={style} />
 }

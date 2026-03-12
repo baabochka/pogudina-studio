@@ -1,15 +1,12 @@
-import rawSvg from '../assets/mouse_cheese.svg?raw'
+import Svg from '../assets/mouse_cheese.svg?react'
 import type { MouseCheeseIllustrationTokens } from '../palettes'
 import { RawSvgIllustration } from './RawSvgIllustration'
-import { extractSvgBody } from './extractSvgBody'
 import type { MouseCheeseSvgVariables } from './svgVariables'
 
 type MouseCheeseIllustrationProps = {
   tokens: MouseCheeseIllustrationTokens
   className?: string
 }
-
-const markup = extractSvgBody(rawSvg)
 
 export function MouseCheeseIllustration({ tokens, className }: MouseCheeseIllustrationProps) {
   const style: MouseCheeseSvgVariables = {
@@ -24,5 +21,5 @@ export function MouseCheeseIllustration({ tokens, className }: MouseCheeseIllust
     '--accent-shade': tokens.accent.shade,
   }
 
-  return <RawSvgIllustration markup={markup} ariaLabel="Mouse and cheese illustration" className={className} style={style} />
+  return <RawSvgIllustration Svg={Svg} ariaLabel="Mouse and cheese illustration" className={className} style={style} />
 }

@@ -1,15 +1,12 @@
-import rawSvg from '../assets/cheese_ball.svg?raw'
+import Svg from '../assets/cheese_ball.svg?react'
 import type { CheeseBallIllustrationTokens } from '../palettes'
 import { RawSvgIllustration } from './RawSvgIllustration'
-import { extractSvgBody } from './extractSvgBody'
 import type { CheeseBallSvgVariables } from './svgVariables'
 
 type CheeseBallIllustrationProps = {
   tokens: CheeseBallIllustrationTokens
   className?: string
 }
-
-const markup = extractSvgBody(rawSvg)
 
 export function CheeseBallIllustration({ tokens, className }: CheeseBallIllustrationProps) {
   const style: CheeseBallSvgVariables = {
@@ -24,5 +21,5 @@ export function CheeseBallIllustration({ tokens, className }: CheeseBallIllustra
     '--accent-shade': tokens.accent.shade,
   }
 
-  return <RawSvgIllustration markup={markup} ariaLabel="Cheese and ball illustration" className={className} style={style} />
+  return <RawSvgIllustration Svg={Svg} ariaLabel="Cheese and ball illustration" className={className} style={style} />
 }

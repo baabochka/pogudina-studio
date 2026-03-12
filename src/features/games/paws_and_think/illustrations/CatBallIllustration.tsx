@@ -1,15 +1,12 @@
-import rawSvg from '../assets/cat_ball_svg.svg?raw'
+import Svg from '../assets/cat_ball_svg.svg?react'
 import type { CatBallIllustrationTokens } from '../palettes'
 import { RawSvgIllustration } from './RawSvgIllustration'
-import { extractSvgBody } from './extractSvgBody'
 import type { CatBallSvgVariables } from './svgVariables'
 
 type CatBallIllustrationProps = {
   tokens: CatBallIllustrationTokens
   className?: string
 }
-
-const markup = extractSvgBody(rawSvg)
 
 export function CatBallIllustration({ tokens, className }: CatBallIllustrationProps) {
   const style: CatBallSvgVariables = {
@@ -26,5 +23,5 @@ export function CatBallIllustration({ tokens, className }: CatBallIllustrationPr
     '--tag-color': tokens.white,
   }
 
-  return <RawSvgIllustration markup={markup} ariaLabel="Cat with ball illustration" className={className} style={style} />
+  return <RawSvgIllustration Svg={Svg} ariaLabel="Cat with ball illustration" className={className} style={style} />
 }

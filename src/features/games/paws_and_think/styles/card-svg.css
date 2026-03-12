@@ -2,6 +2,17 @@
 .card-svg .fill-white { fill: var(--white); }
 .card-svg .fill-black { fill: var(--black); }
 
+.card-svg .fill-cat-light { fill: var(--cat-light); }
+.card-svg .fill-cat-shade { fill: var(--cat-shade); }
+.card-svg .fill-ball-light { fill: var(--ball-light); }
+.card-svg .fill-ball-shade { fill: var(--ball-shade); }
+.card-svg .fill-mouse-light { fill: var(--mouse-light); }
+.card-svg .fill-mouse-shade { fill: var(--mouse-shade); }
+.card-svg .fill-cheese-light { fill: var(--cheese-light); }
+.card-svg .fill-cheese-shade { fill: var(--cheese-shade); }
+.card-svg .fill-pillow-light { fill: var(--pillow-light); }
+.card-svg .fill-pillow-shade { fill: var(--pillow-shade); }
+
 .card-svg .fill-accent-light { fill: var(--accent-light); }
 .card-svg .fill-accent-shade { fill: var(--accent-shade); }
 

@@ -1,15 +1,12 @@
-import rawSvg from '../assets/pillow_cheese.svg?raw'
+import Svg from '../assets/pillow_cheese.svg?react'
 import type { PillowCheeseIllustrationTokens } from '../palettes'
 import { RawSvgIllustration } from './RawSvgIllustration'
-import { extractSvgBody } from './extractSvgBody'
 import type { PillowCheeseSvgVariables } from './svgVariables'
 
 type PillowCheeseIllustrationProps = {
   tokens: PillowCheeseIllustrationTokens
   className?: string
 }
-
-const markup = extractSvgBody(rawSvg)
 
 export function PillowCheeseIllustration({ tokens, className }: PillowCheeseIllustrationProps) {
   const style: PillowCheeseSvgVariables = {
@@ -22,5 +19,5 @@ export function PillowCheeseIllustration({ tokens, className }: PillowCheeseIllu
     '--cheese-shade': tokens.cheese.shade,
   }
 
-  return <RawSvgIllustration markup={markup} ariaLabel="Pillow and cheese illustration" className={className} style={style} />
+  return <RawSvgIllustration Svg={Svg} ariaLabel="Pillow and cheese illustration" className={className} style={style} />
 }

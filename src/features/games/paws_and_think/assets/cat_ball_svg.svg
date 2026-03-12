@@ -1,14 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 431.15">
-  <defs>
-    <style>
-      .fill-cat-light { fill: var(--cat-light); }
-      .fill-cat-shade { fill: var(--cat-shade); }
-      .fill-ball-light { fill: var(--ball-light); }
-      .fill-ball-shade { fill: var(--ball-shade); }
-    </style>
-  </defs>
-
   <g id="Cat">
     <path
       id="ear-right"

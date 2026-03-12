@@ -1,15 +1,12 @@
-import rawSvg from '../assets/mouse_ball.svg?raw'
+import Svg from '../assets/mouse_ball.svg?react'
 import type { MouseBallIllustrationTokens } from '../palettes'
 import { RawSvgIllustration } from './RawSvgIllustration'
-import { extractSvgBody } from './extractSvgBody'
 import type { MouseBallSvgVariables } from './svgVariables'
 
 type MouseBallIllustrationProps = {
   tokens: MouseBallIllustrationTokens
   className?: string
 }
-
-const markup = extractSvgBody(rawSvg)
 
 export function MouseBallIllustration({ tokens, className }: MouseBallIllustrationProps) {
   const style: MouseBallSvgVariables = {
@@ -24,5 +21,5 @@ export function MouseBallIllustration({ tokens, className }: MouseBallIllustrati
     '--accent-shade': tokens.accent.shade,
   }
 
-  return <RawSvgIllustration markup={markup} ariaLabel="Mouse and ball illustration" className={className} style={style} />
+  return <RawSvgIllustration Svg={Svg} ariaLabel="Mouse and ball illustration" className={className} style={style} />
 }
