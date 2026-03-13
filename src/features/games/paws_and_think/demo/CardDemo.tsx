@@ -58,12 +58,15 @@ const BOARD_ANSWER_OPTIONS: ObjectName[] = [
   "ball",
   "pillow",
 ];
-const ANSWER_BUTTON_POSITIONS: Record<ObjectName, string> = {
-  mouse: "top-[14.8%]",
-  cat: "top-[28.4%]",
-  cheese: "top-[42.6%]",
-  ball: "top-[56.5%]",
-  pillow: "top-[70.5%]",
+const ANSWER_BUTTON_OVERLAYS: Record<
+  ObjectName,
+  { className: string; label: string }
+> = {
+  mouse: { className: "right-[0.8%] top-[14.2%] h-[14.5%] w-[19%]", label: "Mouse" },
+  cat: { className: "right-[0.8%] top-[27.7%] h-[14.5%] w-[19%]", label: "Cat" },
+  cheese: { className: "right-[0.8%] top-[41.8%] h-[14.5%] w-[19%]", label: "Cheese" },
+  ball: { className: "right-[0.8%] top-[55.8%] h-[14.5%] w-[19%]", label: "Ball" },
+  pillow: { className: "right-[0.8%] top-[69.8%] h-[14.5%] w-[19%]", label: "Pillow" },
 };
 const CORRECT_ANSWER_PAW_FILL_COLOR = `${fixedDetails.accent.light}CC`;
 const INCORRECT_ANSWER_PAW_FILL_COLOR = `${basePalettes.red.light}CC`;
@@ -162,9 +165,11 @@ export function CardDemo() {
     ResolvedCard["objectA"] | ""
   >("");
   const [selectedAnswer, setSelectedAnswer] = useState<ObjectName | null>(null);
+  const [hoveredAnswer, setHoveredAnswer] = useState<ObjectName | null>(null);
 
   function refreshCard() {
     setSelectedAnswer(null);
+    setHoveredAnswer(null);
     setCard(
       resolveCard({
         illustration: selectedIllustration || undefined,
@@ -188,6 +193,7 @@ export function CardDemo() {
           <GameBoardSmallIllustration
             className="h-full w-auto"
             selectedAnswer={selectedAnswer ?? undefined}
+            hoveredAnswer={hoveredAnswer ?? undefined}
             answerPawFillColor={answerPawFillColor}
             answerPawStrokeColor={answerPawStrokeColor}
           />
@@ -201,8 +207,15 @@ export function CardDemo() {
               key={answer}
               type="button"
               onClick={() => setSelectedAnswer(answer)}
-              className={`absolute right-[1.6%] ${ANSWER_BUTTON_POSITIONS[answer]} h-[11.5%] w-[17.5%] rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background`}
-              aria-label={`Choose ${formatOptionLabel(answer)} as the answer`}
+              onMouseEnter={() => setHoveredAnswer(answer)}
+              onMouseLeave={() => setHoveredAnswer((current) => (current === answer ? null : current))}
+              onFocus={() => setHoveredAnswer(answer)}
+              onBlur={() => setHoveredAnswer((current) => (current === answer ? null : current))}
+              data-answer-object={answer}
+              data-selected={selectedAnswer === answer}
+              data-hovered={hoveredAnswer === answer}
+              className={`absolute ${ANSWER_BUTTON_OVERLAYS[answer].className} rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background`}
+              aria-label={`Choose ${ANSWER_BUTTON_OVERLAYS[answer].label} as the answer`}
             />
           ))}
 

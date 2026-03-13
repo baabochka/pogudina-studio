@@ -4,6 +4,7 @@
 .card-svg .fill-board-light { fill: #008d96; }
 .card-svg .fill-board-dark { fill: #005157; }
 .card-svg .fill-card-placement-bounds { fill: transparent; }
+.card-svg .fill-answer-hit-area { fill: transparent; }
 
 .card-svg .fill-cat-light { fill: var(--cat-light); }
 .card-svg .fill-cat-shade { fill: var(--cat-shade); }
@@ -21,6 +22,11 @@
 
 .card-svg .fill-nose { fill: var(--nose-color); }
 .card-svg .fill-collar-tag { fill: var(--tag-color); }
+.card-svg #answer-button-cat .fill-answer-button-bg { fill: var(--answer-button-cat-bg, #005157); }
+.card-svg #answer-button-pillow .fill-answer-button-bg { fill: var(--answer-button-pillow-bg, #005157); }
+.card-svg #answer-button-mouse .fill-answer-button-bg { fill: var(--answer-button-mouse-bg, #005157); }
+.card-svg #answer-button-cheese .fill-answer-button-bg { fill: var(--answer-button-cheese-bg, #005157); }
+.card-svg #answer-button-ball .fill-answer-button-bg { fill: var(--answer-button-ball-bg, #005157); }
 .card-svg #answer-paw-cat .fill-answer-paw {
   fill: var(--answer-paw-cat-fill, transparent);
   stroke: var(--answer-paw-cat-stroke, transparent);

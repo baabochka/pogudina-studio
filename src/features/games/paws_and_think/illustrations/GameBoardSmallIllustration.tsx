@@ -9,6 +9,7 @@ import { fixedDetails, neutrals } from '../palettes'
 type GameBoardSmallIllustrationProps = {
   className?: string
   selectedAnswer?: ObjectName
+  hoveredAnswer?: ObjectName
   answerPawFillColor?: string
   answerPawStrokeColor?: string
 }
@@ -16,6 +17,7 @@ type GameBoardSmallIllustrationProps = {
 export function GameBoardSmallIllustration({
   className,
   selectedAnswer,
+  hoveredAnswer,
   answerPawFillColor,
   answerPawStrokeColor,
 }: GameBoardSmallIllustrationProps) {
@@ -24,6 +26,11 @@ export function GameBoardSmallIllustration({
   const mouse = getBasePalette(ORIGINAL_COLOR_BY_OBJECT.mouse)
   const cheese = getBasePalette(ORIGINAL_COLOR_BY_OBJECT.cheese)
   const ball = getBasePalette(ORIGINAL_COLOR_BY_OBJECT.ball)
+
+  const answerButtonHoverColor = '#006f75'
+  const getAnswerButtonFill = (answer: ObjectName) => {
+    return hoveredAnswer === answer || selectedAnswer === answer ? answerButtonHoverColor : '#005157'
+  }
 
   const style = {
     '--outline': neutrals.black,
@@ -41,6 +48,11 @@ export function GameBoardSmallIllustration({
     '--cheese-shade': cheese.shade,
     '--ball-light': ball.light,
     '--ball-shade': ball.shade,
+    '--answer-button-cat-bg': getAnswerButtonFill('cat'),
+    '--answer-button-pillow-bg': getAnswerButtonFill('pillow'),
+    '--answer-button-mouse-bg': getAnswerButtonFill('mouse'),
+    '--answer-button-cheese-bg': getAnswerButtonFill('cheese'),
+    '--answer-button-ball-bg': getAnswerButtonFill('ball'),
     '--answer-paw-cat-fill': selectedAnswer === 'cat' ? answerPawFillColor : 'transparent',
     '--answer-paw-cat-stroke': selectedAnswer === 'cat' ? answerPawStrokeColor : 'transparent',
     '--answer-paw-pillow-fill': selectedAnswer === 'pillow' ? answerPawFillColor : 'transparent',
