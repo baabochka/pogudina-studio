@@ -65,3 +65,49 @@
 .card-svg .non-scaling-stroke {
   vector-effect: non-scaling-stroke;
 }
+
+.paw-step-trail {
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(var(--paw-step-rotation, 0deg)) scale(0.34);
+  animation: paw-step-appear 1200ms ease-out forwards;
+}
+
+@keyframes paw-step-appear {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--paw-step-rotation, 0deg)) scale(0.24);
+  }
+
+  40% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--paw-step-rotation, 0deg)) scale(0.38);
+  }
+
+  100% {
+    opacity: 0.92;
+    transform: translate(-50%, -50%) rotate(var(--paw-step-rotation, 0deg)) scale(0.4);
+  }
+}
+
+.paw-step-target {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(1);
+  animation: paw-step-target-appear 480ms ease-out forwards;
+}
+
+@keyframes paw-step-target-appear {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.72);
+  }
+
+  70% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
