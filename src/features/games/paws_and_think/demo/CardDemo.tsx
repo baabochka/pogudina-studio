@@ -1,175 +1,271 @@
-import { useState } from 'react'
+import { useState } from "react";
 
-import { Button } from '../ui/Button'
-import { GameCard } from '../GameCard'
+import {
+  resolveCard,
+  type IllustrationName,
+  type ObjectName,
+  type ResolvedCard,
+} from "../cardResolver";
 import {
   createCatBallTokens,
   createCatCheeseTokens,
   createCatMouseTokens,
   createCatPillowTokens,
   createCheeseBallTokens,
-  createMouseCheeseTokens,
   createMouseBallTokens,
+  createMouseCheeseTokens,
   createPillowBallTokens,
   createPillowCheeseTokens,
   createPillowMouseTokens,
-  createRandomCatBallTokens,
-  createRandomCatCheeseTokens,
-  createRandomCatMouseTokens,
-  createRandomCatPillowTokens,
-  createRandomCheeseBallTokens,
-  createRandomMouseCheeseTokens,
-  createRandomMouseBallTokens,
-  createRandomPillowBallTokens,
-  createRandomPillowCheeseTokens,
-  createRandomPillowMouseTokens,
-} from '../colorRules'
-import { CatBallIllustration } from '../illustrations/CatBallIllustration'
-import { CatCheeseIllustration } from '../illustrations/CatCheeseIllustration'
-import { CatMouseIllustration } from '../illustrations/CatMouseIllustration'
-import { CatPillowIllustration } from '../illustrations/CatPillowIllustration'
-import { CheeseBallIllustration } from '../illustrations/CheeseBallIllustration'
-import { MouseBallIllustration } from '../illustrations/MouseBallIllustration'
-import { MouseCheeseIllustration } from '../illustrations/MouseCheeseIllustration'
-import { PillowBallIllustration } from '../illustrations/PillowBallIllustration'
-import { PillowCheeseIllustration } from '../illustrations/PillowCheeseIllustration'
-import { PillowMouseIllustration } from '../illustrations/PillowMouseIllustration'
-import type {
-  CatBallIllustrationTokens,
-  CatCheeseIllustrationTokens,
-  CatMouseIllustrationTokens,
-  CatPillowIllustrationTokens,
-  CheeseBallIllustrationTokens,
-  MouseCheeseIllustrationTokens,
-  MouseBallIllustrationTokens,
-  PillowBallIllustrationTokens,
-  PillowCheeseIllustrationTokens,
-  PillowMouseIllustrationTokens,
-} from '../palettes'
+} from "../colorRules";
+import { GameBoardSmallIllustration } from "../illustrations/GameBoardSmallIllustration";
+import { CatBallIllustration } from "../illustrations/CatBallIllustration";
+import { CatCheeseIllustration } from "../illustrations/CatCheeseIllustration";
+import { CatMouseIllustration } from "../illustrations/CatMouseIllustration";
+import { CatPillowIllustration } from "../illustrations/CatPillowIllustration";
+import { CheeseBallIllustration } from "../illustrations/CheeseBallIllustration";
+import { MouseBallIllustration } from "../illustrations/MouseBallIllustration";
+import { MouseCheeseIllustration } from "../illustrations/MouseCheeseIllustration";
+import { PillowBallIllustration } from "../illustrations/PillowBallIllustration";
+import { PillowCheeseIllustration } from "../illustrations/PillowCheeseIllustration";
+import { PillowMouseIllustration } from "../illustrations/PillowMouseIllustration";
+import { basePalettes, fixedDetails, neutrals } from "../palettes";
 
-type DemoCards = {
-  catCheese: CatCheeseIllustrationTokens
-  catBall: CatBallIllustrationTokens
-  catMouse: CatMouseIllustrationTokens
-  catPillow: CatPillowIllustrationTokens
-  cheeseBall: CheeseBallIllustrationTokens
-  mouseCheese: MouseCheeseIllustrationTokens
-  mouseBall: MouseBallIllustrationTokens
-  pillowBall: PillowBallIllustrationTokens
-  pillowCheese: PillowCheeseIllustrationTokens
-  pillowMouse: PillowMouseIllustrationTokens
+const ILLUSTRATION_OPTIONS: IllustrationName[] = [
+  "cat-ball",
+  "cat-cheese",
+  "cat-mouse",
+  "cat-pillow",
+  "ball-cheese",
+  "ball-mouse",
+  "ball-pillow",
+  "cheese-mouse",
+  "cheese-pillow",
+  "mouse-pillow",
+];
+
+const TARGET_ANSWER_OPTIONS: ResolvedCard["objectA"][] = [
+  "cat",
+  "pillow",
+  "mouse",
+  "cheese",
+  "ball",
+];
+const BOARD_ANSWER_OPTIONS: ObjectName[] = [
+  "mouse",
+  "cat",
+  "cheese",
+  "ball",
+  "pillow",
+];
+const ANSWER_BUTTON_POSITIONS: Record<ObjectName, string> = {
+  mouse: "top-[14.8%]",
+  cat: "top-[28.4%]",
+  cheese: "top-[42.6%]",
+  ball: "top-[56.5%]",
+  pillow: "top-[70.5%]",
+};
+const CORRECT_ANSWER_PAW_FILL_COLOR = `${fixedDetails.accent.light}CC`;
+const INCORRECT_ANSWER_PAW_FILL_COLOR = `${basePalettes.red.light}CC`;
+const ANSWER_PAW_STROKE_COLOR = neutrals.black;
+
+function formatOptionLabel(value: string) {
+  return value
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" + ");
 }
 
-function createInitialCards(): DemoCards {
-  return {
-    catCheese: createCatCheeseTokens('grey', 'yellow'),
-    catBall: createCatBallTokens('grey', 'blue'),
-    catMouse: createCatMouseTokens('grey', 'blue'),
-    catPillow: createCatPillowTokens('grey', 'red'),
-    cheeseBall: createCheeseBallTokens('yellow', 'blue'),
-    mouseCheese: createMouseCheeseTokens('blue', 'yellow'),
-    mouseBall: createMouseBallTokens('yellow', 'blue'),
-    pillowBall: createPillowBallTokens('red', 'blue'),
-    pillowCheese: createPillowCheeseTokens('red', 'yellow'),
-    pillowMouse: createPillowMouseTokens('red', 'blue'),
-  }
-}
+function renderResolvedIllustration(card: ResolvedCard) {
+  const className = "block h-full w-auto max-w-none";
 
-function createRandomCards(): DemoCards {
-  return {
-    catCheese: createRandomCatCheeseTokens(),
-    catBall: createRandomCatBallTokens(),
-    catMouse: createRandomCatMouseTokens(),
-    catPillow: createRandomCatPillowTokens(),
-    cheeseBall: createRandomCheeseBallTokens(),
-    mouseCheese: createRandomMouseCheeseTokens(),
-    mouseBall: createRandomMouseBallTokens(),
-    pillowBall: createRandomPillowBallTokens(),
-    pillowCheese: createRandomPillowCheeseTokens(),
-    pillowMouse: createRandomPillowMouseTokens(),
+  switch (card.illustration) {
+    case "cat-ball":
+      return (
+        <CatBallIllustration
+          tokens={createCatBallTokens(card.colorA, card.colorB)}
+          className={className}
+        />
+      );
+    case "cat-cheese":
+      return (
+        <CatCheeseIllustration
+          tokens={createCatCheeseTokens(card.colorA, card.colorB)}
+          className={className}
+        />
+      );
+    case "cat-mouse":
+      return (
+        <CatMouseIllustration
+          tokens={createCatMouseTokens(card.colorA, card.colorB)}
+          className={className}
+        />
+      );
+    case "cat-pillow":
+      return (
+        <CatPillowIllustration
+          tokens={createCatPillowTokens(card.colorA, card.colorB)}
+          className={className}
+        />
+      );
+    case "ball-cheese":
+      return (
+        <CheeseBallIllustration
+          tokens={createCheeseBallTokens(card.colorB, card.colorA)}
+          className={className}
+        />
+      );
+    case "ball-mouse":
+      return (
+        <MouseBallIllustration
+          tokens={createMouseBallTokens(card.colorB, card.colorA)}
+          className={className}
+        />
+      );
+    case "ball-pillow":
+      return (
+        <PillowBallIllustration
+          tokens={createPillowBallTokens(card.colorB, card.colorA)}
+          className={className}
+        />
+      );
+    case "cheese-mouse":
+      return (
+        <MouseCheeseIllustration
+          tokens={createMouseCheeseTokens(card.colorB, card.colorA)}
+          className={className}
+        />
+      );
+    case "cheese-pillow":
+      return (
+        <PillowCheeseIllustration
+          tokens={createPillowCheeseTokens(card.colorB, card.colorA)}
+          className={className}
+        />
+      );
+    case "mouse-pillow":
+      return (
+        <PillowMouseIllustration
+          tokens={createPillowMouseTokens(card.colorB, card.colorA)}
+          className={className}
+        />
+      );
   }
 }
 
 export function CardDemo() {
-  const [cards, setCards] = useState<DemoCards>(createInitialCards)
+  const [card, setCard] = useState<ResolvedCard>(() => resolveCard({}));
+  const [selectedIllustration, setSelectedIllustration] = useState<
+    IllustrationName | ""
+  >("");
+  const [selectedTargetAnswer, setSelectedTargetAnswer] = useState<
+    ResolvedCard["objectA"] | ""
+  >("");
+  const [selectedAnswer, setSelectedAnswer] = useState<ObjectName | null>(null);
+
+  function refreshCard() {
+    setSelectedAnswer(null);
+    setCard(
+      resolveCard({
+        illustration: selectedIllustration || undefined,
+        targetAnswer: selectedTargetAnswer || undefined,
+      }),
+    );
+  }
+
+  const answerPawFillColor =
+    selectedAnswer == null
+      ? undefined
+      : selectedAnswer === card.targetAnswer
+        ? CORRECT_ANSWER_PAW_FILL_COLOR
+        : INCORRECT_ANSWER_PAW_FILL_COLOR;
+  const answerPawStrokeColor = selectedAnswer == null ? undefined : ANSWER_PAW_STROKE_COLOR;
 
   return (
     <div className="space-y-8">
-      <div className="grid gap-6 xl:grid-cols-3">
-        <GameCard
-          title="Cat + cheese"
-          description="Shared semantic tokens drive the cat, cheese, outlines, neutrals, and accent eye colors."
-        >
-          <CatCheeseIllustration tokens={cards.catCheese} className="mx-auto w-full max-w-[320px]" />
-        </GameCard>
-
-        <GameCard
-          title="Cat + ball"
-          description="The ball uses a different base palette from the cat, while the green accent is reserved for eyes and stripe details."
-        >
-          <CatBallIllustration tokens={cards.catBall} className="mx-auto w-full max-w-[280px]" />
-        </GameCard>
-
-        <GameCard
-          title="Cat + mouse"
-          description="The mouse uses its own base palette, while the bow and cat eyes stay on the fixed green accent tokens."
-        >
-          <CatMouseIllustration tokens={cards.catMouse} className="mx-auto w-full max-w-[320px]" />
-        </GameCard>
-
-        <GameCard
-          title="Cat + pillow"
-          description="The pillow picks its own base palette while the cat, collar tag, and eye accents stay consistent."
-        >
-          <CatPillowIllustration tokens={cards.catPillow} className="mx-auto w-full max-w-[320px]" />
-        </GameCard>
-
-        <GameCard
-          title="Cheese + ball"
-          description="This non-cat card uses two distinct base palettes with the green accent reserved for the stripe only."
-        >
-          <CheeseBallIllustration tokens={cards.cheeseBall} className="mx-auto w-full max-w-[300px]" />
-        </GameCard>
-
-        <GameCard
-          title="Mouse + ball"
-          description="The mouse and ball randomize independently, while the bow stays on the fixed green accent color."
-        >
-          <MouseBallIllustration tokens={cards.mouseBall} className="mx-auto w-full max-w-[300px]" />
-        </GameCard>
-
-        <GameCard
-          title="Mouse + cheese"
-          description="Mouse and cheese use separate base palettes while the mouse bow remains on the fixed accent green."
-        >
-          <MouseCheeseIllustration tokens={cards.mouseCheese} className="mx-auto w-full max-w-[300px]" />
-        </GameCard>
-
-        <GameCard
-          title="Pillow + ball"
-          description="The pillow and ball randomize independently, with the green accent reserved for the stripe only."
-        >
-          <PillowBallIllustration tokens={cards.pillowBall} className="mx-auto w-full max-w-[300px]" />
-        </GameCard>
-
-        <GameCard
-          title="Pillow + cheese"
-          description="The pillow and cheese swap through the base palette set while preserving the cleaned asset styling."
-        >
-          <PillowCheeseIllustration tokens={cards.pillowCheese} className="mx-auto w-full max-w-[300px]" />
-        </GameCard>
-
-        <GameCard
-          title="Pillow + mouse"
-          description="The pillow and mouse recolor independently, while the mouse bow keeps the fixed accent green."
-        >
-          <PillowMouseIllustration tokens={cards.pillowMouse} className="mx-auto w-full max-w-[300px]" />
-        </GameCard>
-      </div>
-
       <div className="flex justify-center">
-        <Button onClick={() => setCards(createRandomCards())}>Randomize card colors</Button>
+        <div className="relative h-[431.15px]">
+          <GameBoardSmallIllustration
+            className="h-full w-auto"
+            selectedAnswer={selectedAnswer ?? undefined}
+            answerPawFillColor={answerPawFillColor}
+            answerPawStrokeColor={answerPawStrokeColor}
+          />
+
+          <div className="absolute inset-y-0 left-[0.05%] flex w-[89.8%] items-center justify-start">
+            {renderResolvedIllustration(card)}
+          </div>
+
+          {BOARD_ANSWER_OPTIONS.map((answer) => (
+            <button
+              key={answer}
+              type="button"
+              onClick={() => setSelectedAnswer(answer)}
+              className={`absolute right-[1.6%] ${ANSWER_BUTTON_POSITIONS[answer]} h-[11.5%] w-[17.5%] rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background`}
+              aria-label={`Choose ${formatOptionLabel(answer)} as the answer`}
+            />
+          ))}
+
+          <button
+            type="button"
+            onClick={refreshCard}
+            className="absolute right-[1.8%] top-[1.8%] h-[12.5%] w-[18%] rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            aria-label="Generate new card from current settings"
+          />
+        </div>
       </div>
+
+      <form
+        onSubmit={(event) => event.preventDefault()}
+        className="mx-auto max-w-3xl rounded-[2rem] border border-border bg-surface p-6"
+      >
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
+            <span>Illustration</span>
+            <select
+              value={selectedIllustration}
+              onChange={(event) =>
+                setSelectedIllustration(
+                  event.target.value as IllustrationName | "",
+                )
+              }
+              className="rounded-full border border-border bg-background px-4 py-3 text-foreground outline-none transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              <option value="">Any illustration</option>
+              {ILLUSTRATION_OPTIONS.map((illustration) => (
+                <option key={illustration} value={illustration}>
+                  {formatOptionLabel(illustration)}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
+            <span>Target answer</span>
+            <select
+              value={selectedTargetAnswer}
+              onChange={(event) =>
+                setSelectedTargetAnswer(
+                  event.target.value as ResolvedCard["objectA"] | "",
+                )
+              }
+              className="rounded-full border border-border bg-background px-4 py-3 text-foreground outline-none transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              <option value="">No target answer</option>
+              {TARGET_ANSWER_OPTIONS.map((targetAnswer) => (
+                <option key={targetAnswer} value={targetAnswer}>
+                  {formatOptionLabel(targetAnswer)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+          Adjust the controls, then click the refresh icon on the board to
+          generate a new card.
+        </p>
+      </form>
     </div>
-  )
+  );
 }

@@ -1,6 +1,9 @@
 .card-svg .fill-none { fill: none; }
 .card-svg .fill-white { fill: var(--white); }
 .card-svg .fill-black { fill: var(--black); }
+.card-svg .fill-board-light { fill: #008d96; }
+.card-svg .fill-board-dark { fill: #005157; }
+.card-svg .fill-card-placement-bounds { fill: transparent; }
 
 .card-svg .fill-cat-light { fill: var(--cat-light); }
 .card-svg .fill-cat-shade { fill: var(--cat-shade); }
@@ -18,6 +21,26 @@
 
 .card-svg .fill-nose { fill: var(--nose-color); }
 .card-svg .fill-collar-tag { fill: var(--tag-color); }
+.card-svg #answer-paw-cat .fill-answer-paw {
+  fill: var(--answer-paw-cat-fill, transparent);
+  stroke: var(--answer-paw-cat-stroke, transparent);
+}
+.card-svg #answer-paw-pillow .fill-answer-paw {
+  fill: var(--answer-paw-pillow-fill, transparent);
+  stroke: var(--answer-paw-pillow-stroke, transparent);
+}
+.card-svg #answer-paw-mouse .fill-answer-paw {
+  fill: var(--answer-paw-mouse-fill, transparent);
+  stroke: var(--answer-paw-mouse-stroke, transparent);
+}
+.card-svg #answer-paw-cheese .fill-answer-paw {
+  fill: var(--answer-paw-cheese-fill, transparent);
+  stroke: var(--answer-paw-cheese-stroke, transparent);
+}
+.card-svg #answer-paw-ball .fill-answer-paw {
+  fill: var(--answer-paw-ball-fill, transparent);
+  stroke: var(--answer-paw-ball-stroke, transparent);
+}
 
 .card-svg .stroke-outline { stroke: var(--outline); }
 

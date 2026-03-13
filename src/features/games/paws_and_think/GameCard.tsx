@@ -7,25 +7,35 @@ type GameCardProps = {
   title: string;
   description: string;
   children: ReactNode;
+  showFrame?: boolean;
 };
 
-export function GameCard({ title, description, children }: GameCardProps) {
+export function GameCard({
+  title,
+  description,
+  children,
+  showFrame = true,
+}: GameCardProps) {
   return (
     <Card className="h-full bg-[linear-gradient(180deg,var(--surface),color-mix(in_srgb,var(--accent)_12%,var(--surface)))]">
       <div className="flex h-full flex-col gap-5">
-        <div className="mx-auto w-full max-w-[340px]">
-          <div className="relative">
-            <img
-              src={cardFrame}
-              alt=""
-              aria-hidden="true"
-              className="pointer-events-none block h-auto w-full select-none"
-            />
+        <div className="mx-auto w-full max-w-85">
+          {showFrame ? (
+            <div className="relative">
+              <img
+                src={cardFrame}
+                alt=""
+                aria-hidden="true"
+                className="pointer-events-none block h-auto w-full select-none"
+              />
 
-            <div className="absolute inset-[7.5%] flex items-center justify-center overflow-hidden rounded-[2rem]">
-              {children}
+              <div className="absolute inset-[7.5%] flex items-center justify-center overflow-hidden rounded-4xl">
+                {children}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center justify-center">{children}</div>
+          )}
         </div>
 
         <div className="text-center">
