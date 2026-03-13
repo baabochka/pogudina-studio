@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import cardFrame from "./assets/card_frame.png";
+import cardFrame from "./assets/card_frame.svg";
 import { Card } from "./ui/Card";
 
 type GameCardProps = {

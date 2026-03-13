@@ -12,6 +12,9 @@ type GameBoardSmallIllustrationProps = {
   hoveredAnswer?: ObjectName
   answerPawFillColor?: string
   answerPawStrokeColor?: string
+  highlightedAnswer?: ObjectName
+  highlightedAnswerPawFillColor?: string
+  highlightedAnswerPawStrokeColor?: string
 }
 
 export function GameBoardSmallIllustration({
@@ -20,6 +23,9 @@ export function GameBoardSmallIllustration({
   hoveredAnswer,
   answerPawFillColor,
   answerPawStrokeColor,
+  highlightedAnswer,
+  highlightedAnswerPawFillColor,
+  highlightedAnswerPawStrokeColor,
 }: GameBoardSmallIllustrationProps) {
   const cat = getBasePalette(ORIGINAL_COLOR_BY_OBJECT.cat)
   const pillow = getBasePalette(ORIGINAL_COLOR_BY_OBJECT.pillow)
@@ -30,6 +36,28 @@ export function GameBoardSmallIllustration({
   const answerButtonHoverColor = '#006f75'
   const getAnswerButtonFill = (answer: ObjectName) => {
     return hoveredAnswer === answer || selectedAnswer === answer ? answerButtonHoverColor : '#005157'
+  }
+  const getAnswerPawFill = (answer: ObjectName) => {
+    if (selectedAnswer === answer) {
+      return answerPawFillColor
+    }
+
+    if (highlightedAnswer === answer) {
+      return highlightedAnswerPawFillColor
+    }
+
+    return 'transparent'
+  }
+  const getAnswerPawStroke = (answer: ObjectName) => {
+    if (selectedAnswer === answer) {
+      return answerPawStrokeColor
+    }
+
+    if (highlightedAnswer === answer) {
+      return highlightedAnswerPawStrokeColor
+    }
+
+    return 'transparent'
   }
 
   const style = {
@@ -53,16 +81,16 @@ export function GameBoardSmallIllustration({
     '--answer-button-mouse-bg': getAnswerButtonFill('mouse'),
     '--answer-button-cheese-bg': getAnswerButtonFill('cheese'),
     '--answer-button-ball-bg': getAnswerButtonFill('ball'),
-    '--answer-paw-cat-fill': selectedAnswer === 'cat' ? answerPawFillColor : 'transparent',
-    '--answer-paw-cat-stroke': selectedAnswer === 'cat' ? answerPawStrokeColor : 'transparent',
-    '--answer-paw-pillow-fill': selectedAnswer === 'pillow' ? answerPawFillColor : 'transparent',
-    '--answer-paw-pillow-stroke': selectedAnswer === 'pillow' ? answerPawStrokeColor : 'transparent',
-    '--answer-paw-mouse-fill': selectedAnswer === 'mouse' ? answerPawFillColor : 'transparent',
-    '--answer-paw-mouse-stroke': selectedAnswer === 'mouse' ? answerPawStrokeColor : 'transparent',
-    '--answer-paw-cheese-fill': selectedAnswer === 'cheese' ? answerPawFillColor : 'transparent',
-    '--answer-paw-cheese-stroke': selectedAnswer === 'cheese' ? answerPawStrokeColor : 'transparent',
-    '--answer-paw-ball-fill': selectedAnswer === 'ball' ? answerPawFillColor : 'transparent',
-    '--answer-paw-ball-stroke': selectedAnswer === 'ball' ? answerPawStrokeColor : 'transparent',
+    '--answer-paw-cat-fill': getAnswerPawFill('cat'),
+    '--answer-paw-cat-stroke': getAnswerPawStroke('cat'),
+    '--answer-paw-pillow-fill': getAnswerPawFill('pillow'),
+    '--answer-paw-pillow-stroke': getAnswerPawStroke('pillow'),
+    '--answer-paw-mouse-fill': getAnswerPawFill('mouse'),
+    '--answer-paw-mouse-stroke': getAnswerPawStroke('mouse'),
+    '--answer-paw-cheese-fill': getAnswerPawFill('cheese'),
+    '--answer-paw-cheese-stroke': getAnswerPawStroke('cheese'),
+    '--answer-paw-ball-fill': getAnswerPawFill('ball'),
+    '--answer-paw-ball-stroke': getAnswerPawStroke('ball'),
   } as CSSProperties
 
   return (

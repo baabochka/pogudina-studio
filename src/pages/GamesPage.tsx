@@ -1,14 +1,14 @@
-import { CardDemo } from '../features/games/paws_and_think/demo/CardDemo'
+import { GameBoardRound } from '../features/games/paws_and_think/GameBoardRound'
 import { Section } from '../components/ui/Section'
 
 export function GamesPage() {
   return (
     <Section
       eyebrow="Games"
-      title="A small reusable card system for future game prototypes."
-      description="This demo validates shared palette rules, semantic illustration tokens, and SVG-based rendering for multiple card types."
+      title="A timed board round built on the reusable card system."
+      description="Answer as many cards as you can in sixty seconds while the board tracks score, best score, validation feedback, and rotating illustrations."
     >
-      <CardDemo />
+      <GameBoardRound />
     </Section>
   )
 }

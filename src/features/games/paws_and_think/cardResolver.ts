@@ -42,7 +42,7 @@ const OBJECT_NAMES: ObjectName[] = ['cat', 'pillow', 'mouse', 'cheese', 'ball']
 
 const PALETTE_NAMES: PaletteName[] = ['red', 'orange', 'yellow', 'blue', 'grey']
 
-const ILLUSTRATION_NAMES: IllustrationName[] = [
+export const ILLUSTRATION_NAMES: IllustrationName[] = [
   'cat-ball',
   'cat-cheese',
   'cat-mouse',
