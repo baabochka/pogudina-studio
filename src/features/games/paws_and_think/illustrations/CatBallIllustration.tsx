@@ -1,4 +1,4 @@
-import Svg from '../assets/cat_ball_svg.svg?react'
+import Svg from '../assets/cat_ball.svg?react'
 import type { CatBallIllustrationTokens } from '../palettes'
 import { RawSvgIllustration } from './RawSvgIllustration'
 import type { CatBallSvgVariables } from './svgVariables'

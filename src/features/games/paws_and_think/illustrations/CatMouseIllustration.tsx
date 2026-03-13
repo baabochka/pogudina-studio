@@ -1,4 +1,4 @@
-import Svg from '../assets/cat_mouse_svg.svg?react'
+import Svg from '../assets/cat_mouse.svg?react'
 import type { CatMouseIllustrationTokens } from '../palettes'
 import { RawSvgIllustration } from './RawSvgIllustration'
 import type { CatMouseSvgVariables } from './svgVariables'

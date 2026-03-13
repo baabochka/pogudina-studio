@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 431.15">
+<g id="illustration" transform="translate(14.4 21.56) scale(0.9)">
 <g id="Cheese">
     <g id="Cheese_shade">
       <path class="fill-cheese-shade stroke-outline miter stroke-3" d="m232.91,181.07c-2.21,0-166.67,47.94-168.15,48.67-1.47.74-3.04,82.51,0,85.55.82.82,23.09-5.17,50.87-13.13.06-1.1.25-2.24.73-3.37,1-2.36,4.13-4.17,6.38-4.13,2.68.04,5.01-.39,7.1,1.86.37.4.57.85.7,1.33,44.43-12.94,95.22-28.51,96.47-29.76,2.21-2.21,8.11-87.02,5.9-87.02Z"/>
@@ -47,6 +48,7 @@
         <path class="fill-accent-light stroke-outline round stroke-2" d="m192.33,129.02c-3.96-.12-8.16,3.04-5.75,6.46,3.95,3.83,12.54-1.93,5.75-6.46Z"/>
       </g>
     </g>
+  </g>
   </g>
   <g id="Details">
     <rect class="fill-none stroke-0" width="288" height="431.15"/>

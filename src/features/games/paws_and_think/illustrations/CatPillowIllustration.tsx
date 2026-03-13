@@ -1,4 +1,4 @@
-import Svg from '../assets/cat_pillow_svg.svg?react'
+import Svg from '../assets/cat_pillow.svg?react'
 import type { CatPillowIllustrationTokens } from '../palettes'
 import { RawSvgIllustration } from './RawSvgIllustration'
 import type { CatPillowSvgVariables } from './svgVariables'

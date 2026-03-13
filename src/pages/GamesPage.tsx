@@ -1,5 +1,5 @@
-import { GameBoardRound } from '../features/games/paws_and_think/GameBoardRound'
-import { Section } from '../components/ui/Section'
+import { GameBoardRound } from "../features/games/paws_and_think/GameBoardRound";
+import { Section } from "../components/ui/Section";
 
 export function GamesPage() {
   return (
@@ -10,5 +10,5 @@ export function GamesPage() {
     >
       <GameBoardRound />
     </Section>
-  )
+  );
 }

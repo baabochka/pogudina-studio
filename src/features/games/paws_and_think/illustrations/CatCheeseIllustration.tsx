@@ -1,4 +1,4 @@
-import Svg from '../assets/cat_cheese_svg.svg?react'
+import Svg from '../assets/cat_cheese.svg?react'
 import type { CatCheeseIllustrationTokens } from '../palettes'
 import { RawSvgIllustration } from './RawSvgIllustration'
 import type { CatCheeseSvgVariables } from './svgVariables'

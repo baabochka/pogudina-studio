@@ -1,10 +1,39 @@
 .card-svg .fill-none { fill: none; }
 .card-svg .fill-white { fill: var(--white); }
 .card-svg .fill-black { fill: var(--black); }
-.card-svg .fill-board-light { fill: #008d96; }
-.card-svg .fill-board-dark { fill: #005157; }
+.card-svg .fill-board-light { fill: var(--board-light, #008D96); }
+.card-svg .fill-board-dark { fill: var(--board-dark, #005157); }
 .card-svg .fill-card-placement-bounds { fill: transparent; }
 .card-svg .fill-answer-hit-area { fill: transparent; }
+
+.card-svg :is(#Restart_button, #Rules, #Review_previous, #Five_card_mode_button) .fill-board-dark {
+  fill: var(--board-dark, #005157);
+}
+
+.card-svg #Restart_button .fill-board-dark { fill: var(--restart-button-fill, var(--board-dark, #005157)); }
+.card-svg #Rules .fill-board-dark { fill: var(--rules-button-fill, var(--board-dark, #005157)); }
+.card-svg #Review_previous .fill-board-dark { fill: var(--review-previous-fill, var(--board-dark, #005157)); }
+.card-svg #Five_card_mode_button .fill-board-dark { fill: var(--five-card-mode-fill, var(--board-dark, #005157)); }
+
+.card-svg #answer-button-bg-mouse {
+  fill: var(--answer-button-bg-mouse-fill, var(--board-dark, #005157));
+}
+
+.card-svg #answer-button-bg-cat {
+  fill: var(--answer-button-bg-cat-fill, var(--board-dark, #005157));
+}
+
+.card-svg #answer-button-bg-cheese {
+  fill: var(--answer-button-bg-cheese-fill, var(--board-dark, #005157));
+}
+
+.card-svg #answer-button-bg-ball {
+  fill: var(--answer-button-bg-ball-fill, var(--board-dark, #005157));
+}
+
+.card-svg #answer-button-bg-pillow {
+  fill: var(--answer-button-bg-pillow-fill, var(--board-dark, #005157));
+}
 
 .card-svg .fill-cat-light { fill: var(--cat-light); }
 .card-svg .fill-cat-shade { fill: var(--cat-shade); }
@@ -22,11 +51,11 @@
 
 .card-svg .fill-nose { fill: var(--nose-color); }
 .card-svg .fill-collar-tag { fill: var(--tag-color); }
-.card-svg #answer-button-cat .fill-answer-button-bg { fill: var(--answer-button-cat-bg, #005157); }
-.card-svg #answer-button-pillow .fill-answer-button-bg { fill: var(--answer-button-pillow-bg, #005157); }
-.card-svg #answer-button-mouse .fill-answer-button-bg { fill: var(--answer-button-mouse-bg, #005157); }
-.card-svg #answer-button-cheese .fill-answer-button-bg { fill: var(--answer-button-cheese-bg, #005157); }
-.card-svg #answer-button-ball .fill-answer-button-bg { fill: var(--answer-button-ball-bg, #005157); }
+.card-svg #answer-button-cat .fill-answer-button-bg { fill: var(--answer-button-cat-bg, var(--board-dark, #005157)); }
+.card-svg #answer-button-pillow .fill-answer-button-bg { fill: var(--answer-button-pillow-bg, var(--board-dark, #005157)); }
+.card-svg #answer-button-mouse .fill-answer-button-bg { fill: var(--answer-button-mouse-bg, var(--board-dark, #005157)); }
+.card-svg #answer-button-cheese .fill-answer-button-bg { fill: var(--answer-button-cheese-bg, var(--board-dark, #005157)); }
+.card-svg #answer-button-ball .fill-answer-button-bg { fill: var(--answer-button-ball-bg, var(--board-dark, #005157)); }
 .card-svg #answer-paw-cat .fill-answer-paw {
   fill: var(--answer-paw-cat-fill, transparent);
   stroke: var(--answer-paw-cat-stroke, transparent);

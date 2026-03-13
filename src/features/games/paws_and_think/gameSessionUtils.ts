@@ -1,7 +1,7 @@
 import { ILLUSTRATION_NAMES, resolveCard, type IllustrationName, type ResolvedCard } from './cardResolver'
 
 export const ROUND_DURATION_SECONDS = 60
-export const CORRECT_VALIDATION_MS = 1100
+export const CORRECT_VALIDATION_MS = 900
 export const WRONG_VALIDATION_MS = 2300
 export const CARD_TRANSITION_PHASE_MS = 600
 export const CARD_TRANSITION_TOTAL_MS = CARD_TRANSITION_PHASE_MS * 2

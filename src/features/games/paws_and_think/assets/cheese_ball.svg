@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 431.15">
+  <g id="illustration" transform="translate(7.2 10.78) scale(0.95)">
 <g id="Cheese_shade">
     <path
       class="fill-cheese-shade stroke-outline miter stroke-3"
@@ -67,6 +68,7 @@
         d="m188.17,151.79c-.49-.05-.45,1.4-.44,2.17,0,1.05-.02,1.43.33,2.16.41.86.51,1.29.67,2.6.19,1.53.26,3.17.7,4.44.38,1.12.73-.56.95-1.45.29-1.18.45-2.36.23-3.72-.1-.63-.3-1.08-.43-1.69-.11-.55-.16-1.11-.3-1.64s-.32-.82-.51-1.25c-.17-.38-.27-.9-1.2-1.62Z"
       />
     </g>
-    <rect class="fill-none" width="288" height="431.15" />
   </g>
+  </g>
+  <rect id="card-bounds" class="fill-none stroke-0" width="288" height="431.15" pointer-events="none"/>
 </svg>

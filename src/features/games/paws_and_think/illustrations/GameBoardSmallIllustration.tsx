@@ -1,15 +1,22 @@
 import type { CSSProperties } from 'react'
 
-import Svg from '../assets/game_board_small.svg?react'
-import { getBasePalette } from '../colorRules'
+import BoardSvg from '../assets/game_board_small_with_scores.svg?react'
+import type { ObjectName } from '../cardResolver'
+import type { BoardControlName } from '../gameBoardRoundConfig'
+import {
+  ANSWER_BUTTON_CENTERS,
+  BOARD_CONTROL_HOVER_FILL_COLOR,
+  BOARD_VIEWBOX,
+} from '../gameBoardRoundConfig'
+import { basePalettes, fixedDetails, neutrals } from '../palettes'
 import { RawSvgIllustration } from './RawSvgIllustration'
-import { ORIGINAL_COLOR_BY_OBJECT, type ObjectName } from '../cardResolver'
-import { fixedDetails, neutrals } from '../palettes'
+import { HintPawStep } from '../HintPawStep'
 
 type GameBoardSmallIllustrationProps = {
   className?: string
   selectedAnswer?: ObjectName
   hoveredAnswer?: ObjectName
+  hoveredControl?: BoardControlName
   answerPawFillColor?: string
   answerPawStrokeColor?: string
   highlightedAnswer?: ObjectName
@@ -17,88 +24,116 @@ type GameBoardSmallIllustrationProps = {
   highlightedAnswerPawStrokeColor?: string
 }
 
+const BOARD_STYLE: CSSProperties = {
+  '--white': neutrals.white,
+  '--black': neutrals.black,
+  '--outline': neutrals.black,
+  '--board-light': fixedDetails.board.light,
+  '--board-dark': fixedDetails.board.dark,
+  '--cat-light': basePalettes.orange.light,
+  '--cat-shade': basePalettes.orange.shade,
+  '--mouse-light': basePalettes.grey.light,
+  '--mouse-shade': basePalettes.grey.shade,
+  '--cheese-light': basePalettes.yellow.light,
+  '--cheese-shade': basePalettes.yellow.shade,
+  '--ball-light': basePalettes.blue.light,
+  '--ball-shade': basePalettes.blue.shade,
+  '--pillow-light': basePalettes.red.light,
+  '--pillow-shade': basePalettes.red.shade,
+  '--accent-light': fixedDetails.accent.light,
+  '--accent-shade': fixedDetails.accent.shade,
+} as CSSProperties
+
 export function GameBoardSmallIllustration({
   className,
   selectedAnswer,
   hoveredAnswer,
+  hoveredControl,
   answerPawFillColor,
   answerPawStrokeColor,
   highlightedAnswer,
   highlightedAnswerPawFillColor,
   highlightedAnswerPawStrokeColor,
 }: GameBoardSmallIllustrationProps) {
-  const cat = getBasePalette(ORIGINAL_COLOR_BY_OBJECT.cat)
-  const pillow = getBasePalette(ORIGINAL_COLOR_BY_OBJECT.pillow)
-  const mouse = getBasePalette(ORIGINAL_COLOR_BY_OBJECT.mouse)
-  const cheese = getBasePalette(ORIGINAL_COLOR_BY_OBJECT.cheese)
-  const ball = getBasePalette(ORIGINAL_COLOR_BY_OBJECT.ball)
+  const selectedPosition = selectedAnswer
+    ? {
+        left: `${(ANSWER_BUTTON_CENTERS[selectedAnswer].x / BOARD_VIEWBOX.width) * 100}%`,
+        top: `${(ANSWER_BUTTON_CENTERS[selectedAnswer].y / BOARD_VIEWBOX.height) * 100}%`,
+        fill: answerPawFillColor,
+        stroke: answerPawStrokeColor,
+      }
+    : null
 
-  const answerButtonHoverColor = '#006f75'
-  const getAnswerButtonFill = (answer: ObjectName) => {
-    return hoveredAnswer === answer || selectedAnswer === answer ? answerButtonHoverColor : '#005157'
-  }
-  const getAnswerPawFill = (answer: ObjectName) => {
-    if (selectedAnswer === answer) {
-      return answerPawFillColor
-    }
-
-    if (highlightedAnswer === answer) {
-      return highlightedAnswerPawFillColor
-    }
-
-    return 'transparent'
-  }
-  const getAnswerPawStroke = (answer: ObjectName) => {
-    if (selectedAnswer === answer) {
-      return answerPawStrokeColor
-    }
-
-    if (highlightedAnswer === answer) {
-      return highlightedAnswerPawStrokeColor
-    }
-
-    return 'transparent'
-  }
+  const highlightedPosition =
+    highlightedAnswer && highlightedAnswer !== selectedAnswer
+      ? {
+          left: `${(ANSWER_BUTTON_CENTERS[highlightedAnswer].x / BOARD_VIEWBOX.width) * 100}%`,
+          top: `${(ANSWER_BUTTON_CENTERS[highlightedAnswer].y / BOARD_VIEWBOX.height) * 100}%`,
+          fill: highlightedAnswerPawFillColor,
+          stroke: highlightedAnswerPawStrokeColor,
+        }
+      : null
 
   const style = {
-    '--outline': neutrals.black,
-    '--black': neutrals.black,
-    '--white': neutrals.white,
-    '--accent-light': fixedDetails.accent.light,
-    '--accent-shade': fixedDetails.accent.shade,
-    '--cat-light': cat.light,
-    '--cat-shade': cat.shade,
-    '--pillow-light': pillow.light,
-    '--pillow-shade': pillow.shade,
-    '--mouse-light': mouse.light,
-    '--mouse-shade': mouse.shade,
-    '--cheese-light': cheese.light,
-    '--cheese-shade': cheese.shade,
-    '--ball-light': ball.light,
-    '--ball-shade': ball.shade,
-    '--answer-button-cat-bg': getAnswerButtonFill('cat'),
-    '--answer-button-pillow-bg': getAnswerButtonFill('pillow'),
-    '--answer-button-mouse-bg': getAnswerButtonFill('mouse'),
-    '--answer-button-cheese-bg': getAnswerButtonFill('cheese'),
-    '--answer-button-ball-bg': getAnswerButtonFill('ball'),
-    '--answer-paw-cat-fill': getAnswerPawFill('cat'),
-    '--answer-paw-cat-stroke': getAnswerPawStroke('cat'),
-    '--answer-paw-pillow-fill': getAnswerPawFill('pillow'),
-    '--answer-paw-pillow-stroke': getAnswerPawStroke('pillow'),
-    '--answer-paw-mouse-fill': getAnswerPawFill('mouse'),
-    '--answer-paw-mouse-stroke': getAnswerPawStroke('mouse'),
-    '--answer-paw-cheese-fill': getAnswerPawFill('cheese'),
-    '--answer-paw-cheese-stroke': getAnswerPawStroke('cheese'),
-    '--answer-paw-ball-fill': getAnswerPawFill('ball'),
-    '--answer-paw-ball-stroke': getAnswerPawStroke('ball'),
+    ...BOARD_STYLE,
+    '--answer-button-bg-mouse-fill':
+      hoveredAnswer === 'mouse' ? BOARD_CONTROL_HOVER_FILL_COLOR : undefined,
+    '--answer-button-bg-cat-fill':
+      hoveredAnswer === 'cat' ? BOARD_CONTROL_HOVER_FILL_COLOR : undefined,
+    '--answer-button-bg-cheese-fill':
+      hoveredAnswer === 'cheese' ? BOARD_CONTROL_HOVER_FILL_COLOR : undefined,
+    '--answer-button-bg-ball-fill':
+      hoveredAnswer === 'ball' ? BOARD_CONTROL_HOVER_FILL_COLOR : undefined,
+    '--answer-button-bg-pillow-fill':
+      hoveredAnswer === 'pillow' ? BOARD_CONTROL_HOVER_FILL_COLOR : undefined,
+    '--restart-button-fill':
+      hoveredControl === 'restart' ? BOARD_CONTROL_HOVER_FILL_COLOR : undefined,
+    '--rules-button-fill':
+      hoveredControl === 'rules' ? BOARD_CONTROL_HOVER_FILL_COLOR : undefined,
+    '--review-previous-fill':
+      hoveredControl === 'previous' ? BOARD_CONTROL_HOVER_FILL_COLOR : undefined,
+    '--five-card-mode-fill':
+      hoveredControl === 'five-card-mode'
+        ? BOARD_CONTROL_HOVER_FILL_COLOR
+        : undefined,
   } as CSSProperties
 
   return (
-    <RawSvgIllustration
-      Svg={Svg}
-      ariaLabel="Small game board illustration"
-      className={className}
-      style={style}
-    />
+    <div className={`relative ${className ?? ''}`}>
+      <RawSvgIllustration
+        Svg={BoardSvg}
+        ariaLabel="Small game board illustration with scores"
+        className="h-full w-auto"
+        style={style}
+      />
+
+      {selectedPosition ? (
+        <div
+          className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+          style={{ left: selectedPosition.left, top: selectedPosition.top }}
+          aria-hidden="true"
+        >
+          <HintPawStep
+            fill={selectedPosition.fill ?? 'transparent'}
+            stroke={selectedPosition.stroke ?? 'transparent'}
+            className="h-[54px] w-[54px]"
+          />
+        </div>
+      ) : null}
+
+      {highlightedPosition ? (
+        <div
+          className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+          style={{ left: highlightedPosition.left, top: highlightedPosition.top }}
+          aria-hidden="true"
+        >
+          <HintPawStep
+            fill={highlightedPosition.fill ?? 'transparent'}
+            stroke={highlightedPosition.stroke ?? 'transparent'}
+            className="h-[54px] w-[54px]"
+          />
+        </div>
+      ) : null}
+    </div>
   )
 }

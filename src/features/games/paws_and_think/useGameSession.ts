@@ -44,7 +44,7 @@ function createInitialState(): GameSessionState {
   }
 }
 
-export function useGameSession() {
+export function useGameSession(isPaused = false) {
   const [state, setState] = useState<GameSessionState>(() => createInitialState())
   const advanceTimeoutRef = useRef<number | null>(null)
   const transitionTimeoutRef = useRef<number | null>(null)
@@ -59,7 +59,7 @@ export function useGameSession() {
   }, [state.bestTotal])
 
   useEffect(() => {
-    if (state.timeLeft <= 0 || state.validationResult !== 'idle' || state.isCardTransitioning) {
+    if (state.timeLeft <= 0 || state.validationResult !== 'idle' || state.isCardTransitioning || isPaused) {
       return
     }
 
@@ -86,7 +86,7 @@ export function useGameSession() {
     return () => {
       window.clearInterval(intervalId)
     }
-  }, [state.isCardTransitioning, state.timeLeft, state.validationResult])
+  }, [isPaused, state.isCardTransitioning, state.timeLeft, state.validationResult])
 
   useEffect(() => {
     return () => {

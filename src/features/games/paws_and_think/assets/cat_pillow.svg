@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 431.15">
+  <g id="illustration" transform="translate(7.2 10.78) scale(0.95)">
 <g id="Pillow_shade">
     <polygon class="fill-pillow-shade stroke-outline round stroke-2" points="44.89 295.2 201.88 303.67 208.38 297.74 227.29 190.45 44.89 295.2"/>
   </g>
@@ -66,7 +67,6 @@
     </g>
   </g>
   <g id="Details">
-    <rect id="card-bounds" class="fill-none stroke-0" width="288" height="431.15" pointer-events="none"/>
     <g>
       <g>
         <path class="fill-accent-light stroke-0" d="m92.92,199.24c-18.45,1.21-9.31,21.68,4.66,15.53,6.01-2.38,7.42-16.39-4.66-15.53Z"/>
@@ -98,4 +98,6 @@
       </g>
     </g>
   </g>
+  </g>
+  <rect id="card-bounds" class="fill-none stroke-0" width="288" height="431.15" pointer-events="none"/>
 </svg>

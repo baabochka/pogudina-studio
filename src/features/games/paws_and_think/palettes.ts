@@ -99,4 +99,9 @@ export const neutrals = {
 export const fixedDetails = {
   nose: '#692A00',
   accent: { light: '#39B54A', shade: '#006734' },
+  board: {
+    light: '#008D96',
+    dark: '#005157',
+    hover: '#0A6870',
+  },
 } as const
