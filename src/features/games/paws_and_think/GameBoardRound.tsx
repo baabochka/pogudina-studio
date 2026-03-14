@@ -635,6 +635,11 @@ export function GameBoardRound() {
                   closeRules();
                 }
 
+                if (isRoundFinished) {
+                  restartRound();
+                  return;
+                }
+
                 if (isPreviousReviewOpen) {
                   closePreviousReview();
                   return;
@@ -665,7 +670,7 @@ export function GameBoardRound() {
               data-answer-object={answer}
               data-selected={selectedAnswer === answer}
               data-hovered={effectiveHoveredAnswer === answer}
-              disabled={!canAnswer || isPreviousReviewOpen}
+              disabled={(!canAnswer && !isRoundFinished) || isPreviousReviewOpen}
               className={`absolute ${ANSWER_BUTTON_OVERLAYS[answer].className} rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-default`}
               aria-label={`Choose ${ANSWER_BUTTON_OVERLAYS[answer].label} as the answer`}
             />
@@ -679,9 +684,16 @@ export function GameBoardRound() {
                   closeRules();
                 }
 
-                setIsPreviousReviewOpen((current) =>
-                  previousTurn == null ? false : !current,
-                );
+                if (isPreviousReviewOpen) {
+                  closePreviousReview();
+                  return;
+                }
+
+                if (previousTurn == null) {
+                  return;
+                }
+
+                setIsPreviousReviewOpen(true);
                 setIsExplanationVisible(false);
               }}
               onMouseEnter={() => setHoveredControl("previous")}
@@ -801,11 +813,6 @@ export function GameBoardRound() {
             : "Pick the object whose original color appears on the card."}
         </div>
       )}
-
-      <div className="text-center text-xs text-muted-foreground">
-        Cards advance automatically after validation. The round avoids reusing
-        the same illustration within the last three cards.
-      </div>
     </div>
   );
 }
