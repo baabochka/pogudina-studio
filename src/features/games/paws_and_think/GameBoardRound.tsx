@@ -805,14 +805,6 @@ export function GameBoardRound() {
           />
         </div>
       </div>
-
-      {isRoundFinished || isInteractionOverlayOpen ? null : (
-        <div className="text-center text-sm text-muted-foreground">
-          {validationResult === "wrong"
-            ? "Follow the paw trail hint to the correct answer."
-            : "Pick the object whose original color appears on the card."}
-        </div>
-      )}
     </div>
   );
 }
