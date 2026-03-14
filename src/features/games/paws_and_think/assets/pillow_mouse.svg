@@ -85,7 +85,7 @@
   </g>
   <g id="Details-2" data-name="Details">
     <g id="Details-2">
-      <path class="fill-none" d="m0,0v431.15h288V0H0Z"/>
+      <rect id="card-bounds" class="fill-none stroke-0" width="288" height="431.15" pointer-events="none"/>
     </g>
   </g>
 </svg>

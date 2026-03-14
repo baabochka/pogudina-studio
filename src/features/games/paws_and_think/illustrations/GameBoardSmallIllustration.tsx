@@ -17,11 +17,14 @@ type GameBoardSmallIllustrationProps = {
   selectedAnswer?: ObjectName
   hoveredAnswer?: ObjectName
   hoveredControl?: BoardControlName
+  isPreviousReviewActive?: boolean
+  showPreviousControl?: boolean
   answerPawFillColor?: string
   answerPawStrokeColor?: string
   highlightedAnswer?: ObjectName
   highlightedAnswerPawFillColor?: string
   highlightedAnswerPawStrokeColor?: string
+  highlightedAnswerPawClassName?: string
 }
 
 const BOARD_STYLE: CSSProperties = {
@@ -49,11 +52,14 @@ export function GameBoardSmallIllustration({
   selectedAnswer,
   hoveredAnswer,
   hoveredControl,
+  isPreviousReviewActive,
+  showPreviousControl = true,
   answerPawFillColor,
   answerPawStrokeColor,
   highlightedAnswer,
   highlightedAnswerPawFillColor,
   highlightedAnswerPawStrokeColor,
+  highlightedAnswerPawClassName,
 }: GameBoardSmallIllustrationProps) {
   const selectedPosition = selectedAnswer
     ? {
@@ -92,6 +98,8 @@ export function GameBoardSmallIllustration({
       hoveredControl === 'rules' ? BOARD_CONTROL_HOVER_FILL_COLOR : undefined,
     '--review-previous-fill':
       hoveredControl === 'previous' ? BOARD_CONTROL_HOVER_FILL_COLOR : undefined,
+    '--review-previous-arrow-scale-x': isPreviousReviewActive ? '-1' : undefined,
+    '--review-previous-arrow-opacity': showPreviousControl ? undefined : '0',
     '--five-card-mode-fill':
       hoveredControl === 'five-card-mode'
         ? BOARD_CONTROL_HOVER_FILL_COLOR
@@ -130,7 +138,7 @@ export function GameBoardSmallIllustration({
           <HintPawStep
             fill={highlightedPosition.fill ?? 'transparent'}
             stroke={highlightedPosition.stroke ?? 'transparent'}
-            className="h-[54px] w-[54px]"
+            className={highlightedAnswerPawClassName ?? 'h-[54px] w-[54px]'}
           />
         </div>
       ) : null}

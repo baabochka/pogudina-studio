@@ -13,7 +13,15 @@
 .card-svg #Restart_button .fill-board-dark { fill: var(--restart-button-fill, var(--board-dark, #005157)); }
 .card-svg #Rules .fill-board-dark { fill: var(--rules-button-fill, var(--board-dark, #005157)); }
 .card-svg #Review_previous .fill-board-dark { fill: var(--review-previous-fill, var(--board-dark, #005157)); }
+.card-svg #review-previous-arrow {
+  opacity: var(--review-previous-arrow-opacity, 1);
+}
 .card-svg #Five_card_mode_button .fill-board-dark { fill: var(--five-card-mode-fill, var(--board-dark, #005157)); }
+.card-svg #review-previous-arrow {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scaleX(var(--review-previous-arrow-scale-x, 1));
+}
 
 .card-svg #answer-button-bg-mouse {
   fill: var(--answer-button-bg-mouse-fill, var(--board-dark, #005157));
@@ -90,6 +98,16 @@
 .card-svg .stroke-1 { stroke-width: 1px; }
 .card-svg .stroke-2 { stroke-width: 2px; }
 .card-svg .stroke-3 { stroke-width: 3px; }
+
+.card-svg #illustration {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  transform: translateY(var(--illustration-translate-y, 0px)) scale(var(--illustration-scale, 1));
+}
+
+.card-svg #card-bounds {
+  fill: none;
+}
 
 .card-svg .non-scaling-stroke {
   vector-effect: non-scaling-stroke;

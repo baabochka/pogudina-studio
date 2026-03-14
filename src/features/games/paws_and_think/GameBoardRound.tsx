@@ -1,8 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
 import { HintPawStep } from "./HintPawStep";
+import { ReviewCardIllustration } from "./ReviewCardIllustration";
 import { ResolvedCardIllustration } from "./ResolvedCardIllustration";
 import reverseCard from "./assets/reverse.svg";
+import {
+  ORIGINAL_COLOR_BY_OBJECT,
+  type ObjectName,
+  type PaletteName,
+} from "./cardResolver";
 import { GameBoardSmallIllustration } from "./illustrations/GameBoardSmallIllustration";
 import { useGameSession } from "./useGameSession";
 import {
@@ -26,17 +32,22 @@ import { fixedDetails } from "./palettes";
 
 type CardTransitionStage = "idle" | "to-reverse" | "to-next";
 
+const OBJECT_BY_ORIGINAL_COLOR = Object.entries(
+  ORIGINAL_COLOR_BY_OBJECT,
+).reduce(
+  (accumulator, [objectName, colorName]) => {
+    accumulator[colorName as PaletteName] = objectName as ObjectName;
+    return accumulator;
+  },
+  {} as Record<PaletteName, ObjectName>,
+);
+
 const RULES_PAGES = [
   {
     title: "How to play",
     paragraphs: [
       "Look at the colors on the card.",
-      "Each object has one original color: cat is orange, mouse is grey, cheese is yellow, ball is blue, and pillow is red.",
-    ],
-  },
-  {
-    title: "How to play",
-    paragraphs: [
+      "Each object has one original color: cat is orange, mouse is grey, cheese is yellow, ball is blue, and pillow is red. The tokens on the right show the correct color for each object.",
       "If an object on the card has its original color, that object is the correct answer.",
       "Example: if you see an orange cat on a blue pillow, the correct answer is cat.",
     ],
@@ -46,11 +57,6 @@ const RULES_PAGES = [
     paragraphs: [
       "If none of the objects on the card have their original colors, the answer is the object that is missing from the card and whose color is also missing.",
       "To solve it, first remove the objects that are already on the card.",
-    ],
-  },
-  {
-    title: "How to play",
-    paragraphs: [
       "Then remove any object whose original color is already visible on the card.",
       "The only object left is the correct answer.",
     ],
@@ -60,14 +66,8 @@ const RULES_PAGES = [
     paragraphs: [
       "Example: if you see a grey mouse on a blue pillow, first remove mouse and pillow because they are already on the card.",
       "Then remove mouse and ball because grey and blue are already on the card.",
-    ],
-  },
-  {
-    title: "How to play",
-    paragraphs: [
       "The only answer left is cheese.",
-      "Choose an answer by clicking one of the tokens on the right.",
-      "If you choose wrong, the paw trail will guide you to the correct answer.",
+      "Choose an answer by clicking one of the tokens on the right. If you choose wrong, the paw trail will guide you to the correct answer.",
     ],
   },
   {
@@ -84,12 +84,9 @@ function RulesNavArrow({ direction }: { direction: "next" | "previous" }) {
     <svg
       aria-hidden="true"
       viewBox="0 0 24 16"
-      className={
-        direction === "next"
-          ? "h-6 w-9 rotate-180 shrink-0"
-          : "h-6 w-9 shrink-0"
-      }
+      className={direction === "next" ? "h-6 w-9 shrink-0" : "h-6 w-9 shrink-0"}
       fill="none"
+      style={direction === "next" ? { transform: "scaleX(-1)" } : undefined}
     >
       <g
         transform={direction === "next" ? "translate(0 -3)" : "translate(0 -3)"}
@@ -103,11 +100,100 @@ function RulesNavArrow({ direction }: { direction: "next" | "previous" }) {
   );
 }
 
+function formatColoredObject(color: PaletteName, object: ObjectName) {
+  return `${color} ${object}`;
+}
+
+type ReviewExplanationParagraph = {
+  content: ReactNode;
+  key: string;
+};
+
+function getReviewExplanation(card: {
+  objectA: ObjectName;
+  objectB: ObjectName;
+  colorA: PaletteName;
+  colorB: PaletteName;
+  targetAnswer?: ObjectName;
+}): ReviewExplanationParagraph[] {
+  const firstObjectIsCorrectlyColored =
+    ORIGINAL_COLOR_BY_OBJECT[card.objectA] === card.colorA;
+  const secondObjectIsCorrectlyColored =
+    ORIGINAL_COLOR_BY_OBJECT[card.objectB] === card.colorB;
+
+  if (firstObjectIsCorrectlyColored || secondObjectIsCorrectlyColored) {
+    const correctlyColoredObject = firstObjectIsCorrectlyColored
+      ? formatColoredObject(card.colorA, card.objectA)
+      : formatColoredObject(card.colorB, card.objectB);
+
+    return [
+      {
+        key: "correctly-colored",
+        content: (
+          <>
+            The tokens on the right show the correct color for each object. This
+            card has <strong>{correctlyColoredObject}</strong>, and it is in its
+            original color. So the correct answer is{" "}
+            <strong>{correctlyColoredObject}</strong>.
+          </>
+        ),
+      },
+    ];
+  }
+
+  const firstRemovedByColor = OBJECT_BY_ORIGINAL_COLOR[card.colorA];
+  const secondRemovedByColor = OBJECT_BY_ORIGINAL_COLOR[card.colorB];
+  const correctAnswerText = card.targetAnswer
+    ? formatColoredObject(
+        ORIGINAL_COLOR_BY_OBJECT[card.targetAnswer],
+        card.targetAnswer,
+      )
+    : "the correct answer";
+
+  return [
+    {
+      key: "card-contents",
+      content: (
+        <>
+          This card has{" "}
+          <strong>{formatColoredObject(card.colorA, card.objectA)}</strong> and{" "}
+          <strong>{formatColoredObject(card.colorB, card.objectB)}</strong>, and
+          neither one is in its original color. The tokens on the right show the
+          correct color for each object.
+        </>
+      ),
+    },
+    {
+      key: "remove-objects",
+      content: (
+        <>
+          So the answer is not <strong>{card.objectA}</strong> or{" "}
+          <strong>{card.objectB}</strong>. And the answer is not{" "}
+          <strong>{firstRemovedByColor}</strong> or{" "}
+          <strong>{secondRemovedByColor}</strong>.
+        </>
+      ),
+    },
+    {
+      key: "remaining-answer",
+      content: (
+        <>
+          This leaves us with the only possible answer:{" "}
+          <strong>{correctAnswerText}</strong>.
+        </>
+      ),
+    },
+  ];
+}
+
 export function GameBoardRound() {
   const [isRulesOpen, setIsRulesOpen] = useState(false);
+  const [isPreviousReviewOpen, setIsPreviousReviewOpen] = useState(false);
+  const [isExplanationVisible, setIsExplanationVisible] = useState(false);
   const {
     card,
     selectedAnswer,
+    previousTurn,
     validationResult,
     score,
     answeredCount,
@@ -119,7 +205,7 @@ export function GameBoardRound() {
     isRoundFinished,
     submitAnswer,
     restartRound,
-  } = useGameSession(isRulesOpen);
+  } = useGameSession(isRulesOpen || isPreviousReviewOpen);
   const [hoveredAnswer, setHoveredAnswer] = useState<
     null | (typeof BOARD_ANSWER_OPTIONS)[number]
   >(null);
@@ -134,11 +220,21 @@ export function GameBoardRound() {
   const timeoutRefs = useRef<number[]>([]);
   const lastRenderedCardRef = useRef(card);
   const effectiveHoveredAnswer =
-    canAnswer && !isRulesOpen ? hoveredAnswer : null;
-  const currentRulesPage = RULES_PAGES[rulesPageIndex];
-  const canGoToPreviousRulesPage = rulesPageIndex > 0;
-  const canGoToNextRulesPage = rulesPageIndex < RULES_PAGES.length - 1;
+    canAnswer && !isRulesOpen && !isPreviousReviewOpen ? hoveredAnswer : null;
+  const clampedRulesPageIndex = Math.min(
+    rulesPageIndex,
+    RULES_PAGES.length - 1,
+  );
+  const currentRulesPage = RULES_PAGES[clampedRulesPageIndex];
+  const canGoToPreviousRulesPage = clampedRulesPageIndex > 0;
+  const canGoToNextRulesPage = clampedRulesPageIndex < RULES_PAGES.length - 1;
   const closeRules = () => setIsRulesOpen(false);
+  const closePreviousReview = () => {
+    setIsPreviousReviewOpen(false);
+    setIsExplanationVisible(false);
+  };
+  const isPreviousReviewAvailable = previousTurn != null;
+  const isInteractionOverlayOpen = isRulesOpen || isPreviousReviewOpen;
 
   useEffect(() => {
     return () => {
@@ -215,6 +311,9 @@ export function GameBoardRound() {
     fontWeight: 700,
     lineHeight: 1,
   } as const;
+  const previousReviewExplanation = previousTurn
+    ? getReviewExplanation(previousTurn.card)
+    : [];
 
   return (
     <div className="space-y-6">
@@ -222,11 +321,41 @@ export function GameBoardRound() {
         <div className="relative h-[483.89px]">
           <GameBoardSmallIllustration
             className="h-full w-auto"
-            selectedAnswer={selectedAnswer ?? undefined}
+            selectedAnswer={
+              isPreviousReviewOpen
+                ? previousTurn?.selectedAnswer
+                : (selectedAnswer ?? undefined)
+            }
             hoveredAnswer={effectiveHoveredAnswer ?? undefined}
             hoveredControl={hoveredControl ?? undefined}
-            answerPawFillColor={answerPawFillColor}
-            answerPawStrokeColor={answerPawStrokeColor}
+            isPreviousReviewActive={isPreviousReviewOpen}
+            showPreviousControl={isPreviousReviewAvailable}
+            answerPawFillColor={
+              isPreviousReviewOpen
+                ? previousTurn?.wasCorrect
+                  ? CORRECT_ANSWER_PAW_FILL_COLOR
+                  : INCORRECT_ANSWER_PAW_FILL_COLOR
+                : answerPawFillColor
+            }
+            answerPawStrokeColor={
+              isPreviousReviewOpen
+                ? previousTurn?.selectedAnswer
+                  ? ANSWER_PAW_STROKE_COLOR
+                  : undefined
+                : answerPawStrokeColor
+            }
+            highlightedAnswer={
+              isPreviousReviewOpen ? previousTurn?.correctAnswer : undefined
+            }
+            highlightedAnswerPawFillColor={
+              isPreviousReviewOpen ? CORRECT_ANSWER_PAW_FILL_COLOR : undefined
+            }
+            highlightedAnswerPawStrokeColor={
+              isPreviousReviewOpen ? ANSWER_PAW_STROKE_COLOR : undefined
+            }
+            highlightedAnswerPawClassName={
+              isPreviousReviewOpen ? "h-9 w-9" : undefined
+            }
           />
 
           <div
@@ -255,7 +384,7 @@ export function GameBoardRound() {
 
           <div
             className={
-              isRulesOpen
+              isRulesOpen || isPreviousReviewOpen
                 ? "absolute left-[8.81%] top-[17.62%] h-[75.49%] w-[71.95%]"
                 : "absolute left-[0.11%] top-[10.83%] h-[89.1%] w-[89.6%] [perspective:1200px]"
             }
@@ -269,9 +398,9 @@ export function GameBoardRound() {
                   <button
                     type="button"
                     onClick={closeRules}
-                    className="absolute right-0 top-0 text-[20px] leading-none"
+                    className="absolute right-0 -top-[10px] text-[20px] leading-none"
                     style={{
-                      fontFamily: "Helvetica, Arial, sans-serif",
+                      fontFamily: '"Hannotate TC", sans-serif',
                       fontWeight: 700,
                       color: fixedDetails.board.dark,
                     }}
@@ -280,9 +409,9 @@ export function GameBoardRound() {
                     ×
                   </button>
                   <p
-                    className="text-[20px] leading-none"
+                    className="text-[17px] leading-none"
                     style={{
-                      fontFamily: "Helvetica, Arial, sans-serif",
+                      fontFamily: '"Hannotate TC", sans-serif',
                       fontWeight: 700,
                     }}
                   >
@@ -291,9 +420,9 @@ export function GameBoardRound() {
                 </header>
 
                 <article
-                  className="mt-4 flex-1 px-1 text-left text-[15px] leading-[1.34] text-[#22304a]"
+                  className="mt-2 flex-1 px-1 text-left text-[13px] leading-[1.3] text-[#22304a]"
                   style={{
-                    fontFamily: "Helvetica, Arial, sans-serif",
+                    fontFamily: '"Hannotate TC", sans-serif',
                     fontWeight: 400,
                   }}
                 >
@@ -316,7 +445,7 @@ export function GameBoardRound() {
                       }
                       className="flex items-center gap-1 rounded-full px-1 py-1 text-[14px]"
                       style={{
-                        fontFamily: "Helvetica, Arial, sans-serif",
+                        fontFamily: '"Hannotate TC", sans-serif',
                         fontWeight: 700,
                         color: fixedDetails.board.dark,
                       }}
@@ -331,7 +460,7 @@ export function GameBoardRound() {
                   <p
                     className="shrink-0 text-[12px] leading-none text-[#4e627c]"
                     style={{
-                      fontFamily: "Helvetica, Arial, sans-serif",
+                      fontFamily: '"Hannotate TC", sans-serif',
                       fontWeight: 400,
                     }}
                   >
@@ -348,7 +477,7 @@ export function GameBoardRound() {
                       }
                       className="flex items-center gap-1 rounded-full px-1 py-1 text-[14px]"
                       style={{
-                        fontFamily: "Helvetica, Arial, sans-serif",
+                        fontFamily: '"Hannotate TC", sans-serif',
                         fontWeight: 700,
                         color: fixedDetails.board.dark,
                       }}
@@ -361,6 +490,13 @@ export function GameBoardRound() {
                   )}
                 </nav>
               </section>
+            ) : isPreviousReviewOpen && previousTurn ? (
+              <div className="relative h-full w-full">
+                <ReviewCardIllustration
+                  card={previousTurn.card}
+                  isExplanationVisible={isExplanationVisible}
+                />
+              </div>
             ) : isRoundFinished ? (
               <div
                 className="flex h-full w-full -translate-y-[20px] flex-col items-center justify-center px-10 text-center text-[#22304a]"
@@ -419,24 +555,59 @@ export function GameBoardRound() {
             )}
           </div>
 
+          {isPreviousReviewOpen && previousTurn ? (
+            <div className="absolute left-[8.81%] top-[17.62%] z-10 h-[75.49%] w-[71.95%]">
+              <div className="absolute inset-x-0 top-[15px]">
+                <div className="flex flex-col items-center">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setIsExplanationVisible((current) => !current)
+                    }
+                    className="whitespace-nowrap text-[14px] leading-none text-[#22304a] underline underline-offset-2"
+                    style={{ fontFamily: '"Hannotate TC", sans-serif' }}
+                  >
+                    {isExplanationVisible
+                      ? "Hide explanation"
+                      : "Show explanation"}
+                  </button>
+                  {isExplanationVisible ? (
+                    <div
+                      className="mt-2 w-full px-[10px] text-center text-[12px] leading-snug text-[#22304a]"
+                      style={{ fontFamily: '"Hannotate TC", sans-serif' }}
+                    >
+                      {previousReviewExplanation.map((paragraph) => (
+                        <p key={paragraph.key} className="mb-1 last:mb-0">
+                          {paragraph.content}
+                        </p>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           <div
             className="pointer-events-none absolute inset-0"
             aria-hidden="true"
           >
-            {pawTrailSteps.map((step) => (
-              <div
-                key={step.key}
-                className="paw-step-trail absolute"
-                style={getPawTrailStyle(step)}
-              >
-                <HintPawStep
-                  fill={PAW_TRAIL_FILL_COLOR}
-                  stroke={PAW_TRAIL_STROKE_COLOR}
-                  className="h-11 w-11"
-                />
-              </div>
-            ))}
-            {targetHintPosition ? (
+            {isInteractionOverlayOpen
+              ? null
+              : pawTrailSteps.map((step) => (
+                  <div
+                    key={step.key}
+                    className="paw-step-trail absolute"
+                    style={getPawTrailStyle(step)}
+                  >
+                    <HintPawStep
+                      fill={PAW_TRAIL_FILL_COLOR}
+                      stroke={PAW_TRAIL_STROKE_COLOR}
+                      className="h-11 w-11"
+                    />
+                  </div>
+                ))}
+            {!isInteractionOverlayOpen && targetHintPosition ? (
               <div
                 key={`target-paw-${pawTrailRunId}`}
                 className="paw-step-target absolute"
@@ -464,6 +635,11 @@ export function GameBoardRound() {
                   closeRules();
                 }
 
+                if (isPreviousReviewOpen) {
+                  closePreviousReview();
+                  return;
+                }
+
                 submitAnswer(answer);
               }}
               onMouseEnter={() => {
@@ -489,11 +665,45 @@ export function GameBoardRound() {
               data-answer-object={answer}
               data-selected={selectedAnswer === answer}
               data-hovered={effectiveHoveredAnswer === answer}
-              disabled={!canAnswer}
+              disabled={!canAnswer || isPreviousReviewOpen}
               className={`absolute ${ANSWER_BUTTON_OVERLAYS[answer].className} rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-default`}
               aria-label={`Choose ${ANSWER_BUTTON_OVERLAYS[answer].label} as the answer`}
             />
           ))}
+
+          {isPreviousReviewAvailable ? (
+            <button
+              type="button"
+              onClick={() => {
+                if (isRulesOpen) {
+                  closeRules();
+                }
+
+                setIsPreviousReviewOpen((current) =>
+                  previousTurn == null ? false : !current,
+                );
+                setIsExplanationVisible(false);
+              }}
+              onMouseEnter={() => setHoveredControl("previous")}
+              onMouseLeave={() =>
+                setHoveredControl((current) =>
+                  current === "previous" ? null : current,
+                )
+              }
+              onFocus={() => setHoveredControl("previous")}
+              onBlur={() =>
+                setHoveredControl((current) =>
+                  current === "previous" ? null : current,
+                )
+              }
+              className={`absolute ${BOARD_CONTROL_OVERLAYS.previous.className} rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background`}
+              aria-label={
+                isPreviousReviewOpen
+                  ? "Return to the current game"
+                  : BOARD_CONTROL_OVERLAYS.previous.label
+              }
+            />
+          ) : null}
 
           <button
             type="button"
@@ -501,28 +711,9 @@ export function GameBoardRound() {
               if (isRulesOpen) {
                 closeRules();
               }
-            }}
-            onMouseEnter={() => setHoveredControl("previous")}
-            onMouseLeave={() =>
-              setHoveredControl((current) =>
-                current === "previous" ? null : current,
-              )
-            }
-            onFocus={() => setHoveredControl("previous")}
-            onBlur={() =>
-              setHoveredControl((current) =>
-                current === "previous" ? null : current,
-              )
-            }
-            className={`absolute ${BOARD_CONTROL_OVERLAYS.previous.className} rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background`}
-            aria-label={BOARD_CONTROL_OVERLAYS.previous.label}
-          />
 
-          <button
-            type="button"
-            onClick={() => {
-              if (isRulesOpen) {
-                closeRules();
+              if (isPreviousReviewOpen) {
+                closePreviousReview();
               }
 
               restartRound();
@@ -546,6 +737,10 @@ export function GameBoardRound() {
           <button
             type="button"
             onClick={() => {
+              if (isPreviousReviewOpen) {
+                closePreviousReview();
+              }
+
               setIsRulesOpen((current) => !current);
               setRulesPageIndex(0);
             }}
@@ -571,6 +766,11 @@ export function GameBoardRound() {
               if (isRulesOpen) {
                 closeRules();
               }
+
+              if (isPreviousReviewOpen) {
+                closePreviousReview();
+                return;
+              }
             }}
             onMouseEnter={() => setHoveredControl("five-card-mode")}
             onMouseLeave={() =>
@@ -585,12 +785,16 @@ export function GameBoardRound() {
               )
             }
             className={`absolute ${BOARD_CONTROL_OVERLAYS["five-card-mode"].className} rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background`}
-            aria-label={BOARD_CONTROL_OVERLAYS["five-card-mode"].label}
+            aria-label={
+              isPreviousReviewOpen
+                ? "Return to the current game"
+                : BOARD_CONTROL_OVERLAYS["five-card-mode"].label
+            }
           />
         </div>
       </div>
 
-      {isRoundFinished || isRulesOpen ? null : (
+      {isRoundFinished || isInteractionOverlayOpen ? null : (
         <div className="text-center text-sm text-muted-foreground">
           {validationResult === "wrong"
             ? "Follow the paw trail hint to the correct answer."

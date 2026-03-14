@@ -14,9 +14,17 @@ import {
 
 export type ValidationResult = 'idle' | 'correct' | 'wrong' | 'finished'
 
+export type ReviewedTurn = {
+  card: ResolvedCard
+  selectedAnswer: ObjectName
+  correctAnswer: ObjectName
+  wasCorrect: boolean
+}
+
 type GameSessionState = {
   card: ResolvedCard
   selectedAnswer: ObjectName | null
+  previousTurn: ReviewedTurn | null
   validationResult: ValidationResult
   score: number
   answeredCount: number
@@ -32,6 +40,7 @@ function createInitialState(): GameSessionState {
   return {
     card: resolveSessionCard([]),
     selectedAnswer: null,
+    previousTurn: null,
     validationResult: 'idle',
     score: 0,
     answeredCount: 0,
@@ -111,6 +120,7 @@ export function useGameSession(isPaused = false) {
       }
 
       const isCorrect = answer === currentState.card.targetAnswer
+      const correctAnswer = currentState.card.targetAnswer
       const nextScore = isCorrect ? currentState.score + 1 : currentState.score
       const nextAnsweredCount = currentState.answeredCount + 1
       const nextBestTotal = Math.max(currentState.bestTotal, nextScore)
@@ -166,6 +176,14 @@ export function useGameSession(isPaused = false) {
       return {
         ...currentState,
         selectedAnswer: answer,
+        previousTurn: correctAnswer
+          ? {
+              card: currentState.card,
+              selectedAnswer: answer,
+              correctAnswer,
+              wasCorrect: isCorrect,
+            }
+          : currentState.previousTurn,
         validationResult: isCorrect ? 'correct' : 'wrong',
         score: nextScore,
         answeredCount: nextAnsweredCount,
@@ -197,6 +215,7 @@ export function useGameSession(isPaused = false) {
   return {
     card: state.card,
     selectedAnswer: state.selectedAnswer,
+    previousTurn: state.previousTurn,
     validationResult: state.validationResult,
     score: state.score,
     answeredCount: state.answeredCount,

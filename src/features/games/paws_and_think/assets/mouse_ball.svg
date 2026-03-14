@@ -64,7 +64,7 @@
     </g>
   </g>
   <g id="Details">
-    <rect class="fill-none stroke-0" width="288" height="431.15"/>
+    <rect id="card-bounds" class="fill-none stroke-0" width="288" height="431.15" pointer-events="none"/>
   </g>
   </g>
 </svg>

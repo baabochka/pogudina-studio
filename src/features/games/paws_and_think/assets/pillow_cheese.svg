@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 431.15">
+<g id="illustration">
 <g id="Cheese">
     <g id="Cheese_shade">
       <path class="fill-cheese-shade stroke-outline round stroke-3" d="m66.09,265.14c-2.84.29-5.97,4.83-6.17,4.7-4.4-2.27-6.3.03-5.74,3.65-2.66-1.16-6.41.33-6.66,3.44,9.31,2.52,17.95,4.59,18.81,4.09.38-.22.47-6.68.39-16-.22.02-.42.1-.63.12Z"/>
@@ -57,7 +58,8 @@
       <path class="fill-pillow-shade stroke-outline miter stroke-1" d="m124.3,164.23c1.14,2.3,3.99,3,6.42,1.55,2.06-1.22,3.16-3.58,2.86-5.7-1.38.59-7.55,3.39-9.28,4.15Z"/>
     </g>
   </g>
+  </g>
   <g id="Details-2" data-name="Details">
-    <path class="fill-none" d="m0,0v431.15h288V0H0Z"/>
+    <rect id="card-bounds" class="fill-none stroke-0" width="288" height="431.15" pointer-events="none"/>
   </g>
 </svg>

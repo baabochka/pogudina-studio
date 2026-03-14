@@ -1,12 +1,15 @@
 import { RouterProvider } from 'react-router-dom'
 
+import { AppErrorBoundary } from './components/layout/AppErrorBoundary'
 import { ThemeProvider } from './context/ThemeContext'
 import { router } from './router'
 
 function App() {
   return (
     <ThemeProvider>
-      <RouterProvider router={router} />
+      <AppErrorBoundary>
+        <RouterProvider router={router} />
+      </AppErrorBoundary>
     </ThemeProvider>
   )
 }

@@ -7,12 +7,14 @@ import { HomePage } from './pages/HomePage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { ProjectDetailPage } from './pages/ProjectDetailPage'
 import { ProjectsPage } from './pages/ProjectsPage'
+import { RouteErrorPage } from './pages/RouteErrorPage'
 
 export const router = createBrowserRouter(
   [
     {
       path: '/',
       element: <AppLayout />,
+      errorElement: <RouteErrorPage />,
       children: [
         {
           index: true,
