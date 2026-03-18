@@ -118,7 +118,7 @@ function CardTransitionFace({
 }) {
   return (
     <div
-      className={`card-transition-face ${side === "front" ? "card-transition-face-front" : "card-transition-face-back"} flex items-center justify-start`}
+      className={`card-transition-face ${side === "front" ? "card-transition-face-front" : "card-transition-face-back"} flex items-center justify-center`}
     >
       {children}
     </div>
@@ -563,7 +563,7 @@ export function GameBoardRound({
                       src={reverseCard}
                       alt=""
                       aria-hidden="true"
-                      className="pointer-events-none -mt-[10px] ml-[45px] block h-[70%] w-auto max-w-none select-none"
+                      className="pointer-events-none -mt-[10px] block h-[70%] w-auto max-w-none select-none"
                     />
                   }
                 />
@@ -576,14 +576,14 @@ export function GameBoardRound({
                       src={reverseCard}
                       alt=""
                       aria-hidden="true"
-                      className="pointer-events-none -mt-[10px] ml-[45px] block h-[70%] w-auto max-w-none select-none"
+                      className="pointer-events-none -mt-[10px] block h-[70%] w-auto max-w-none select-none"
                     />
                   }
                   backFace={<ResolvedCardIllustration card={displayCard} />}
                 />
               )
             ) : (
-              <div className="flex h-full w-full items-center justify-start">
+              <div className="flex h-full w-full items-center justify-center">
                 <ResolvedCardIllustration card={displayCard} />
               </div>
             )}
