@@ -76,7 +76,7 @@ export function ProjectDetailPage() {
             This route is wired up correctly, but the current slug does not match the project data.
           </p>
           <Link
-            className="utilityLink mt-6 items-center text-sm font-semibold focus-visible:outline-none"
+            className="utilityLink mt-6 items-center text-sm font-semibold"
             to="/projects"
           >
             Return to projects

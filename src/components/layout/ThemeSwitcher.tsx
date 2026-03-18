@@ -16,7 +16,7 @@ export function ThemeSwitcher() {
       <select
         value={theme}
         onChange={(event) => setTheme(event.target.value as Theme)}
-        className="rounded-xl border border-white/25 bg-[var(--game-teal-dark)] px-3 py-2 text-white outline-none transition hover:bg-[var(--game-teal-light)] focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--game-teal-dark)]"
+        className="rounded-xl border border-white/25 bg-[var(--game-teal-dark)] px-3 py-2 text-white transition hover:bg-[var(--game-teal-light)]"
         aria-label="Select color theme"
       >
         {themes.map((themeOption) => (

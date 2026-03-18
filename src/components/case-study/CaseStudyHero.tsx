@@ -13,7 +13,7 @@ export function CaseStudyHero({ project }: CaseStudyHeroProps) {
     <section>
       <Link
         to="/projects"
-        className="utilityLink mb-4 items-center text-sm font-semibold focus-visible:outline-none"
+        className="utilityLink mb-4 items-center text-sm font-semibold"
       >
         ← Back to projects
       </Link>

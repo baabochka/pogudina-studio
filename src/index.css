@@ -190,7 +190,8 @@ html[data-theme='sunset'] {
   }
 
   .navLink:focus-visible {
-    box-shadow: 0 0 0 3px var(--focus-ring);
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
 
   .inlineLink,
@@ -263,7 +264,8 @@ html[data-theme='sunset'] {
 
   .inlineLink:focus-visible,
   .utilityLink:focus-visible {
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 28%, transparent);
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
 
   .cardLink {
@@ -273,7 +275,8 @@ html[data-theme='sunset'] {
   }
 
   .cardLink:focus-visible {
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 26%, transparent);
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
 
   img {
@@ -284,8 +287,18 @@ html[data-theme='sunset'] {
     background: color-mix(in srgb, var(--primary) 22%, white);
   }
 
-  :focus-visible {
-    outline: none;
+  :where(
+      a[href],
+      button,
+      summary,
+      input:not([type="hidden"]),
+      select,
+      textarea,
+      [role='button'],
+      [tabindex]:not([tabindex='-1'])
+    ):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
 }
 

@@ -100,10 +100,6 @@ export function GameBoardSmallIllustration({
       hoveredControl === 'previous' ? BOARD_CONTROL_HOVER_FILL_COLOR : undefined,
     '--review-previous-arrow-scale-x': isPreviousReviewActive ? '-1' : undefined,
     '--review-previous-arrow-opacity': showPreviousControl ? undefined : '0',
-    '--five-card-mode-fill':
-      hoveredControl === 'five-card-mode'
-        ? BOARD_CONTROL_HOVER_FILL_COLOR
-        : undefined,
   } as CSSProperties
 
   return (

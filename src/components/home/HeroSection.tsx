@@ -25,7 +25,7 @@ export function HeroSection() {
               experiences, including{" "}
               <Link
                 to="/games"
-                className="inlineLink font-medium focus-visible:outline-none"
+                className="inlineLink font-medium"
               >
                 small browser games
               </Link>
@@ -34,7 +34,7 @@ export function HeroSection() {
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
               <Link
                 to="/projects"
-                className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_12px_30px_-18px_color-mix(in_srgb,var(--primary)_65%,transparent)] transition duration-180 hover:-translate-y-0.5 hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-px sm:min-h-11 sm:w-auto"
+                className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_12px_30px_-18px_color-mix(in_srgb,var(--primary)_65%,transparent)] transition duration-180 hover:-translate-y-0.5 hover:opacity-95 active:translate-y-px sm:min-h-11 sm:w-auto"
               >
                 View Projects
               </Link>
@@ -45,7 +45,7 @@ export function HeroSection() {
             <Link
               to="/about"
               aria-label="Open About page"
-              className="group block focus-visible:rounded-[20px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className="group block rounded-[20px]"
             >
               <img
                 src={headshotImage}

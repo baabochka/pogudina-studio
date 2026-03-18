@@ -1,14 +1,25 @@
-import { GameBoardRound } from "../features/games/paws_and_think/GameBoardRound";
-import { Section } from "../components/ui/Section";
+import { ComingSoonCard } from '../components/games/ComingSoonCard'
+import { GameCard } from '../components/games/GameCard'
+import { Section } from '../components/ui/Section'
+import { games } from '../data/games'
 
 export function GamesPage() {
   return (
     <Section
       eyebrow="Games"
-      title="Paws and Think"
-      description="A playful logic game built around color matching, quick deduction, and a little bit of pressure from the clock. Each card shows two objects, but only one token can be the correct answer. Sometimes the answer is an object shown on the card in its original color. If neither object is in its original color, you solve the puzzle by eliminating the objects on the card and the objects whose original colors are already visible. The one token left is the answer."
+      title="Interactive frontend experiments"
+      description="A small collection of browser-based games and interactive experiments focused on logic, SVG-driven interfaces, and polished UI behavior. Each game is built to feel playful, responsive, and intentional within the same design system as the rest of the portfolio."
     >
-      <GameBoardRound />
+      <div className="grid items-stretch gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {games.map((game) => (
+          <article key={game.slug} className="h-full">
+            <GameCard game={game} />
+          </article>
+        ))}
+        <article className="h-full">
+          <ComingSoonCard />
+        </article>
+      </div>
     </Section>
-  );
+  )
 }

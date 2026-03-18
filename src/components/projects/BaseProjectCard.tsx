@@ -24,7 +24,7 @@ export function BaseProjectCard({
   return (
     <Link
       to={`/projects/${project.slug}`}
-      className="cardLink group focus-visible:outline-none"
+      className="cardLink group"
     >
       <Card
         className={[

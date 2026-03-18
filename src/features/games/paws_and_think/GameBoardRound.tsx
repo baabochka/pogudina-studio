@@ -223,7 +223,11 @@ function getReviewExplanation(card: {
   ];
 }
 
-export function GameBoardRound() {
+export function GameBoardRound({
+  boardHeightClassName = "h-[483.89px]",
+}: {
+  boardHeightClassName?: string;
+} = {}) {
   const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [isPreviousReviewOpen, setIsPreviousReviewOpen] = useState(false);
   const [isExplanationVisible, setIsExplanationVisible] = useState(false);
@@ -354,7 +358,7 @@ export function GameBoardRound() {
   return (
     <div className="space-y-6">
       <div className="flex justify-center">
-        <div className="relative h-[483.89px]">
+        <div className={`relative ${boardHeightClassName}`}>
           <GameBoardSmallIllustration
             className="h-full w-auto"
             selectedAnswer={
@@ -814,18 +818,6 @@ export function GameBoardRound() {
                 return;
               }
             }}
-            onMouseEnter={() => setHoveredControl("five-card-mode")}
-            onMouseLeave={() =>
-              setHoveredControl((current) =>
-                current === "five-card-mode" ? null : current,
-              )
-            }
-            onFocus={() => setHoveredControl("five-card-mode")}
-            onBlur={() =>
-              setHoveredControl((current) =>
-                current === "five-card-mode" ? null : current,
-              )
-            }
             className={`absolute ${BOARD_CONTROL_OVERLAYS["five-card-mode"].className} rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background`}
             aria-label={
               isPreviousReviewOpen
