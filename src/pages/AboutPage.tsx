@@ -6,6 +6,8 @@ import { SidebarCard } from '../components/about/SidebarCard'
 import { SidebarColumn } from '../components/about/SidebarColumn'
 import { Container } from '../components/ui/Container'
 
+const resumeHref = `${import.meta.env.BASE_URL}resume.pdf`
+
 const aboutSections = [
   {
     title: 'About',
@@ -60,7 +62,7 @@ export function AboutPage() {
                 my resume.
               </p>
               <a
-                href="/resume.pdf"
+                href={resumeHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[0_12px_30px_-18px_color-mix(in_srgb,var(--primary)_65%,transparent)] transition duration-180 hover:opacity-95 active:translate-y-px"
