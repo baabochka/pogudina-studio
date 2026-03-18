@@ -53,6 +53,21 @@ export function AboutPage() {
                 ))}
               </ContentSectionCard>
             ))}
+
+            <div className="mt-6 ml-6 max-w-[62ch] sm:ml-7">
+              <p className="text-base leading-7 text-muted-foreground">
+                If you’d like a structured overview of my experience, you can download
+                my resume.
+              </p>
+              <a
+                href="/resume.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[0_12px_30px_-18px_color-mix(in_srgb,var(--primary)_65%,transparent)] transition duration-180 hover:opacity-95 active:translate-y-px"
+              >
+                Download Resume
+              </a>
+            </div>
           </div>
 
           <SidebarColumn
