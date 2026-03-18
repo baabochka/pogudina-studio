@@ -50,14 +50,14 @@ export function ErrorFallback({ title, description }: ErrorFallbackProps) {
           <div className="mt-8 flex flex-wrap gap-3">
             <a
               href={homeHref}
-              className="inline-flex rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:opacity-90"
+              className="inline-flex rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:opacity-90"
             >
               Go home
             </a>
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="inline-flex rounded-full border border-border px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-surface-muted"
+              className="inline-flex rounded-xl border border-border px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-surface-muted"
             >
               Reload page
             </button>

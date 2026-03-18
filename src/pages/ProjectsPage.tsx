@@ -1,39 +1,33 @@
-import { Link } from 'react-router-dom'
-
-import { Card } from '../components/ui/Card'
+import { ProjectCard } from '../components/projects/ProjectCard'
 import { Section } from '../components/ui/Section'
 import { projects } from '../data/projects'
+
+const featuredProjectSlugs = new Set([
+  'real-time-call-monitoring-intervention',
+  'agent-response-templates-shortcuts',
+])
 
 export function ProjectsPage() {
   return (
     <Section
       eyebrow="Projects"
-      title="A starter project index with room to grow into full case studies."
-      description="Start with concise summaries. When a project deserves more depth, move that detail into the dynamic route."
+      title="Selected frontend work"
+      description="Selected front-end work across enterprise UI, accessibility, design systems, and interactive experiences."
     >
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid items-stretch gap-6 md:grid-cols-2 xl:grid-cols-6">
         {projects.map((project) => (
-          <article key={project.slug}>
-            <Card className="flex h-full flex-col">
-              <h3 className="text-xl font-semibold text-foreground">{project.title}</h3>
-              <p className="mt-3 text-muted-foreground">{project.summary}</p>
-              <ul className="mt-4 flex flex-wrap gap-2">
-                {project.stack.map((item) => (
-                  <li
-                    key={item}
-                    className="rounded-full bg-surface-muted px-3 py-1 text-xs font-medium text-foreground"
-                  >
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                to={`/projects/${project.slug}`}
-                className="mt-6 text-sm font-semibold text-primary underline-offset-4 hover:underline"
-              >
-                Open case study
-              </Link>
-            </Card>
+          <article
+            key={project.slug}
+            className={
+              featuredProjectSlugs.has(project.slug)
+                ? 'h-full md:col-span-2 xl:col-span-3'
+                : 'h-full xl:col-span-2'
+            }
+          >
+            <ProjectCard
+              project={project}
+              featured={featuredProjectSlugs.has(project.slug)}
+            />
           </article>
         ))}
       </div>

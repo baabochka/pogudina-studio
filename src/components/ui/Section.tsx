@@ -18,7 +18,7 @@ export function Section({
   ...props
 }: SectionProps) {
   return (
-    <section className={['py-12 sm:py-16', className].join(' ').trim()} {...props}>
+    <section className={['pt-8 pb-12 sm:pt-10 sm:pb-16', className].join(' ').trim()} {...props}>
       <Container>
         <div className="max-w-3xl">
           {eyebrow ? (

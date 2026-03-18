@@ -109,6 +109,43 @@ type ReviewExplanationParagraph = {
   key: string;
 };
 
+function CardTransitionFace({
+  children,
+  side,
+}: {
+  children: ReactNode;
+  side: "back" | "front";
+}) {
+  return (
+    <div
+      className={`card-transition-face ${side === "front" ? "card-transition-face-front" : "card-transition-face-back"} flex items-center justify-start`}
+    >
+      {children}
+    </div>
+  );
+}
+
+function CardFlipTransition({
+  backFace,
+  className = "",
+  frontFace,
+  transitionKey,
+}: {
+  backFace: ReactNode;
+  className?: string;
+  frontFace: ReactNode;
+  transitionKey: string;
+}) {
+  return (
+    <div key={transitionKey} className="card-transition-scene h-full w-full">
+      <div className={`card-transition-rotor ${className}`.trim()}>
+        <CardTransitionFace side="back">{frontFace}</CardTransitionFace>
+        <CardTransitionFace side="front">{backFace}</CardTransitionFace>
+      </div>
+    </div>
+  );
+}
+
 function getReviewExplanation(card: {
   objectA: ObjectName;
   objectB: ObjectName;
@@ -194,7 +231,6 @@ export function GameBoardRound() {
     card,
     selectedAnswer,
     previousTurn,
-    validationResult,
     score,
     answeredCount,
     bestTotal,
@@ -512,41 +548,35 @@ export function GameBoardRound() {
               </div>
             ) : isAnimatingCardTransition ? (
               cardTransitionStage === "to-reverse" ? (
-                <div
-                  key={`to-reverse-${cardSequence}`}
-                  className="card-transition-flip-phase relative h-full w-full"
-                >
-                  <div className="card-transition-face card-transition-face-back flex items-center justify-start">
+                <CardFlipTransition
+                  transitionKey={`to-reverse-${cardSequence}`}
+                  className="card-transition-rotor-flipping"
+                  frontFace={
                     <ResolvedCardIllustration card={previousCard} />
-                  </div>
-
-                  <div className="card-transition-face card-transition-face-front flex items-center justify-start">
+                  }
+                  backFace={
                     <img
                       src={reverseCard}
                       alt=""
                       aria-hidden="true"
                       className="pointer-events-none -mt-[10px] ml-[45px] block h-[70%] w-auto max-w-none select-none"
                     />
-                  </div>
-                </div>
+                  }
+                />
               ) : (
-                <div
-                  key={`to-next-${cardSequence}`}
-                  className="card-transition-flip-phase-reverse relative h-full w-full"
-                >
-                  <div className="card-transition-face card-transition-face-back flex items-center justify-start">
+                <CardFlipTransition
+                  transitionKey={`to-next-${cardSequence}`}
+                  className="card-transition-rotor-flipping"
+                  frontFace={
                     <img
                       src={reverseCard}
                       alt=""
                       aria-hidden="true"
                       className="pointer-events-none -mt-[10px] ml-[45px] block h-[70%] w-auto max-w-none select-none"
                     />
-                  </div>
-
-                  <div className="card-transition-face card-transition-face-front flex items-center justify-start">
-                    <ResolvedCardIllustration card={displayCard} />
-                  </div>
-                </div>
+                  }
+                  backFace={<ResolvedCardIllustration card={displayCard} />}
+                />
               )
             ) : (
               <div className="flex h-full w-full items-center justify-start">
