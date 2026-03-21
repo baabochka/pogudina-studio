@@ -1,20 +1,24 @@
 import { Link } from "react-router-dom";
 
-import headshotImage from "../../assets/headshot.jpg";
+import headshotImage from "../../assets/headshot-hero.jpg";
+import headshotImageWebp from "../../assets/headshot-hero.webp";
 import { Container } from "../ui/Container";
+import { getButtonClassName } from "../ui/buttonClassName";
+
+const resumeHref = `${import.meta.env.BASE_URL}resume.pdf`;
 
 export function HeroSection() {
   return (
     <section
-      className="pt-16 pb-0 sm:pt-20 sm:pb-0 lg:pt-24 lg:pb-8"
+      className="pt-12 pb-0 sm:pt-16 sm:pb-0 lg:pt-20 lg:pb-[var(--space-8)]"
       aria-labelledby="hero-title"
     >
-      <Container className="max-w-6xl px-5 sm:px-6 lg:px-8">
+      <Container className="max-w-6xl">
         <div className="grid items-start gap-6 sm:gap-8 md:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:gap-16">
           <div className="max-w-[600px]">
             <h1
               id="hero-title"
-              className="mb-6 max-w-[600px] text-[2.35rem] font-bold leading-[1.08] tracking-tight text-foreground sm:text-5xl sm:leading-[1.12]"
+              className="mb-5 max-w-[600px] text-[2.35rem] font-bold leading-[1.08] tracking-tight text-foreground sm:text-5xl sm:leading-[1.12]"
             >
               Front-end Engineer crafting thoughtful, accessible interfaces
             </h1>
@@ -31,27 +35,45 @@ export function HeroSection() {
               </Link>
               .
             </p>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+            <div className="mt-5 flex flex-col gap-[var(--space-3)] sm:flex-row sm:flex-wrap sm:items-center sm:gap-[var(--space-4)]">
               <Link
                 to="/projects"
-                className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_12px_30px_-18px_color-mix(in_srgb,var(--primary)_65%,transparent)] transition duration-180 hover:-translate-y-0.5 hover:opacity-95 active:translate-y-px sm:min-h-11 sm:w-auto"
+                className={[getButtonClassName(), 'min-h-11 w-full sm:w-auto'].join(' ')}
               >
                 View Projects
               </Link>
+              <a
+                href={resumeHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="View Resume (opens in a new tab)"
+                className={[getButtonClassName('secondary'), 'min-h-11 w-full sm:w-auto'].join(' ')}
+              >
+                View Resume
+              </a>
             </div>
           </div>
 
-          <div className="mt-6 justify-self-start lg:mt-0 lg:justify-self-end">
+          <div className="mt-5 justify-self-start lg:mt-0 lg:justify-self-end">
             <Link
               to="/about"
               aria-label="Open About page"
               className="group block rounded-[20px]"
             >
-              <img
-                src={headshotImage}
-                alt="Headshot portrait of Valentina Pogudina"
-                className="w-full max-w-[260px] rounded-[20px] object-cover shadow-[0_30px_60px_-32px_rgba(15,23,42,0.4)] transition duration-200 ease-out group-hover:scale-[1.01] group-hover:shadow-lg sm:max-w-[300px]"
-              />
+              <picture>
+                <source
+                  srcSet={headshotImageWebp}
+                  type="image/webp"
+                />
+                <img
+                  src={headshotImage}
+                  alt="Headshot portrait of Valentina Pogudina"
+                  width="640"
+                  height="835"
+                  sizes="(min-width: 1024px) 300px, 260px"
+                  className="w-full max-w-[260px] rounded-[20px] object-cover shadow-[var(--shadow-image)] transition-[transform,box-shadow] duration-[var(--duration-interactive)] ease-[var(--easing-interactive)] group-hover:scale-[1.01] group-hover:shadow-lg sm:max-w-[300px]"
+                />
+              </picture>
             </Link>
           </div>
         </div>

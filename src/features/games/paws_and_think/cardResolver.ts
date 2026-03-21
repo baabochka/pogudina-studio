@@ -38,7 +38,7 @@ export type ResolvedCard = {
   source: 'manual' | 'target-answer' | 'random-fallback'
 }
 
-const OBJECT_NAMES: ObjectName[] = ['cat', 'pillow', 'mouse', 'cheese', 'ball']
+export const OBJECT_NAMES: ObjectName[] = ['cat', 'pillow', 'mouse', 'cheese', 'ball']
 
 const PALETTE_NAMES: PaletteName[] = ['red', 'orange', 'yellow', 'blue', 'grey']
 
@@ -199,7 +199,7 @@ export function getValidPairsForIllustrationAndTarget(
   )
 }
 
-function getIllustrationsForTarget(targetAnswer: TargetAnswer): IllustrationName[] {
+export function getIllustrationsForTarget(targetAnswer: TargetAnswer): IllustrationName[] {
   return ILLUSTRATION_NAMES.filter((illustration) => {
     return getValidPairsForIllustrationAndTarget(illustration, targetAnswer).length > 0
   })

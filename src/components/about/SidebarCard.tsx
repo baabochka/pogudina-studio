@@ -1,23 +1,25 @@
 import type { ReactNode } from 'react'
 
+import { Card } from '../ui/Card'
+
 type SidebarCardProps = {
   children: ReactNode
   className?: string
-  title: string
+  title: ReactNode
 }
 
 export function SidebarCard({ children, className = '', title }: SidebarCardProps) {
   return (
-    <div
+    <Card
       className={[
-        'rounded-3xl border border-border/80 bg-surface px-5 py-5 sm:px-6 sm:py-6',
+        'rounded-3xl border-border/80 p-[var(--space-5)] shadow-none sm:p-[var(--space-card-padding)] space-y-[var(--space-heading-content)]',
         className,
       ]
         .join(' ')
         .trim()}
     >
       <h2 className="text-base font-semibold text-foreground sm:text-lg">{title}</h2>
-      <div className="mt-4">{children}</div>
-    </div>
+      {children}
+    </Card>
   )
 }

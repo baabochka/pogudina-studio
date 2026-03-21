@@ -7,6 +7,7 @@ export function NotFoundPage() {
     <Section
       eyebrow="404"
       title="That page does not exist."
+      titleAs="h1"
       description="The wildcard route keeps broken links from dumping visitors into a blank screen."
     >
       <Link className="utilityLink items-center text-sm font-semibold" to="/">

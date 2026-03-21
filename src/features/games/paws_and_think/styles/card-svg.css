@@ -1,10 +1,68 @@
+.card-svg {
+  overflow: visible;
+}
+
 .card-svg .fill-none { fill: none; }
 .card-svg .fill-white { fill: var(--white); }
 .card-svg .fill-black { fill: var(--black); }
-.card-svg .fill-board-light { fill: var(--board-light, #008D96); }
+.card-svg .fill-board-light { fill: var(--board-light-fill, var(--board-light, #008D96)); }
 .card-svg .fill-board-dark { fill: var(--board-dark, #005157); }
 .card-svg .fill-card-placement-bounds { fill: transparent; }
 .card-svg .fill-answer-hit-area { fill: transparent; }
+
+.card-svg #TopRightCorner {
+  transform: translate(var(--board-top-right-translate-x, 0px), 0px);
+}
+
+.card-svg #BottomRightCorner {
+  transform: translate(
+    var(--board-bottom-right-translate-x, 0px),
+    var(--board-bottom-right-translate-y, 0px)
+  );
+}
+
+.card-svg #BottomLeftCorner {
+  transform: translate(0px, var(--board-bottom-left-translate-y, 0px));
+}
+
+.card-svg #DecorativePawsLight {
+  transform: translate(0px, var(--board-decorative-paws-light-translate-y, 0px));
+}
+
+.card-svg #Mouse {
+  transform: translate(
+    var(--mouse-group-translate-x, 0px),
+    var(--mouse-group-translate-y, 0px)
+  );
+}
+
+.card-svg #Cat {
+  transform: translate(
+    var(--cat-group-translate-x, 0px),
+    var(--cat-group-translate-y, 0px)
+  );
+}
+
+.card-svg #Cheese {
+  transform: translate(
+    var(--cheese-group-translate-x, 0px),
+    var(--cheese-group-translate-y, 0px)
+  );
+}
+
+.card-svg #Ball {
+  transform: translate(
+    var(--ball-group-translate-x, 0px),
+    var(--ball-group-translate-y, 0px)
+  );
+}
+
+.card-svg #Pillow {
+  transform: translate(
+    var(--pillow-group-translate-x, 0px),
+    var(--pillow-group-translate-y, 0px)
+  );
+}
 
 .card-svg :is(#Restart_button, #Rules, #Review_previous, #Five_card_mode_button) .fill-board-dark {
   fill: var(--board-dark, #005157);
@@ -16,7 +74,8 @@
 .card-svg #review-previous-arrow {
   opacity: var(--review-previous-arrow-opacity, 1);
 }
-.card-svg #Five_card_mode_button .fill-board-dark { fill: var(--five-card-mode-fill, var(--board-dark, #005157)); }
+.card-svg #Five_card_mode_button,
+.card-svg #Five_card_mode_button * { fill: var(--five-card-mode-fill, var(--board-dark, #005157)); }
 .card-svg #review-previous-arrow {
   transform-box: fill-box;
   transform-origin: center;
@@ -64,25 +123,69 @@
 .card-svg #answer-button-mouse .fill-answer-button-bg { fill: var(--answer-button-mouse-bg, var(--board-dark, #005157)); }
 .card-svg #answer-button-cheese .fill-answer-button-bg { fill: var(--answer-button-cheese-bg, var(--board-dark, #005157)); }
 .card-svg #answer-button-ball .fill-answer-button-bg { fill: var(--answer-button-ball-bg, var(--board-dark, #005157)); }
-.card-svg #answer-paw-cat .fill-answer-paw {
+.card-svg [id^="answer-paw-"],
+.card-svg [id^="answer-paw-"] * {
+  fill: transparent;
+  stroke: transparent;
+}
+
+.card-svg #answer-paw-cat,
+.card-svg #answer-paw-pillow,
+.card-svg #answer-paw-mouse,
+.card-svg #answer-paw-cheese,
+.card-svg #answer-paw-ball {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.card-svg #answer-paw-cat,
+.card-svg #answer-paw-cat * {
   fill: var(--answer-paw-cat-fill, transparent);
   stroke: var(--answer-paw-cat-stroke, transparent);
 }
-.card-svg #answer-paw-pillow .fill-answer-paw {
+
+.card-svg #answer-paw-cat {
+  transform: scale(var(--answer-paw-cat-scale, 1));
+}
+
+.card-svg #answer-paw-pillow,
+.card-svg #answer-paw-pillow * {
   fill: var(--answer-paw-pillow-fill, transparent);
   stroke: var(--answer-paw-pillow-stroke, transparent);
 }
-.card-svg #answer-paw-mouse .fill-answer-paw {
+
+.card-svg #answer-paw-pillow {
+  transform: scale(var(--answer-paw-pillow-scale, 1));
+}
+
+.card-svg #answer-paw-mouse,
+.card-svg #answer-paw-mouse * {
   fill: var(--answer-paw-mouse-fill, transparent);
   stroke: var(--answer-paw-mouse-stroke, transparent);
 }
-.card-svg #answer-paw-cheese .fill-answer-paw {
+
+.card-svg #answer-paw-mouse {
+  transform: scale(var(--answer-paw-mouse-scale, 1));
+}
+
+.card-svg #answer-paw-cheese,
+.card-svg #answer-paw-cheese * {
   fill: var(--answer-paw-cheese-fill, transparent);
   stroke: var(--answer-paw-cheese-stroke, transparent);
 }
-.card-svg #answer-paw-ball .fill-answer-paw {
+
+.card-svg #answer-paw-cheese {
+  transform: scale(var(--answer-paw-cheese-scale, 1));
+}
+
+.card-svg #answer-paw-ball,
+.card-svg #answer-paw-ball * {
   fill: var(--answer-paw-ball-fill, transparent);
   stroke: var(--answer-paw-ball-stroke, transparent);
+}
+
+.card-svg #answer-paw-ball {
+  transform: scale(var(--answer-paw-ball-scale, 1));
 }
 
 .card-svg .stroke-outline { stroke: var(--outline); }

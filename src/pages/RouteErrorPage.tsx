@@ -1,6 +1,9 @@
 import { isRouteErrorResponse, useRouteError } from "react-router-dom";
 
+import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/Card";
 import { Container } from "../components/ui/Container";
+import { getButtonClassName } from "../components/ui/buttonClassName";
 
 type ErrorFallbackProps = {
   description: string;
@@ -35,9 +38,9 @@ export function ErrorFallback({ title, description }: ErrorFallbackProps) {
   const homeHref = import.meta.env.BASE_URL || "/";
 
   return (
-    <div className="flex min-h-screen items-center bg-background py-12 text-foreground">
+    <main className="flex min-h-screen items-center bg-background py-12 text-foreground">
       <Container>
-        <div className="mx-auto max-w-2xl rounded-[2rem] border border-border bg-surface p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] sm:p-10">
+        <Card className="mx-auto max-w-2xl rounded-[var(--radius-2xl)] p-8 shadow-[0_24px_80px_rgba(0,0,0,0.08)] sm:p-10">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
             App Error
           </p>
@@ -50,21 +53,20 @@ export function ErrorFallback({ title, description }: ErrorFallbackProps) {
           <div className="mt-8 flex flex-wrap gap-3">
             <a
               href={homeHref}
-              className="inline-flex rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:opacity-90"
+              className={getButtonClassName()}
             >
               Go home
             </a>
-            <button
-              type="button"
+            <Button
               onClick={() => window.location.reload()}
-              className="inline-flex rounded-xl border border-border px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-surface-muted"
+              variant="secondary"
             >
               Reload page
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
       </Container>
-    </div>
+    </main>
   );
 }
 

@@ -1,6 +1,16 @@
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  type ReactNode,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
+import { FiveCardBoard } from "./FiveCardBoard";
 import { HintPawStep } from "./HintPawStep";
+import { GameQuickStartGuide } from "./GameQuickStartGuide";
 import { ReviewCardIllustration } from "./ReviewCardIllustration";
 import { ResolvedCardIllustration } from "./ResolvedCardIllustration";
 import reverseCard from "./assets/reverse.svg";
@@ -28,9 +38,113 @@ import {
 import type { BoardControlName } from "./gameBoardRoundConfig";
 import type { ResolvedCard } from "./cardResolver";
 import { CARD_TRANSITION_PHASE_MS } from "./gameSessionUtils";
+import type { GameMode } from "./gameMode";
 import { fixedDetails } from "./palettes";
 
 type CardTransitionStage = "idle" | "to-reverse" | "to-next";
+type OverlayLayout = {
+  height: number;
+  left: number;
+  top: number;
+  width: number;
+};
+
+const BOARD_FRAME_PIECES = [
+  { key: "right", x: 259.59, y: 115.09, width: 61.78, height: 304.96 },
+  { key: "top", x: 90.92, y: 51.96, width: 84.72, height: 33.3 },
+  { key: "bottom", x: 89.52, y: 450.58, width: 87.52, height: 33.3 },
+  { key: "left", x: 0.02, y: 116.01, width: 28.38, height: 303.11 },
+] as const;
+
+const BOARD_HORIZONTAL_STRETCH_SCALE = 3.5;
+const BOARD_VERTICAL_STRETCH_SCALE = 1.2;
+const RIGHT_FRAME_X = 259.59;
+const RIGHT_FRAME_TOP_Y = 115.09;
+const RIGHT_FRAME_WIDTH = 61.78;
+const TOKEN_STACK_CENTER_SPACING = 65;
+const TOKEN_STACK_TOP_OFFSET = -20;
+const HORIZONTAL_STRETCH_OFFSET =
+  BOARD_FRAME_PIECES[1].width * (BOARD_HORIZONTAL_STRETCH_SCALE - 1);
+const VERTICAL_STRETCH_OFFSET =
+  BOARD_FRAME_PIECES[3].height * (BOARD_VERTICAL_STRETCH_SCALE - 1);
+
+const SCORE_BACKGROUND_PIECE = {
+  x: 0.02,
+  y: 0,
+  width: 321.34,
+  height: 51.95,
+} as const;
+
+const FIVE_CARD_BOARD_BOUNDS = {
+  x: 0.02,
+  y: 51.95,
+  width: BOARD_VIEWBOX.width,
+  height: BOARD_VIEWBOX.height - 51.95,
+} as const;
+
+const SINGLE_CARD_BOARD_BOUNDS = {
+  left: "0.11%",
+  top: "10.83%",
+  width: "89.6%",
+  height: "89.1%",
+} as const;
+
+const COMPACT_OVERLAY_BOUNDS = {
+  left: "8.81%",
+  top: "17.62%",
+  width: "71.95%",
+  height: "75.49%",
+} as const;
+
+const ANSWER_BUTTON_LAYOUT: Record<ObjectName, OverlayLayout> = {
+  mouse: { left: 80.4, top: 23.8, width: 19.3, height: 12.8 },
+  cat: { left: 80.4, top: 36.5, width: 19.3, height: 12.8 },
+  cheese: { left: 80.4, top: 48.6, width: 19.3, height: 12.8 },
+  ball: { left: 80.4, top: 61.2, width: 19.3, height: 12.8 },
+  pillow: { left: 80.4, top: 73.7, width: 19.3, height: 12.8 },
+};
+
+const TOKEN_WIDTH = (ANSWER_BUTTON_LAYOUT.mouse.width / 100) * BOARD_VIEWBOX.width;
+const TOKEN_HEIGHT = (ANSWER_BUTTON_LAYOUT.mouse.height / 100) * BOARD_VIEWBOX.height;
+const STRETCHED_RIGHT_FRAME_HEIGHT = BOARD_FRAME_PIECES[0].height * BOARD_VERTICAL_STRETCH_SCALE;
+const TOKEN_STACK_HEIGHT =
+  TOKEN_HEIGHT + TOKEN_STACK_CENTER_SPACING * (BOARD_ANSWER_OPTIONS.length - 1);
+const TOKEN_STACK_TOP =
+  RIGHT_FRAME_TOP_Y +
+  (STRETCHED_RIGHT_FRAME_HEIGHT - TOKEN_STACK_HEIGHT) / 2 +
+  TOKEN_STACK_TOP_OFFSET;
+const TOKEN_STACK_LEFT =
+  RIGHT_FRAME_X + HORIZONTAL_STRETCH_OFFSET + (RIGHT_FRAME_WIDTH - TOKEN_WIDTH) / 2;
+
+const COMPACT_ANSWER_BUTTON_CENTERS: Record<ObjectName, { x: number; y: number }> = {
+  mouse: {
+    x: TOKEN_STACK_LEFT + TOKEN_WIDTH / 2,
+    y: TOKEN_STACK_TOP + TOKEN_HEIGHT / 2,
+  },
+  cat: {
+    x: TOKEN_STACK_LEFT + TOKEN_WIDTH / 2,
+    y: TOKEN_STACK_TOP + TOKEN_HEIGHT / 2 + TOKEN_STACK_CENTER_SPACING,
+  },
+  cheese: {
+    x: TOKEN_STACK_LEFT + TOKEN_WIDTH / 2,
+    y: TOKEN_STACK_TOP + TOKEN_HEIGHT / 2 + TOKEN_STACK_CENTER_SPACING * 2,
+  },
+  ball: {
+    x: TOKEN_STACK_LEFT + TOKEN_WIDTH / 2,
+    y: TOKEN_STACK_TOP + TOKEN_HEIGHT / 2 + TOKEN_STACK_CENTER_SPACING * 3,
+  },
+  pillow: {
+    x: TOKEN_STACK_LEFT + TOKEN_WIDTH / 2,
+    y: TOKEN_STACK_TOP + TOKEN_HEIGHT / 2 + TOKEN_STACK_CENTER_SPACING * 4,
+  },
+};
+
+const CONTROL_LAYOUT: Record<BoardControlName, OverlayLayout> = {
+  previous: { left: 0.9, top: 11.1, width: 13.8, height: 11.4 },
+  restart: { left: 80.1, top: 11.7, width: 19.1, height: 11.8 },
+  rules: { left: 0.2, top: 91.1, width: 13.8, height: 8.6 },
+  "five-card-mode": { left: 78.8, top: 86.8, width: 20.8, height: 13.1 },
+};
 
 const OBJECT_BY_ORIGINAL_COLOR = Object.entries(
   ORIGINAL_COLOR_BY_OBJECT,
@@ -42,11 +156,10 @@ const OBJECT_BY_ORIGINAL_COLOR = Object.entries(
   {} as Record<PaletteName, ObjectName>,
 );
 
-const RULES_PAGES = [
+const SINGLE_CARD_RULES_PAGES = [
   {
     title: "How to play",
     paragraphs: [
-      "Look at the colors on the card.",
       "Each object has one original color: cat is orange, mouse is grey, cheese is yellow, ball is blue, and pillow is red. The tokens on the right show the correct color for each object.",
       "If an object on the card has its original color, that object is the correct answer.",
       "Example: if you see an orange cat on a blue pillow, the correct answer is cat.",
@@ -75,6 +188,22 @@ const RULES_PAGES = [
     paragraphs: [
       "Use the top-right paw to restart.",
       "Use the back-arrow paw to review the previous answer.",
+    ],
+  },
+] as const;
+
+const FIVE_CARD_RULES_PAGES = [
+  {
+    title: "How to play",
+    paragraphs: [
+      "In five-card mode, the answer to the round is the answer that repeats twice across the five cards.",
+      "Solve each card using the one-card rules, then choose the answer that appears twice.",
+      "One-card rules:",
+      "Each object has one original color: cat is orange, mouse is grey, cheese is yellow, ball is blue, and pillow is red.",
+      "If an object on the card has its original color, that object is the correct answer for that card.",
+      "If none of the objects on the card have their original colors, remove the shown objects and any object whose original color is already visible on the card.",
+      "The only answer left is the correct answer for that card. After solving all five cards, pick the answer that repeats twice.",
+      "Use the top-right paw to restart and the back-arrow paw to review the previous answer.",
     ],
   },
 ] as const;
@@ -144,6 +273,95 @@ function CardFlipTransition({
       </div>
     </div>
   );
+}
+
+function BoardFrame({ isStretched }: { isStretched: boolean }) {
+  const horizontalStretchScale = isStretched
+    ? BOARD_HORIZONTAL_STRETCH_SCALE
+    : 1;
+  const verticalStretchScale = isStretched
+    ? BOARD_VERTICAL_STRETCH_SCALE
+    : 1;
+  const horizontalOffset = isStretched ? HORIZONTAL_STRETCH_OFFSET : 0;
+  const verticalOffset = isStretched ? VERTICAL_STRETCH_OFFSET : 0;
+
+  return (
+    <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+      <div
+        className="absolute"
+        style={{
+          left: `${(SCORE_BACKGROUND_PIECE.x / BOARD_VIEWBOX.width) * 100}%`,
+          top: `${(SCORE_BACKGROUND_PIECE.y / BOARD_VIEWBOX.height) * 100}%`,
+          width: `${(
+            (SCORE_BACKGROUND_PIECE.width + horizontalOffset) /
+            BOARD_VIEWBOX.width
+          ) * 100}%`,
+          height: `${(SCORE_BACKGROUND_PIECE.height / BOARD_VIEWBOX.height) * 100}%`,
+          background: "var(--board-dark-fill)",
+          borderBottom: "1px solid rgba(0, 0, 0, 0.1)",
+        }}
+      />
+
+      {BOARD_FRAME_PIECES.map((piece) => (
+        <div
+          key={piece.key}
+          className="absolute"
+          style={{
+            left: `${(
+              (piece.x +
+                (piece.key === "right" ? horizontalOffset : 0)) /
+              BOARD_VIEWBOX.width
+            ) * 100}%`,
+            top: `${(
+              (piece.y +
+                (piece.key === "bottom" ? verticalOffset : 0)) /
+              BOARD_VIEWBOX.height
+            ) * 100}%`,
+            width: `${(
+              (piece.width *
+                (piece.key === "top" || piece.key === "bottom"
+                  ? horizontalStretchScale
+                  : 1)) /
+              BOARD_VIEWBOX.width
+            ) * 100}%`,
+            height: `${(
+              (piece.height *
+                (piece.key === "left" || piece.key === "right"
+                  ? verticalStretchScale
+                  : 1)) /
+              BOARD_VIEWBOX.height
+            ) * 100}%`,
+            background: "var(--board-light-fill)",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function getOverlayStyle(
+  layout: OverlayLayout,
+  translateX = 0,
+  translateY = 0,
+): CSSProperties {
+  return {
+    left: `${layout.left + (translateX / BOARD_VIEWBOX.width) * 100}%`,
+    top: `${layout.top + (translateY / BOARD_VIEWBOX.height) * 100}%`,
+    width: `${layout.width}%`,
+    height: `${layout.height}%`,
+  };
+}
+
+function getCompactTokenOverlayStyle(answer: ObjectName): CSSProperties {
+  const index = BOARD_ANSWER_OPTIONS.indexOf(answer);
+  const top = TOKEN_STACK_TOP + index * TOKEN_STACK_CENTER_SPACING;
+
+  return {
+    left: `${(TOKEN_STACK_LEFT / BOARD_VIEWBOX.width) * 100}%`,
+    top: `${(top / BOARD_VIEWBOX.height) * 100}%`,
+    width: `${(TOKEN_WIDTH / BOARD_VIEWBOX.width) * 100}%`,
+    height: `${(TOKEN_HEIGHT / BOARD_VIEWBOX.height) * 100}%`,
+  };
 }
 
 function getReviewExplanation(card: {
@@ -223,16 +441,44 @@ function getReviewExplanation(card: {
   ];
 }
 
+function getFiveCardReviewExplanation(previousTurn: {
+  cards: ResolvedCard[];
+  correctAnswer: ObjectName;
+}) {
+  const repeatedAnswer = formatColoredObject(
+    ORIGINAL_COLOR_BY_OBJECT[previousTurn.correctAnswer],
+    previousTurn.correctAnswer,
+  );
+
+  return [
+    {
+      key: "five-card-explanation",
+      content: (
+        <>
+          In five-card mode each card has a solution, which can be found
+          according to one-card rules. The overall answer will be the token
+          that repeats for two different cards. Here, that repeated answer is{" "}
+          <strong>{repeatedAnswer}</strong>.
+        </>
+      ),
+    },
+  ] satisfies ReviewExplanationParagraph[];
+}
+
 export function GameBoardRound({
   boardHeightClassName = "h-[483.89px]",
 }: {
   boardHeightClassName?: string;
 } = {}) {
+  const [hasStarted, setHasStarted] = useState(false);
+  const [gameMode, setGameMode] = useState<GameMode>("single-card");
   const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [isPreviousReviewOpen, setIsPreviousReviewOpen] = useState(false);
   const [isExplanationVisible, setIsExplanationVisible] = useState(false);
   const {
     card,
+    cards,
+    correctAnswer,
     selectedAnswer,
     previousTurn,
     score,
@@ -241,11 +487,15 @@ export function GameBoardRound({
     timeLeft,
     pawTrailRunId,
     cardSequence,
+    isCardTransitioning,
     canAnswer,
     isRoundFinished,
     submitAnswer,
     restartRound,
-  } = useGameSession(isRulesOpen || isPreviousReviewOpen);
+  } = useGameSession({
+    isPaused: isRulesOpen || isPreviousReviewOpen || !hasStarted,
+    mode: gameMode,
+  });
   const [hoveredAnswer, setHoveredAnswer] = useState<
     null | (typeof BOARD_ANSWER_OPTIONS)[number]
   >(null);
@@ -258,16 +508,31 @@ export function GameBoardRound({
     useState<CardTransitionStage>("idle");
   const [rulesPageIndex, setRulesPageIndex] = useState(0);
   const timeoutRefs = useRef<number[]>([]);
+  const isBoardStretched = gameMode === "five-card";
   const lastRenderedCardRef = useRef(card);
+  const suppressNextCardTransitionRef = useRef(false);
+  const lastOverlayTriggerRef = useRef<HTMLElement | null>(null);
+  const previousOverlayOpenRef = useRef(false);
+  const rulesCloseButtonRef = useRef<HTMLButtonElement | null>(null);
+  const explanationToggleButtonRef = useRef<HTMLButtonElement | null>(null);
+  const previousControlButtonRef = useRef<HTMLButtonElement | null>(null);
+  const rulesControlButtonRef = useRef<HTMLButtonElement | null>(null);
+  const fiveCardModeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const rulesTitleId = useId();
+  const reviewTitleId = useId();
   const effectiveHoveredAnswer =
-    canAnswer && !isRulesOpen && !isPreviousReviewOpen ? hoveredAnswer : null;
+    hasStarted && canAnswer && !isRulesOpen && !isPreviousReviewOpen
+      ? hoveredAnswer
+      : null;
+  const rulesPages =
+    gameMode === "five-card" ? FIVE_CARD_RULES_PAGES : SINGLE_CARD_RULES_PAGES;
   const clampedRulesPageIndex = Math.min(
     rulesPageIndex,
-    RULES_PAGES.length - 1,
+    rulesPages.length - 1,
   );
-  const currentRulesPage = RULES_PAGES[clampedRulesPageIndex];
+  const currentRulesPage = rulesPages[clampedRulesPageIndex];
   const canGoToPreviousRulesPage = clampedRulesPageIndex > 0;
-  const canGoToNextRulesPage = clampedRulesPageIndex < RULES_PAGES.length - 1;
+  const canGoToNextRulesPage = clampedRulesPageIndex < rulesPages.length - 1;
   const closeRules = () => setIsRulesOpen(false);
   const closePreviousReview = () => {
     setIsPreviousReviewOpen(false);
@@ -286,6 +551,67 @@ export function GameBoardRound({
   }, []);
 
   useEffect(() => {
+    if (isRulesOpen) {
+      rulesCloseButtonRef.current?.focus();
+      previousOverlayOpenRef.current = true;
+      return;
+    }
+
+    if (isPreviousReviewOpen) {
+      explanationToggleButtonRef.current?.focus();
+      previousOverlayOpenRef.current = true;
+      return;
+    }
+
+    if (previousOverlayOpenRef.current) {
+      lastOverlayTriggerRef.current?.focus();
+      previousOverlayOpenRef.current = false;
+    }
+  }, [isPreviousReviewOpen, isRulesOpen]);
+
+  useEffect(() => {
+    if (!isInteractionOverlayOpen) {
+      return;
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (isRulesOpen) {
+        closeRules();
+        return;
+      }
+
+      if (isPreviousReviewOpen) {
+        closePreviousReview();
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [isInteractionOverlayOpen, isPreviousReviewOpen, isRulesOpen]);
+
+  useEffect(() => {
+    if (suppressNextCardTransitionRef.current) {
+      timeoutRefs.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+      timeoutRefs.current = [];
+      suppressNextCardTransitionRef.current = false;
+      lastRenderedCardRef.current = card;
+      return;
+    }
+
+    if (isBoardStretched) {
+      lastRenderedCardRef.current = card;
+      return;
+    }
+
     if (lastRenderedCardRef.current === card) {
       return;
     }
@@ -309,37 +635,41 @@ export function GameBoardRound({
     }, CARD_TRANSITION_PHASE_MS * 2);
 
     timeoutRefs.current = [toNextTimeoutId, finishTimeoutId];
-  }, [card, cardSequence]);
+  }, [card, cardSequence, isBoardStretched]);
 
   const answerPawFillColor =
     selectedAnswer == null
       ? undefined
-      : selectedAnswer === card.targetAnswer
+      : selectedAnswer === correctAnswer
         ? CORRECT_ANSWER_PAW_FILL_COLOR
         : INCORRECT_ANSWER_PAW_FILL_COLOR;
   const answerPawStrokeColor =
     selectedAnswer == null ? undefined : ANSWER_PAW_STROKE_COLOR;
 
+  const activeAnswerCenters = isBoardStretched
+    ? COMPACT_ANSWER_BUTTON_CENTERS
+    : ANSWER_BUTTON_CENTERS;
+
   const pawTrailSteps = useMemo(() => {
     if (
       !selectedAnswer ||
-      !card.targetAnswer ||
-      selectedAnswer === card.targetAnswer
+      !correctAnswer ||
+      selectedAnswer === correctAnswer
     ) {
       return [];
     }
 
     return createPawTrailSteps(
-      ANSWER_BUTTON_CENTERS[selectedAnswer],
-      ANSWER_BUTTON_CENTERS[card.targetAnswer],
+      activeAnswerCenters[selectedAnswer],
+      activeAnswerCenters[correctAnswer],
       3,
       pawTrailRunId,
     );
-  }, [card.targetAnswer, pawTrailRunId, selectedAnswer]);
+  }, [activeAnswerCenters, correctAnswer, pawTrailRunId, selectedAnswer]);
 
   const targetHintPosition =
-    selectedAnswer && card.targetAnswer && selectedAnswer !== card.targetAnswer
-      ? ANSWER_BUTTON_CENTERS[card.targetAnswer]
+    selectedAnswer && correctAnswer && selectedAnswer !== correctAnswer
+      ? activeAnswerCenters[correctAnswer]
       : null;
   const targetHintDelay =
     pawTrailSteps.length > 0 ? `${pawTrailSteps.length * 180 + 220}ms` : "0ms";
@@ -351,57 +681,115 @@ export function GameBoardRound({
     fontWeight: 700,
     lineHeight: 1,
   } as const;
+  const boardFrameStyle = {
+    "--board-light-fill": fixedDetails.board.light,
+    "--board-dark-fill": fixedDetails.board.dark,
+  } as CSSProperties;
   const previousReviewExplanation = previousTurn
-    ? getReviewExplanation(previousTurn.card)
+    ? previousTurn.mode === "five-card"
+      ? getFiveCardReviewExplanation(previousTurn)
+      : getReviewExplanation(previousTurn.cards[0])
     : [];
+  const answerOverlayTranslateY = {
+    mouse:
+      isBoardStretched
+        ? 0
+        : 0,
+    cat:
+      isBoardStretched
+        ? 0
+        : 0,
+    cheese:
+      isBoardStretched
+        ? 0
+        : 0,
+    ball:
+      isBoardStretched
+        ? 0
+        : 0,
+    pillow:
+      isBoardStretched
+        ? 0
+        : 0,
+  } satisfies Record<ObjectName, number>;
+  const horizontalOverlayOffset = isBoardStretched ? HORIZONTAL_STRETCH_OFFSET : 0;
+  const verticalOverlayOffset = isBoardStretched ? VERTICAL_STRETCH_OFFSET : 0;
+  const fiveCardBoardAreaStyle = {
+    left: `${(FIVE_CARD_BOARD_BOUNDS.x / BOARD_VIEWBOX.width) * 100}%`,
+    top: `${(FIVE_CARD_BOARD_BOUNDS.y / BOARD_VIEWBOX.height) * 100}%`,
+    width: `${(
+      (FIVE_CARD_BOARD_BOUNDS.width + horizontalOverlayOffset) /
+      BOARD_VIEWBOX.width
+    ) * 100}%`,
+    height: `${(
+      (FIVE_CARD_BOARD_BOUNDS.height + verticalOverlayOffset) /
+      BOARD_VIEWBOX.height
+    ) * 100}%`,
+  } satisfies CSSProperties;
+  const useCompactOverlayViewport =
+    (isRulesOpen && !isBoardStretched) ||
+    (isPreviousReviewOpen && previousTurn?.mode !== "five-card");
+  const activeBoardAreaStyle =
+    isBoardStretched ? fiveCardBoardAreaStyle : SINGLE_CARD_BOARD_BOUNDS;
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-center">
-        <div className={`relative ${boardHeightClassName}`}>
-          <GameBoardSmallIllustration
-            className="h-full w-auto"
-            selectedAnswer={
-              isPreviousReviewOpen
-                ? previousTurn?.selectedAnswer
-                : (selectedAnswer ?? undefined)
-            }
-            hoveredAnswer={effectiveHoveredAnswer ?? undefined}
-            hoveredControl={hoveredControl ?? undefined}
-            isPreviousReviewActive={isPreviousReviewOpen}
-            showPreviousControl={isPreviousReviewAvailable}
-            answerPawFillColor={
-              isPreviousReviewOpen
-                ? previousTurn?.wasCorrect
-                  ? CORRECT_ANSWER_PAW_FILL_COLOR
-                  : INCORRECT_ANSWER_PAW_FILL_COLOR
-                : answerPawFillColor
-            }
-            answerPawStrokeColor={
-              isPreviousReviewOpen
-                ? previousTurn?.selectedAnswer
-                  ? ANSWER_PAW_STROKE_COLOR
-                  : undefined
-                : answerPawStrokeColor
-            }
-            highlightedAnswer={
-              isPreviousReviewOpen ? previousTurn?.correctAnswer : undefined
-            }
-            highlightedAnswerPawFillColor={
-              isPreviousReviewOpen ? CORRECT_ANSWER_PAW_FILL_COLOR : undefined
-            }
-            highlightedAnswerPawStrokeColor={
-              isPreviousReviewOpen ? ANSWER_PAW_STROKE_COLOR : undefined
-            }
-            highlightedAnswerPawClassName={
-              isPreviousReviewOpen ? "h-9 w-9" : undefined
-            }
-          />
-
+      <div className="flex items-start justify-start">
+        <div
+          className="relative"
+          style={{
+            paddingBottom: isBoardStretched ? `${VERTICAL_STRETCH_OFFSET}px` : undefined,
+            paddingRight: isBoardStretched ? `${HORIZONTAL_STRETCH_OFFSET}px` : undefined,
+          }}
+        >
           <div
-            className="pointer-events-none absolute inset-0 text-white"
-            aria-hidden="true"
+            className={`relative overflow-visible ${boardHeightClassName}`}
+            style={boardFrameStyle}
           >
+            <BoardFrame isStretched={isBoardStretched} />
+
+            <GameBoardSmallIllustration
+              className="relative h-full w-auto"
+              selectedAnswer={
+                isPreviousReviewOpen
+                  ? previousTurn?.selectedAnswer
+                  : (selectedAnswer ?? undefined)
+              }
+              hoveredAnswer={effectiveHoveredAnswer ?? undefined}
+              hoveredControl={hoveredControl ?? undefined}
+              isPreviousReviewActive={isPreviousReviewOpen}
+              isRulesActive={isRulesOpen}
+              showPreviousControl={isPreviousReviewAvailable}
+              answerPawFillColor={
+                isPreviousReviewOpen
+                  ? previousTurn?.wasCorrect
+                    ? CORRECT_ANSWER_PAW_FILL_COLOR
+                    : INCORRECT_ANSWER_PAW_FILL_COLOR
+                  : answerPawFillColor
+              }
+              answerPawStrokeColor={
+                isPreviousReviewOpen
+                  ? previousTurn?.selectedAnswer
+                    ? ANSWER_PAW_STROKE_COLOR
+                    : undefined
+                  : answerPawStrokeColor
+              }
+              highlightedAnswer={
+                isPreviousReviewOpen ? previousTurn?.correctAnswer : undefined
+              }
+              highlightedAnswerPawFillColor={
+                isPreviousReviewOpen ? CORRECT_ANSWER_PAW_FILL_COLOR : undefined
+              }
+              highlightedAnswerPawStrokeColor={
+                isPreviousReviewOpen ? ANSWER_PAW_STROKE_COLOR : undefined
+              }
+              isBoardStretched={isBoardStretched}
+            />
+
+            <div
+              className="pointer-events-none absolute inset-0 text-white"
+              aria-hidden="true"
+            >
             <div
               className="absolute left-[24.37%] top-[5.29%] -translate-x-1/2 -translate-y-1/2 leading-none"
               style={scoreboardNumberStyle}
@@ -420,22 +808,34 @@ export function GameBoardRound({
             >
               {bestTotal}
             </div>
-          </div>
+            </div>
 
-          <div
-            className={
-              isRulesOpen || isPreviousReviewOpen
-                ? "absolute left-[8.81%] top-[17.62%] h-[75.49%] w-[71.95%]"
-                : "absolute left-[0.11%] top-[10.83%] h-[89.1%] w-[89.6%] [perspective:1200px]"
-            }
-          >
+            <div
+              className={
+                useCompactOverlayViewport
+                  ? "absolute"
+                  : "absolute [perspective:1200px]"
+              }
+              style={
+                useCompactOverlayViewport
+                  ? COMPACT_OVERLAY_BOUNDS
+                  : activeBoardAreaStyle
+              }
+            >
             {isRulesOpen ? (
               <section
-                className="flex h-full w-full flex-col px-5 pt-6 pb-4 text-[#22304a]"
-                aria-label="Game rules"
+                className={`flex h-full w-full flex-col text-[#22304a] ${
+                  isBoardStretched
+                    ? "pt-14 pl-12 pb-12 pr-24"
+                    : "px-5 pt-6 pb-4"
+                }`}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={rulesTitleId}
               >
                 <header className="relative text-center">
                   <button
+                    ref={rulesCloseButtonRef}
                     type="button"
                     onClick={closeRules}
                     className="absolute right-0 -top-[10px] text-[20px] leading-none"
@@ -449,7 +849,8 @@ export function GameBoardRound({
                     ×
                   </button>
                   <p
-                    className="text-[17px] leading-none"
+                    id={rulesTitleId}
+                    className="text-[19px] leading-none"
                     style={{
                       fontFamily: '"Hannotate TC", sans-serif',
                       fontWeight: 700,
@@ -460,17 +861,28 @@ export function GameBoardRound({
                 </header>
 
                 <article
-                  className="mt-2 flex-1 px-1 text-left text-[13px] leading-[1.3] text-[#22304a]"
-                  style={{
-                    fontFamily: '"Hannotate TC", sans-serif',
-                    fontWeight: 400,
-                  }}
+                  className="mt-2 flex-1 min-h-0"
                 >
-                  {currentRulesPage.paragraphs.map((paragraph) => (
-                    <p key={paragraph} className="mb-3 last:mb-0">
-                      {paragraph}
-                    </p>
-                  ))}
+                  <div
+                    className="h-full px-1 text-left text-[15px] leading-[1.35] text-[#22304a]"
+                    style={{
+                      fontFamily: '"Hannotate TC", sans-serif',
+                      fontWeight: 400,
+                    }}
+                  >
+                    {currentRulesPage.paragraphs.map((paragraph) => (
+                      <p
+                        key={paragraph}
+                        className={
+                          paragraph === "One-card rules:"
+                            ? "mb-3 text-center font-semibold last:mb-0"
+                            : "mb-3 last:mb-0"
+                        }
+                      >
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
                 </article>
 
                 <nav
@@ -483,7 +895,7 @@ export function GameBoardRound({
                       onClick={() =>
                         setRulesPageIndex((current) => Math.max(0, current - 1))
                       }
-                      className="flex items-center gap-1 rounded-full px-1 py-1 text-[14px]"
+                      className="flex items-center gap-1 rounded-full px-1 py-1 text-[15px]"
                       style={{
                         fontFamily: '"Hannotate TC", sans-serif',
                         fontWeight: 700,
@@ -498,13 +910,13 @@ export function GameBoardRound({
                   )}
 
                   <p
-                    className="shrink-0 text-[12px] leading-none text-[#4e627c]"
+                    className="shrink-0 text-[13px] leading-none text-[#4e627c]"
                     style={{
                       fontFamily: '"Hannotate TC", sans-serif',
                       fontWeight: 400,
                     }}
                   >
-                    {rulesPageIndex + 1}/{RULES_PAGES.length}
+                    {rulesPageIndex + 1}/{rulesPages.length}
                   </p>
 
                   {canGoToNextRulesPage ? (
@@ -512,10 +924,10 @@ export function GameBoardRound({
                       type="button"
                       onClick={() =>
                         setRulesPageIndex((current) =>
-                          Math.min(RULES_PAGES.length - 1, current + 1),
+                          Math.min(rulesPages.length - 1, current + 1),
                         )
                       }
-                      className="flex items-center gap-1 rounded-full px-1 py-1 text-[14px]"
+                      className="flex items-center gap-1 rounded-full px-1 py-1 text-[15px]"
                       style={{
                         fontFamily: '"Hannotate TC", sans-serif',
                         fontWeight: 700,
@@ -531,15 +943,53 @@ export function GameBoardRound({
                 </nav>
               </section>
             ) : isPreviousReviewOpen && previousTurn ? (
-              <div className="relative h-full w-full">
-                <ReviewCardIllustration
-                  card={previousTurn.card}
-                  isExplanationVisible={isExplanationVisible}
-                />
-              </div>
+              <section
+                className="relative h-full w-full"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={reviewTitleId}
+              >
+                <h2 id={reviewTitleId} className="sr-only">
+                  Previous card review
+                </h2>
+                {previousTurn.mode === "five-card" ? (
+                  isExplanationVisible ? (
+                    <div className="absolute inset-0 flex items-end justify-center pb-12">
+                      <div
+                        className="h-full w-full"
+                        style={{
+                          transform: "scale(0.8)",
+                          transformOrigin: "center bottom",
+                        }}
+                      >
+                        <FiveCardBoard cards={previousTurn.cards} />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 flex items-end justify-center pb-12">
+                      <div
+                        className="h-full w-full"
+                        style={{
+                          transform: "scale(0.9)",
+                          transformOrigin: "center bottom",
+                        }}
+                      >
+                        <FiveCardBoard cards={previousTurn.cards} />
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  <ReviewCardIllustration
+                    card={previousTurn.cards[0]}
+                    isExplanationVisible={isExplanationVisible}
+                  />
+                )}
+              </section>
             ) : isRoundFinished ? (
               <div
-                className="flex h-full w-full -translate-y-[20px] flex-col items-center justify-center px-10 text-center text-[#22304a]"
+                className={`flex h-full w-full -translate-y-[20px] flex-col items-center justify-center text-center text-[#22304a] ${
+                  isBoardStretched ? "pl-10 pr-20" : "px-10"
+                }`}
                 style={{ fontFamily: '"Hannotate TC", sans-serif' }}
               >
                 <p className="text-[22px] leading-none">Round complete</p>
@@ -582,23 +1032,53 @@ export function GameBoardRound({
                   backFace={<ResolvedCardIllustration card={displayCard} />}
                 />
               )
+            ) : !hasStarted ? (
+              <GameQuickStartGuide isLarge={isBoardStretched} />
+            ) : isBoardStretched ? (
+              <FiveCardBoard
+                cards={cards}
+                previousCards={
+                  isCardTransitioning && previousTurn?.mode === "five-card"
+                    ? previousTurn.cards
+                    : undefined
+                }
+                transitionRunId={isCardTransitioning ? cardSequence : undefined}
+              />
             ) : (
               <div className="flex h-full w-full items-center justify-center">
                 <ResolvedCardIllustration card={displayCard} />
               </div>
             )}
-          </div>
+            </div>
 
-          {isPreviousReviewOpen && previousTurn ? (
-            <div className="absolute left-[8.81%] top-[17.62%] z-10 h-[75.49%] w-[71.95%]">
-              <div className="absolute inset-x-0 top-[15px]">
+            {isPreviousReviewOpen && previousTurn ? (
+            <div
+              className={
+                previousTurn.mode === "five-card"
+                  ? "absolute z-10"
+                  : "absolute z-10"
+              }
+              style={
+                previousTurn.mode === "five-card"
+                  ? fiveCardBoardAreaStyle
+                  : COMPACT_OVERLAY_BOUNDS
+              }
+            >
+              <div
+                className={
+                  previousTurn.mode === "five-card"
+                    ? "absolute inset-0 pt-14 pl-12 pb-12 pr-24"
+                    : "absolute inset-x-0 top-[15px]"
+                }
+              >
                 <div className="flex flex-col items-center">
                   <button
+                    ref={explanationToggleButtonRef}
                     type="button"
                     onClick={() =>
                       setIsExplanationVisible((current) => !current)
                     }
-                    className="whitespace-nowrap text-[14px] leading-none text-[#22304a] underline underline-offset-2"
+                    className="whitespace-nowrap text-[15px] leading-none text-[#22304a] underline underline-offset-2"
                     style={{ fontFamily: '"Hannotate TC", sans-serif' }}
                   >
                     {isExplanationVisible
@@ -607,7 +1087,11 @@ export function GameBoardRound({
                   </button>
                   {isExplanationVisible ? (
                     <div
-                      className="mt-2 w-full px-[10px] text-center text-[12px] leading-snug text-[#22304a]"
+                      className={
+                        previousTurn.mode === "five-card"
+                          ? "mt-2 w-full text-center text-[14px] leading-snug text-[#22304a]"
+                          : "mt-2 w-full px-[10px] text-center text-[14px] leading-snug text-[#22304a]"
+                      }
                       style={{ fontFamily: '"Hannotate TC", sans-serif' }}
                     >
                       {previousReviewExplanation.map((paragraph) => (
@@ -620,12 +1104,12 @@ export function GameBoardRound({
                 </div>
               </div>
             </div>
-          ) : null}
+            ) : null}
 
-          <div
-            className="pointer-events-none absolute inset-0"
-            aria-hidden="true"
-          >
+            <div
+              className="pointer-events-none absolute inset-0"
+              aria-hidden="true"
+            >
             {isInteractionOverlayOpen
               ? null
               : pawTrailSteps.map((step) => (
@@ -658,9 +1142,9 @@ export function GameBoardRound({
                 />
               </div>
             ) : null}
-          </div>
+            </div>
 
-          {BOARD_ANSWER_OPTIONS.map((answer) => (
+            {BOARD_ANSWER_OPTIONS.map((answer) => (
             <button
               key={answer}
               type="button"
@@ -670,6 +1154,7 @@ export function GameBoardRound({
                 }
 
                 if (isRoundFinished) {
+                  setHasStarted(true);
                   restartRound();
                   return;
                 }
@@ -679,10 +1164,14 @@ export function GameBoardRound({
                   return;
                 }
 
+                if (!hasStarted) {
+                  return;
+                }
+
                 submitAnswer(answer);
               }}
               onMouseEnter={() => {
-                if (canAnswer) {
+                if (hasStarted && canAnswer) {
                   setHoveredAnswer(answer);
                 }
               }}
@@ -692,7 +1181,7 @@ export function GameBoardRound({
                 )
               }
               onFocus={() => {
-                if (canAnswer) {
+                if (hasStarted && canAnswer) {
                   setHoveredAnswer(answer);
                 }
               }}
@@ -704,14 +1193,26 @@ export function GameBoardRound({
               data-answer-object={answer}
               data-selected={selectedAnswer === answer}
               data-hovered={effectiveHoveredAnswer === answer}
-              disabled={(!canAnswer && !isRoundFinished) || isPreviousReviewOpen}
-              className={`absolute ${ANSWER_BUTTON_OVERLAYS[answer].className} rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-default`}
+              disabled={
+                (!hasStarted || !canAnswer) && !isRoundFinished || isPreviousReviewOpen
+              }
+              className="absolute z-20 rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-default"
+              style={
+                isBoardStretched
+                  ? getCompactTokenOverlayStyle(answer)
+                  : getOverlayStyle(
+                      ANSWER_BUTTON_LAYOUT[answer],
+                      horizontalOverlayOffset,
+                      answerOverlayTranslateY[answer],
+                    )
+              }
               aria-label={`Choose ${ANSWER_BUTTON_OVERLAYS[answer].label} as the answer`}
             />
           ))}
 
-          {isPreviousReviewAvailable ? (
+            {isPreviousReviewAvailable ? (
             <button
+              ref={previousControlButtonRef}
               type="button"
               onClick={() => {
                 if (isRulesOpen) {
@@ -727,6 +1228,7 @@ export function GameBoardRound({
                   return;
                 }
 
+                lastOverlayTriggerRef.current = previousControlButtonRef.current;
                 setIsPreviousReviewOpen(true);
                 setIsExplanationVisible(false);
               }}
@@ -742,16 +1244,17 @@ export function GameBoardRound({
                   current === "previous" ? null : current,
                 )
               }
-              className={`absolute ${BOARD_CONTROL_OVERLAYS.previous.className} rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background`}
+              className="absolute z-20 rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              style={getOverlayStyle(CONTROL_LAYOUT.previous)}
               aria-label={
                 isPreviousReviewOpen
                   ? "Return to the current game"
                   : BOARD_CONTROL_OVERLAYS.previous.label
               }
             />
-          ) : null}
+            ) : null}
 
-          <button
+            <button
             type="button"
             onClick={() => {
               if (isRulesOpen) {
@@ -762,6 +1265,7 @@ export function GameBoardRound({
                 closePreviousReview();
               }
 
+              setHasStarted(true);
               restartRound();
             }}
             onMouseEnter={() => setHoveredControl("restart")}
@@ -776,17 +1280,23 @@ export function GameBoardRound({
                 current === "restart" ? null : current,
               )
             }
-            className={`absolute ${BOARD_CONTROL_OVERLAYS.restart.className} rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background`}
+            className="absolute z-20 rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            style={getOverlayStyle(
+              CONTROL_LAYOUT.restart,
+              horizontalOverlayOffset,
+            )}
             aria-label={BOARD_CONTROL_OVERLAYS.restart.label}
-          />
+            />
 
-          <button
+            <button
+            ref={rulesControlButtonRef}
             type="button"
             onClick={() => {
               if (isPreviousReviewOpen) {
                 closePreviousReview();
               }
 
+              lastOverlayTriggerRef.current = rulesControlButtonRef.current;
               setIsRulesOpen((current) => !current);
               setRulesPageIndex(0);
             }}
@@ -802,11 +1312,17 @@ export function GameBoardRound({
                 current === "rules" ? null : current,
               )
             }
-            className={`absolute ${BOARD_CONTROL_OVERLAYS.rules.className} rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background`}
+            className="absolute z-20 rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            style={getOverlayStyle(
+              CONTROL_LAYOUT.rules,
+              0,
+              verticalOverlayOffset,
+            )}
             aria-label={BOARD_CONTROL_OVERLAYS.rules.label}
-          />
+            />
 
-          <button
+            <button
+            ref={fiveCardModeButtonRef}
             type="button"
             onClick={() => {
               if (isRulesOpen) {
@@ -815,16 +1331,44 @@ export function GameBoardRound({
 
               if (isPreviousReviewOpen) {
                 closePreviousReview();
-                return;
               }
+
+              const nextMode =
+                gameMode === "five-card" ? "single-card" : "five-card";
+
+              suppressNextCardTransitionRef.current = true;
+              setPreviousCard(null);
+              setCardTransitionStage("idle");
+              setDisplayCard(card);
+              lastRenderedCardRef.current = card;
+              setGameMode(nextMode);
+              restartRound(nextMode);
             }}
-            className={`absolute ${BOARD_CONTROL_OVERLAYS["five-card-mode"].className} rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background`}
-            aria-label={
-              isPreviousReviewOpen
-                ? "Return to the current game"
-                : BOARD_CONTROL_OVERLAYS["five-card-mode"].label
+            onMouseEnter={() => setHoveredControl("five-card-mode")}
+            onMouseLeave={() =>
+              setHoveredControl((current) =>
+                current === "five-card-mode" ? null : current,
+              )
             }
-          />
+            onFocus={() => setHoveredControl("five-card-mode")}
+            onBlur={() =>
+              setHoveredControl((current) =>
+                current === "five-card-mode" ? null : current,
+              )
+            }
+            className="absolute z-20 rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            style={getOverlayStyle(
+              CONTROL_LAYOUT["five-card-mode"],
+              horizontalOverlayOffset,
+              verticalOverlayOffset,
+            )}
+            aria-label={
+              isBoardStretched
+                ? "Switch to single card mode"
+                : "Switch to five card mode"
+            }
+            />
+          </div>
         </div>
       </div>
     </div>

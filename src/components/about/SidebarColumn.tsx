@@ -16,7 +16,7 @@ export function SidebarColumn({
   imageSrc,
 }: SidebarColumnProps) {
   return (
-    <div className={['flex flex-col gap-4 lg:self-start', className].join(' ').trim()}>
+    <aside className={['flex flex-col gap-4 lg:self-start', className].join(' ').trim()}>
       <img
         src={imageSrc}
         alt={alt}
@@ -28,6 +28,6 @@ export function SidebarColumn({
           .trim()}
       />
       {children}
-    </div>
+    </aside>
   )
 }

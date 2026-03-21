@@ -41,7 +41,7 @@ export function AboutPage() {
         />
 
         <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10">
-          <div className="order-2 max-w-4xl space-y-5 lg:order-1">
+          <div className="order-2 max-w-4xl space-y-6 lg:order-1">
             {aboutSections.map((section) => (
               <ContentSectionCard
                 key={section.title}
@@ -56,20 +56,19 @@ export function AboutPage() {
               </ContentSectionCard>
             ))}
 
-            <div className="mt-6 ml-6 max-w-[62ch] sm:ml-7">
-              <p className="text-base leading-7 text-muted-foreground">
-                If you’d like a structured overview of my experience, you can download
-                my resume.
-              </p>
+            <p className="mt-6 ml-6 max-w-[62ch] text-base leading-7 text-muted-foreground">
+              If you’d like a structured overview of my experience,{' '}
               <a
                 href={resumeHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[0_12px_30px_-18px_color-mix(in_srgb,var(--primary)_65%,transparent)] transition duration-180 hover:opacity-95 active:translate-y-px"
+                aria-label="View Resume (opens in a new tab)"
+                className="inlineLink font-medium"
               >
-                Download Resume
+                View Resume
               </a>
-            </div>
+              .
+            </p>
           </div>
 
           <SidebarColumn
@@ -79,7 +78,7 @@ export function AboutPage() {
             imageSrc={portraitImage}
           >
             <SidebarCard title="Quick facts">
-              <dl className="space-y-3.5 text-sm">
+              <dl className="space-y-4 text-sm">
                 <LabeledFact label="Focus">
                   React, TypeScript, accessibility, UI architecture.
                 </LabeledFact>

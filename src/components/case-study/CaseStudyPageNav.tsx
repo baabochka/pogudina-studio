@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { type MouseEvent, useId, useState } from 'react'
 
 type CaseStudyPageNavProps = {
   activeSectionId: string
@@ -10,12 +10,16 @@ type CaseStudyPageNavProps = {
   variant: 'mobile' | 'desktop'
 }
 
+const SECTION_SCROLL_OFFSET: Record<string, number> = {
+  play: 80,
+}
+
 function getNavItemClassName(isActive: boolean) {
   return [
     'block rounded-lg px-2 py-1.5 transition-colors',
     isActive
       ? 'bg-[color:color-mix(in_srgb,var(--primary)_10%,white)] font-medium text-foreground'
-      : 'text-muted-foreground hover:text-foreground',
+      : 'text-muted-foreground hover:bg-[color:color-mix(in_srgb,var(--primary)_6%,white)] hover:text-foreground focus-visible:bg-[color:color-mix(in_srgb,var(--primary)_6%,white)] focus-visible:text-foreground',
   ]
     .join(' ')
     .trim()
@@ -30,22 +34,42 @@ function CaseStudyPageNavLinks({
   onNavigate?: () => void
   sections: CaseStudyPageNavProps['sections']
 }) {
+  const handleNavigate = (
+    event: MouseEvent<HTMLAnchorElement>,
+    sectionId: string,
+  ) => {
+    const target = document.getElementById(sectionId)
+
+    if (!target) {
+      return
+    }
+
+    event.preventDefault()
+
+    const scrollTarget = target.closest('section') ?? target
+    const headerOffset = SECTION_SCROLL_OFFSET[sectionId] ?? 24
+    const top = scrollTarget.getBoundingClientRect().top + window.scrollY - headerOffset
+
+    window.history.pushState(null, '', `#${sectionId}`)
+    window.scrollTo({ top, behavior: 'smooth' })
+    onNavigate?.()
+  }
+
   return (
-    <nav aria-label="Case study sections">
-      <ul className="space-y-2 text-sm">
-        {sections.map((section) => (
-          <li key={section.id}>
-            <a
-              href={`#${section.id}`}
-              className={getNavItemClassName(activeSectionId === section.id)}
-              onClick={onNavigate}
-            >
-              {section.label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <ul className="space-y-2 text-sm">
+      {sections.map((section) => (
+        <li key={section.id}>
+          <a
+            href={`#${section.id}`}
+            aria-current={activeSectionId === section.id ? 'location' : undefined}
+            className={getNavItemClassName(activeSectionId === section.id)}
+            onClick={(event) => handleNavigate(event, section.id)}
+          >
+            {section.label}
+          </a>
+        </li>
+      ))}
+    </ul>
   )
 }
 
@@ -57,6 +81,7 @@ export function CaseStudyPageNav({
 }: CaseStudyPageNavProps) {
   const [isOpen, setIsOpen] = useState(false)
   const navRegionId = useId()
+  const navLabelId = useId()
   const activeSectionLabel =
     sections.find((section) => section.id === activeSectionId)?.label ?? sections[0]?.label
 
@@ -78,7 +103,9 @@ export function CaseStudyPageNav({
           onClick={() => setIsOpen((current) => !current)}
         >
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">On this page</p>
+            <p id={navLabelId} className="text-sm font-semibold text-foreground">
+              On this page
+            </p>
             <p className="mt-0.5 truncate text-xs text-muted-foreground">{activeSectionLabel}</p>
           </div>
           <svg
@@ -103,11 +130,13 @@ export function CaseStudyPageNav({
         </button>
 
         <div id={navRegionId} className={isOpen ? 'mt-3' : 'hidden'}>
-          <CaseStudyPageNavLinks
-            activeSectionId={activeSectionId}
-            onNavigate={() => setIsOpen(false)}
-            sections={sections}
-          />
+          <nav aria-labelledby={navLabelId}>
+            <CaseStudyPageNavLinks
+              activeSectionId={activeSectionId}
+              onNavigate={() => setIsOpen(false)}
+              sections={sections}
+            />
+          </nav>
         </div>
       </div>
     )
@@ -122,9 +151,13 @@ export function CaseStudyPageNav({
         .join(' ')
         .trim()}
     >
-      <h2 className="text-base font-semibold text-foreground">On this page</h2>
+      <p id={navLabelId} className="text-base font-semibold text-foreground">
+        On this page
+      </p>
       <div className="mt-2.5">
-        <CaseStudyPageNavLinks activeSectionId={activeSectionId} sections={sections} />
+        <nav aria-labelledby={navLabelId}>
+          <CaseStudyPageNavLinks activeSectionId={activeSectionId} sections={sections} />
+        </nav>
       </div>
     </div>
   )

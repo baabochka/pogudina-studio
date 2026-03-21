@@ -1,12 +1,18 @@
 import type { HTMLAttributes, ReactNode } from 'react'
 
 import { Container } from './Container'
+import {
+  bodyTextClassName,
+  eyebrowTextClassName,
+  sectionTitleClassName,
+} from './contentStyles'
 
 type SectionProps = HTMLAttributes<HTMLElement> & {
   children: ReactNode
-  eyebrow?: string
-  title: string
-  description?: string
+  eyebrow?: ReactNode
+  title: ReactNode
+  description?: ReactNode
+  titleAs?: 'h1' | 'h2'
 }
 
 export function Section({
@@ -15,25 +21,34 @@ export function Section({
   description,
   eyebrow,
   title,
+  titleAs: Title = 'h2',
   ...props
 }: SectionProps) {
   return (
-    <section className={['pt-8 pb-12 sm:pt-10 sm:pb-16', className].join(' ').trim()} {...props}>
+    <section
+      className={[
+        'pt-[var(--space-section-block-start)] pb-[var(--space-section-block-end)] sm:pt-[var(--space-section-block-start-md)] sm:pb-[var(--space-section-block-end-md)]',
+        className,
+      ]
+        .join(' ')
+        .trim()}
+      {...props}
+    >
       <Container>
         <div className="max-w-3xl">
           {eyebrow ? (
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-primary">
-              {eyebrow}
+            <p className={eyebrowTextClassName}>{eyebrow}</p>
+          ) : null}
+          <Title className={sectionTitleClassName}>
+            {title}
+          </Title>
+          {description ? (
+            <p className={['mt-[var(--space-heading-content)]', bodyTextClassName].join(' ')}>
+              {description}
             </p>
           ) : null}
-          <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            {title}
-          </h2>
-          {description ? (
-            <p className="mt-4 text-base leading-7 text-muted-foreground">{description}</p>
-          ) : null}
         </div>
-        <div className="mt-8">{children}</div>
+        <div className="mt-[var(--space-section-gap)]">{children}</div>
       </Container>
     </section>
   )

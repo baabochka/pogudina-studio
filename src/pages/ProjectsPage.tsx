@@ -12,11 +12,12 @@ export function ProjectsPage() {
     <Section
       eyebrow="Projects"
       title="Selected frontend work"
+      titleAs="h1"
       description="Selected front-end work across enterprise UI, accessibility, design systems, and interactive experiences."
     >
-      <div className="grid items-stretch gap-6 md:grid-cols-2 xl:grid-cols-6">
+      <ul className="grid items-stretch gap-6 md:grid-cols-2 xl:grid-cols-6">
         {projects.map((project) => (
-          <article
+          <li
             key={project.slug}
             className={
               featuredProjectSlugs.has(project.slug)
@@ -28,9 +29,9 @@ export function ProjectsPage() {
               project={project}
               featured={featuredProjectSlugs.has(project.slug)}
             />
-          </article>
+          </li>
         ))}
-      </div>
+      </ul>
     </Section>
   )
 }

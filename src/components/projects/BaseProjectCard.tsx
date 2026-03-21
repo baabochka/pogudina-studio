@@ -28,7 +28,7 @@ export function BaseProjectCard({
     >
       <Card
         className={[
-          'flex h-full flex-col transition-all duration-200 ease-out group-hover:-translate-y-[2px] group-hover:border-[color:color-mix(in_srgb,var(--border)_60%,#9ca3af_40%)] group-hover:shadow-sm motion-reduce:transform-none motion-reduce:transition-none',
+          'flex h-full flex-col transition-[border-color,transform,box-shadow] duration-[var(--duration-interactive)] ease-[var(--easing-interactive)] group-hover:translate-y-[var(--translate-interactive-hover)] group-hover:border-[color:color-mix(in_srgb,var(--border)_60%,#9ca3af_40%)] group-hover:shadow-sm motion-reduce:transform-none motion-reduce:transition-none',
           className,
         ]
           .join(' ')
@@ -36,7 +36,7 @@ export function BaseProjectCard({
       >
         <div className={contentClassName}>{children}</div>
         <div className={['mt-auto', footerClassName].join(' ').trim()}>
-          <span className="inline-flex w-fit items-center rounded-full bg-[color:color-mix(in_srgb,var(--primary)_18%,white)] px-3.5 py-1.5 text-sm font-semibold text-[color:color-mix(in_srgb,var(--primary)_78%,#14532d_22%)] transition duration-200 ease-out group-hover:bg-[color:color-mix(in_srgb,var(--primary)_24%,white)] group-hover:text-[color:color-mix(in_srgb,var(--primary)_82%,#14532d_18%)] group-focus-visible:bg-[color:color-mix(in_srgb,var(--primary)_24%,white)] group-focus-visible:text-[color:color-mix(in_srgb,var(--primary)_82%,#14532d_18%)] motion-reduce:transition-none">
+          <span className="inline-flex w-fit items-center rounded-[var(--radius-pill)] bg-[color:color-mix(in_srgb,var(--primary)_18%,white)] px-[var(--space-chip-inline)] py-[var(--space-chip-block)] text-sm font-semibold text-[color:color-mix(in_srgb,var(--primary)_78%,#14532d_22%)] transition-[background-color,color] duration-[var(--duration-interactive)] ease-[var(--easing-interactive)] group-hover:bg-[color:color-mix(in_srgb,var(--primary)_24%,white)] group-hover:text-[color:color-mix(in_srgb,var(--primary)_82%,#14532d_18%)] group-focus-visible:bg-[color:color-mix(in_srgb,var(--primary)_24%,white)] group-focus-visible:text-[color:color-mix(in_srgb,var(--primary)_82%,#14532d_18%)] motion-reduce:transition-none">
             {ctaLabel}
           </span>
         </div>
@@ -46,22 +46,26 @@ export function BaseProjectCard({
 }
 
 export function ProjectCardTitle({
+  as: Component = 'h3',
   title,
   weight = 'semibold',
 }: {
+  as?: 'h2' | 'h3'
   title: string
   weight?: 'semibold' | 'bold'
 }) {
   return (
-    <h3
+    <Component
       className={[
-        'text-xl text-foreground transition-colors duration-200 ease-out group-hover:text-[color:color-mix(in_srgb,var(--foreground)_88%,#111827_12%)] group-focus-visible:text-[color:color-mix(in_srgb,var(--foreground)_88%,#111827_12%)]',
-        weight === 'bold' ? 'font-bold' : 'font-semibold',
+        'text-[length:var(--font-size-title-xs)] tracking-tight leading-[var(--line-height-tight)] text-foreground transition-colors duration-[var(--duration-interactive)] ease-[var(--easing-interactive)] group-hover:text-[color:color-mix(in_srgb,var(--foreground)_88%,#111827_12%)] group-focus-visible:text-[color:color-mix(in_srgb,var(--foreground)_88%,#111827_12%)]',
+        weight === 'bold'
+          ? 'font-[var(--font-weight-bold)]'
+          : 'font-[var(--font-weight-semibold)]',
       ]
         .join(' ')
         .trim()}
     >
       {title}
-    </h3>
+    </Component>
   )
 }

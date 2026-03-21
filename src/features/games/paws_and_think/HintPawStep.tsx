@@ -1,15 +1,19 @@
 export function HintPawStep({
   fill,
   stroke,
-  className = 'h-9 w-9',
+  className = "h-9 w-9",
 }: {
-  fill: string
-  stroke: string
-  className?: string
+  fill: string;
+  stroke: string;
+  className?: string;
 }) {
   return (
-    <svg viewBox="0 0 90 90" className={`${className} overflow-visible`} aria-hidden="true">
-      <g transform="translate(45 45) scale(0.98) translate(-45 -45)">
+    <svg
+      viewBox="0 0 90 90"
+      className={`${className} overflow-visible`}
+      aria-hidden="true"
+    >
+      <g transform="translate(45 45) scale(1.3) translate(-45 -45)">
         <path
           d="m45.22,15.81c5.69,2.07,14.56,7.05,10.58,14.76-2.29,4.4-8.47,12.81-13.03,10.56-8.44-5.3-18.55-14.82-6.73-22.78,2.56-1.73,6.03-3.11,9.18-2.54Z"
           fill={fill}
@@ -48,5 +52,5 @@ export function HintPawStep({
         />
       </g>
     </svg>
-  )
+  );
 }

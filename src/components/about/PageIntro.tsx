@@ -1,24 +1,37 @@
 import type { ReactNode } from 'react'
 
+import {
+  bodyTextClassName,
+  eyebrowTextClassName,
+  sectionTitleClassName,
+} from '../ui/contentStyles'
+
 type PageIntroProps = {
   className?: string
   description?: ReactNode
-  eyebrow: string
+  eyebrow: ReactNode
   title: ReactNode
 }
 
 export function PageIntro({ className = '', description, eyebrow, title }: PageIntroProps) {
   return (
-    <div className={['max-w-3xl', className].join(' ').trim()}>
-      <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-primary">
-        {eyebrow}
-      </p>
-      <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+    <header className={['max-w-3xl', className].join(' ').trim()}>
+      <p className={eyebrowTextClassName}>{eyebrow}</p>
+      <h1 className={sectionTitleClassName}>
         {title}
       </h1>
       {description ? (
-        <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">{description}</p>
+        <p
+          className={[
+            'mt-[var(--space-heading-content)] max-w-2xl',
+            bodyTextClassName,
+          ]
+            .join(' ')
+            .trim()}
+        >
+          {description}
+        </p>
       ) : null}
-    </div>
+    </header>
   )
 }

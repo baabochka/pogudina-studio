@@ -1,21 +1,26 @@
-import { useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
 import { CaseStudyPageNav } from '../components/case-study/CaseStudyPageNav'
 import { SectionBlock } from '../components/case-study/SectionBlock'
-import { GamePreview } from '../components/games/GamePreview'
 import { Container } from '../components/ui/Container'
-import { GameBoardRound } from '../features/games/paws_and_think/GameBoardRound'
 import { getGameBySlug } from '../data/games'
 
+const GameBoardRound = lazy(() =>
+  import('../features/games/paws_and_think/GameBoardRound').then((module) => ({
+    default: module.GameBoardRound,
+  })),
+)
+
 const gameSections = [
-  { id: 'context', label: 'Context' },
+  { id: 'play', label: 'Game' },
+  { id: 'context', label: 'Problem' },
   { id: 'challenges', label: 'Challenges' },
   { id: 'approach', label: 'Approach' },
-  { id: 'design-decisions', label: 'Design decisions' },
-  { id: 'impact', label: 'Impact' },
+  { id: 'engineering-notes', label: 'Engineering notes' },
+  { id: 'design-decisions', label: 'Design tradeoffs' },
+  { id: 'impact', label: 'Outcome' },
   { id: 'next-steps', label: 'Next steps' },
-  { id: 'play', label: 'Play the game' },
 ] as const
 
 const pawsAndThinkDetails = {
@@ -36,12 +41,20 @@ const pawsAndThinkDetails = {
     'Introduced dynamic theming to keep artwork, controls, and overlays visually consistent across the game.',
     'Simplified the UI so the board, card area, and answer tokens stayed easy to read on both desktop and mobile.',
   ],
-  gameplay: [
-    'The timer and score system turn the puzzle into a replayable challenge instead of a one-off exercise.',
-    'Correct and incorrect answers get immediate feedback through paw markers, color changes, and hint animation.',
-    'Wrong answers trigger a curved paw trail that reveals the correct token instead of leaving the player stuck.',
-    'Previous-answer review and explanations reinforce the deduction pattern rather than treating the game as guesswork.',
-  ],
+  engineeringNotes: {
+    svgSystem: [
+      'The board and card visuals are composed from reusable SVG illustration components instead of exported image variants.',
+      'Keeping structure in code makes combinations easier to generate, update, and validate as the game grows.',
+    ],
+    reuseAndTheming: [
+      'Shared palette tokens let the same illustration logic drive artwork, answer states, and overlays without duplicating visual assets.',
+      'That reuse makes future card sets and modes easier to extend while preserving a consistent visual language.',
+    ],
+    performance: [
+      'Moving from static assets to composable SVG dramatically reduced asset weight and removed the need to manage dozens of individual files.',
+      'The lighter bundle improves load time on lower-bandwidth devices while also lowering maintenance overhead.',
+    ],
+  },
   designDecisions: {
     svg: [
       'Replaced 50+ PNG/JPG card variations with a small set of reusable SVG illustrations.',
@@ -72,12 +85,6 @@ const pawsAndThinkDetails = {
     'Expand the system with new card sets, rules, and difficulty adjustments while keeping the same visual language.',
     'Continue reducing bundle cost and improving component reuse as the game library grows.',
   ],
-  metadata: [
-    { label: 'Type', value: 'Puzzle / Logic' },
-    { label: 'Platform', value: 'Web / Mobile' },
-    { label: 'Built with', value: 'React, SVG' },
-    { label: 'Focus', value: 'UI responsiveness / visual reasoning' },
-  ],
 }
 
 function BulletList({ items }: { items: string[] }) {
@@ -90,6 +97,15 @@ function BulletList({ items }: { items: string[] }) {
         </li>
       ))}
     </ul>
+  )
+}
+
+function GameBoardFallback() {
+  return (
+    <div
+      className="h-[560px] rounded-[var(--radius-xl)] border border-border/70 bg-[color:color-mix(in_srgb,var(--surface)_94%,white)] sm:h-[600px]"
+      aria-hidden="true"
+    />
   )
 }
 
@@ -109,28 +125,33 @@ export function GameDetailPage() {
       return
     }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visibleEntries = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
+    const updateActiveSection = () => {
+      const activationOffset = 140
+      let nextActiveSectionId = sectionElements[0].id
 
-        if (visibleEntries.length > 0) {
-          setActiveSectionId(
-            visibleEntries[0].target.id as (typeof gameSections)[number]['id'],
-          )
+      for (const element of sectionElements) {
+        const elementTop = element.getBoundingClientRect().top
+
+        if (elementTop - activationOffset <= 0) {
+          nextActiveSectionId = element.id
+        } else {
+          break
         }
-      },
-      {
-        rootMargin: '-20% 0px -55% 0px',
-        threshold: [0.1, 0.25, 0.5, 0.75],
-      },
-    )
+      }
 
-    sectionElements.forEach((element) => observer.observe(element))
+      setActiveSectionId(
+        nextActiveSectionId as (typeof gameSections)[number]['id'],
+      )
+    }
+
+    updateActiveSection()
+
+    window.addEventListener('scroll', updateActiveSection, { passive: true })
+    window.addEventListener('resize', updateActiveSection)
 
     return () => {
-      observer.disconnect()
+      window.removeEventListener('scroll', updateActiveSection)
+      window.removeEventListener('resize', updateActiveSection)
     }
   }, [game?.slug])
 
@@ -168,154 +189,139 @@ export function GameDetailPage() {
           ← Back to games
         </Link>
 
-        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10">
+        <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-10">
           <div className="max-w-4xl">
-            <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-primary">
-              Games
-            </p>
-            <h1 className="mb-6 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-              {game.title}
-            </h1>
-            <p className="max-w-[68ch] text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-              {game.summary} {game.description}
-            </p>
+            <header>
+              <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-primary">
+                Games
+              </p>
+              <h1 className="mb-6 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+                {game.title}
+              </h1>
+              <p className="max-w-[68ch] text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
+                {game.summary} {game.description}
+              </p>
+            </header>
 
-            <div className="mt-8 w-full max-w-3xl rounded-2xl border border-border/80 bg-surface p-4 md:p-5">
-              <dl className="grid gap-x-6 gap-y-4 md:grid-cols-2">
-                {pawsAndThinkDetails.metadata.map((item) => (
-                  <div key={item.label}>
-                    <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                      {item.label}
-                    </dt>
-                    <dd className="mt-2 text-sm leading-6 text-foreground">{item.value}</dd>
-                  </div>
-                ))}
-              </dl>
+            <div className="mt-8 space-y-10">
+              <section id="play">
+                <div className="mb-10 w-full max-w-[24rem] sm:mb-12 lg:max-w-[400px]">
+                  <Suspense fallback={<GameBoardFallback />}>
+                    <GameBoardRound boardHeightClassName="h-[560px] sm:h-[600px]" />
+                  </Suspense>
+                </div>
+              </section>
 
-              <div className="mt-8 lg:hidden">
-                <a
-                  href="#play"
-                  className="inline-flex min-h-11 w-fit items-center justify-center self-start rounded-full bg-primary px-5 py-3 text-base font-semibold text-primary-foreground shadow-[0_12px_30px_-18px_color-mix(in_srgb,var(--primary)_65%,transparent)] transition duration-180 hover:opacity-95 active:translate-y-px"
-                >
-                  Try it
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div className="hidden w-full flex-col items-end lg:flex lg:self-start">
-            <div className="w-full max-w-[260px]">
-              <GamePreview
-                src={game.previewImage}
-                alt={game.previewAlt}
-                variant={game.previewVariant}
-                className="border-border/60 bg-[color:color-mix(in_srgb,var(--surface)_88%,white)]"
+              <CaseStudyPageNav
+                activeSectionId={activeSectionId}
+                className="w-full max-w-3xl lg:hidden"
+                sections={gameSections.map((section) => ({ ...section }))}
+                variant="mobile"
               />
-              <a
-                href="#play"
-                className="mt-6 inline-flex min-h-11 w-fit items-center justify-center self-start rounded-full bg-primary px-5 py-3 text-base font-semibold text-primary-foreground shadow-[0_12px_30px_-18px_color-mix(in_srgb,var(--primary)_65%,transparent)] transition duration-180 hover:opacity-95 active:translate-y-px"
-              >
-                Try it
-              </a>
+
+              <SectionBlock id="context" title="Problem and product context">
+                <div className="max-w-[68ch] space-y-4">
+                  {pawsAndThinkDetails.context.map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+                </div>
+              </SectionBlock>
+
+              <SectionBlock id="challenges" title="Challenges">
+                <div className="max-w-[68ch]">
+                  <BulletList items={pawsAndThinkDetails.challenges} />
+                </div>
+              </SectionBlock>
+
+              <SectionBlock id="approach" title="Approach">
+                <div className="max-w-[68ch]">
+                  <BulletList items={pawsAndThinkDetails.approach} />
+                </div>
+              </SectionBlock>
+
+              <SectionBlock id="engineering-notes" title="Engineering notes">
+                <div className="max-w-[68ch] space-y-8">
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      SVG composition instead of static assets
+                    </h3>
+                    <div className="mt-4">
+                      <BulletList items={pawsAndThinkDetails.engineeringNotes.svgSystem} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Reuse and theming benefits
+                    </h3>
+                    <div className="mt-4">
+                      <BulletList items={pawsAndThinkDetails.engineeringNotes.reuseAndTheming} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Asset and performance advantages
+                    </h3>
+                    <div className="mt-4">
+                      <BulletList items={pawsAndThinkDetails.engineeringNotes.performance} />
+                    </div>
+                  </div>
+                </div>
+              </SectionBlock>
+
+              <SectionBlock id="design-decisions" title="Design and implementation tradeoffs">
+                <div className="max-w-[68ch] space-y-8">
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      SVG-based rendering instead of static assets
+                    </h3>
+                    <div className="mt-4">
+                      <BulletList items={pawsAndThinkDetails.designDecisions.svg} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Designing for scalability, not just completion
+                    </h3>
+                    <div className="mt-4">
+                      <BulletList items={pawsAndThinkDetails.designDecisions.scalability} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Intentional UI simplicity
+                    </h3>
+                    <div className="mt-4">
+                      <BulletList items={pawsAndThinkDetails.designDecisions.simplicity} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Consistent responsive behavior
+                    </h3>
+                    <div className="mt-4">
+                      <BulletList items={pawsAndThinkDetails.designDecisions.responsive} />
+                    </div>
+                  </div>
+                </div>
+              </SectionBlock>
+
+              <SectionBlock id="impact" title="Outcome and impact">
+                <div className="max-w-[68ch]">
+                  <BulletList items={pawsAndThinkDetails.impact} />
+                </div>
+              </SectionBlock>
+
+              <SectionBlock id="next-steps" title="Next steps">
+                <div className="max-w-[68ch]">
+                  <BulletList items={pawsAndThinkDetails.nextSteps} />
+                </div>
+              </SectionBlock>
             </div>
-          </div>
-        </div>
-
-        <CaseStudyPageNav
-          activeSectionId={activeSectionId}
-          className="mt-10 w-full max-w-3xl lg:hidden"
-          sections={gameSections.map((section) => ({ ...section }))}
-          variant="mobile"
-        />
-
-        <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-10">
-          <div className="max-w-4xl space-y-10">
-            <SectionBlock title="From physical game to scalable web system">
-              <div id="context" className="max-w-[68ch] space-y-4">
-                {pawsAndThinkDetails.context.map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
-              </div>
-            </SectionBlock>
-
-            <SectionBlock title="Challenges">
-              <div id="challenges" className="max-w-[68ch]">
-                <BulletList items={pawsAndThinkDetails.challenges} />
-              </div>
-            </SectionBlock>
-
-            <SectionBlock title="Approach">
-              <div id="approach" className="max-w-[68ch]">
-                <BulletList items={pawsAndThinkDetails.approach} />
-              </div>
-            </SectionBlock>
-
-            <SectionBlock title="Design decisions">
-              <div id="design-decisions" className="max-w-[68ch] space-y-8">
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">
-                    SVG-based rendering instead of static assets
-                  </h3>
-                  <div className="mt-4">
-                    <BulletList items={pawsAndThinkDetails.designDecisions.svg} />
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">
-                    Designing for scalability, not just completion
-                  </h3>
-                  <div className="mt-4">
-                    <BulletList items={pawsAndThinkDetails.designDecisions.scalability} />
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">
-                    Intentional UI simplicity
-                  </h3>
-                  <div className="mt-4">
-                    <BulletList items={pawsAndThinkDetails.designDecisions.simplicity} />
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">
-                    Consistent responsive behavior
-                  </h3>
-                  <div className="mt-4">
-                    <BulletList items={pawsAndThinkDetails.designDecisions.responsive} />
-                  </div>
-                </div>
-              </div>
-            </SectionBlock>
-
-            <SectionBlock title="Impact">
-              <div id="impact" className="max-w-[68ch]">
-                <BulletList items={pawsAndThinkDetails.impact} />
-              </div>
-            </SectionBlock>
-
-            <SectionBlock title="Next steps">
-              <div id="next-steps" className="max-w-[68ch]">
-                <BulletList items={pawsAndThinkDetails.nextSteps} />
-              </div>
-            </SectionBlock>
-
-            <SectionBlock title="Gameplay">
-              <div id="gameplay" className="max-w-[68ch]">
-                <BulletList items={pawsAndThinkDetails.gameplay} />
-              </div>
-            </SectionBlock>
-
-            <section id="play" className="border-t border-border/80 pt-10 sm:pt-12">
-              <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                Play the game
-              </h2>
-              <div className="mt-8 mx-auto mb-10 w-full max-w-[24rem] px-2 sm:mb-12 lg:mx-0 lg:ml-2 lg:max-w-[400px] lg:px-0">
-                <GameBoardRound boardHeightClassName="h-[560px] sm:h-[600px]" />
-              </div>
-            </section>
           </div>
 
           <aside className="hidden lg:block lg:sticky lg:top-24 lg:self-start">

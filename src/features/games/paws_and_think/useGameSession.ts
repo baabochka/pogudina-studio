@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 
 import type { IllustrationName, ObjectName, ResolvedCard } from './cardResolver'
+import type { GameMode } from './gameMode'
 import {
   CARD_TRANSITION_TOTAL_MS,
   CORRECT_VALIDATION_MS,
   loadBestTotal,
   getRecentIllustrationsWithNext,
-  resolveSessionCard,
+  resolveSessionRound,
   ROUND_DURATION_SECONDS,
   saveBestTotal,
   WRONG_VALIDATION_MS,
@@ -15,14 +16,16 @@ import {
 export type ValidationResult = 'idle' | 'correct' | 'wrong' | 'finished'
 
 export type ReviewedTurn = {
-  card: ResolvedCard
+  cards: ResolvedCard[]
+  mode: GameMode
   selectedAnswer: ObjectName
   correctAnswer: ObjectName
   wasCorrect: boolean
 }
 
 type GameSessionState = {
-  card: ResolvedCard
+  cards: ResolvedCard[]
+  correctAnswer: ObjectName
   selectedAnswer: ObjectName | null
   previousTurn: ReviewedTurn | null
   validationResult: ValidationResult
@@ -36,9 +39,12 @@ type GameSessionState = {
   isCardTransitioning: boolean
 }
 
-function createInitialState(): GameSessionState {
+function createInitialState(mode: GameMode): GameSessionState {
+  const { cards, correctAnswer } = resolveSessionRound(mode, [])
+
   return {
-    card: resolveSessionCard([]),
+    cards,
+    correctAnswer,
     selectedAnswer: null,
     previousTurn: null,
     validationResult: 'idle',
@@ -53,15 +59,26 @@ function createInitialState(): GameSessionState {
   }
 }
 
-export function useGameSession(isPaused = false) {
-  const [state, setState] = useState<GameSessionState>(() => createInitialState())
+export function useGameSession({
+  isPaused = false,
+  mode = 'single-card',
+}: {
+  isPaused?: boolean
+  mode?: GameMode
+} = {}) {
+  const [state, setState] = useState<GameSessionState>(() => createInitialState(mode))
   const advanceTimeoutRef = useRef<number | null>(null)
   const transitionTimeoutRef = useRef<number | null>(null)
   const timeLeftRef = useRef(state.timeLeft)
+  const modeRef = useRef(mode)
 
   useEffect(() => {
     timeLeftRef.current = state.timeLeft
   }, [state.timeLeft])
+
+  useEffect(() => {
+    modeRef.current = mode
+  }, [mode])
 
   useEffect(() => {
     saveBestTotal(state.bestTotal)
@@ -119,8 +136,8 @@ export function useGameSession(isPaused = false) {
         return currentState
       }
 
-      const isCorrect = answer === currentState.card.targetAnswer
-      const correctAnswer = currentState.card.targetAnswer
+      const isCorrect = answer === currentState.correctAnswer
+      const correctAnswer = currentState.correctAnswer
       const nextScore = isCorrect ? currentState.score + 1 : currentState.score
       const nextAnsweredCount = currentState.answeredCount + 1
       const nextBestTotal = Math.max(currentState.bestTotal, nextScore)
@@ -145,12 +162,15 @@ export function useGameSession(isPaused = false) {
 
           const nextRecentIllustrations = getRecentIllustrationsWithNext(
             timeoutState.recentIllustrations,
-            timeoutState.card.illustration,
+            timeoutState.cards.map((card) => card.illustration),
           )
+
+          const nextRound = resolveSessionRound(modeRef.current, nextRecentIllustrations)
 
           return {
             ...timeoutState,
-            card: resolveSessionCard(nextRecentIllustrations),
+            cards: nextRound.cards,
+            correctAnswer: nextRound.correctAnswer,
             selectedAnswer: null,
             validationResult: 'idle',
             recentIllustrations: nextRecentIllustrations,
@@ -178,7 +198,8 @@ export function useGameSession(isPaused = false) {
         selectedAnswer: answer,
         previousTurn: correctAnswer
           ? {
-              card: currentState.card,
+              cards: currentState.cards,
+              mode: modeRef.current,
               selectedAnswer: answer,
               correctAnswer,
               wasCorrect: isCorrect,
@@ -193,7 +214,7 @@ export function useGameSession(isPaused = false) {
     })
   }
 
-  const restartRound = () => {
+  const restartRound = (modeOverride?: GameMode) => {
     if (advanceTimeoutRef.current != null) {
       window.clearTimeout(advanceTimeoutRef.current)
       advanceTimeoutRef.current = null
@@ -204,7 +225,7 @@ export function useGameSession(isPaused = false) {
     }
 
     setState((currentState) => {
-      const freshState = createInitialState()
+      const freshState = createInitialState(modeOverride ?? modeRef.current)
       return {
         ...freshState,
         bestTotal: currentState.bestTotal,
@@ -213,7 +234,9 @@ export function useGameSession(isPaused = false) {
   }
 
   return {
-    card: state.card,
+    card: state.cards[0],
+    cards: state.cards,
+    correctAnswer: state.correctAnswer,
     selectedAnswer: state.selectedAnswer,
     previousTurn: state.previousTurn,
     validationResult: state.validationResult,

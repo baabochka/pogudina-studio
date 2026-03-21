@@ -17,7 +17,9 @@ export function ComingSoonCard() {
       </div>
 
       <div className="flex flex-1 flex-col">
-        <h2 className="text-xl font-semibold tracking-tight text-foreground/85">Coming soon</h2>
+        <h2 className="text-[length:var(--font-size-title-xs)] font-[var(--font-weight-semibold)] tracking-tight leading-[var(--line-height-tight)] text-foreground/85">
+          Coming soon
+        </h2>
         <p className="mt-2 max-w-[58ch] text-sm leading-6 text-muted-foreground">
           I’m building out this section as a home for small browser games, UI experiments, and
           playful prototypes that still reflect the same focus on polish, clarity, and frontend

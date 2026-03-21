@@ -14,6 +14,8 @@ export type Project = {
   decisionDetails?: string[]
   solution: string[]
   impact: string[]
+  tradeoffs: string[]
+  nextImprovements: string[]
   reflection: string[]
 }
 
@@ -63,6 +65,14 @@ export const projects: Project[] = [
       'Reduced reliance on fragmented views and manual workarounds',
       'Introduced a resilient UI model that adapted to evolving backend behavior without requiring rework',
     ],
+    tradeoffs: [
+      'Deriving monitoring state in the UI reduced backend churn and preserved flexibility, but it required extra care to keep rapidly changing snapshot data understandable.',
+      'Keeping the feature aligned with existing application patterns improved maintainability, while limiting how far the UI could diverge from established workflows.',
+    ],
+    nextImprovements: [
+      'Introduce clearer state diagrams and edge-case documentation earlier so backend, design, and QA can align faster.',
+      'Expand scenario coverage around fast state transitions to make regression analysis more predictable as the monitoring model grows.',
+    ],
     reflection: [
       'Separating monitoring from other call states early made the interface easier to extend as the product direction matured.',
       'If I revisited the project, I would introduce clearer state diagrams earlier in cross-team discussions to accelerate alignment on edge cases and reduce ambiguity during implementation.',
@@ -105,6 +115,14 @@ export const projects: Project[] = [
       'Made reusable responses easier to discover and insert during live chats, reducing friction in repetitive agent workflows.',
       'Expanded a complex editor safely while preserving keyboard accessibility and confidence in the existing chat experience.',
     ],
+    tradeoffs: [
+      'Preserving the styled placeholder requirement kept the intended UX, but it increased editor complexity and forced more defensive state handling.',
+      'Building on DraftJS avoided a disruptive rewrite, while requiring a deeper investment in framework-specific behavior and testing.',
+    ],
+    nextImprovements: [
+      'Document editor edge cases earlier so design and product tradeoffs are easier to evaluate before implementation starts.',
+      'Add more reusable abstractions around trigger detection and insertion behavior if similar rich-text customizations expand.',
+    ],
     reflection: [
       'This project sharpened my ability to challenge design requirements constructively when the implementation cost is high but still deliver if the team decides to proceed.',
       'I would invest even earlier in editor edge-case documentation when extending highly customized rich text behavior.',
@@ -144,6 +162,14 @@ export const projects: Project[] = [
     impact: [
       'Improved confidence in releases by strengthening UI reliability and expanding automated test coverage around a sensitive workflow.',
       'Made authentication status easier for agents to trust and interpret during active customer conversations.',
+    ],
+    tradeoffs: [
+      'Focusing on reliability and incremental fixes improved release confidence quickly, but it meant working within an existing interaction model rather than redesigning the flow.',
+      'Strengthening regression coverage increased deployment safety, while adding upfront maintenance cost to preserve nuanced state behavior.',
+    ],
+    nextImprovements: [
+      'Add more scenario-based regression coverage earlier for nuanced real-time transitions and release-to-release drift.',
+      'Create clearer UI-state references for cross-functional partners so maintenance decisions can be made faster over time.',
     ],
     reflection: [
       'Owning a feature across releases reinforced how much product trust depends on maintenance work, not just net-new UI.',
@@ -185,6 +211,14 @@ export const projects: Project[] = [
       'Helped the product adopt a major design system update without sacrificing accessibility or introducing broad workflow regressions.',
       'Established a validation approach that made future migration work more predictable and less risky.',
     ],
+    tradeoffs: [
+      'Rolling the migration out incrementally reduced regression risk, but it required more coordination and careful validation across shared surfaces.',
+      'Preserving behavioral consistency limited how aggressively visual updates could be applied in a single pass.',
+    ],
+    nextImprovements: [
+      'Formalize migration checklists earlier so shared teams align on accessibility and regression standards from the start.',
+      'Expand reusable visual and behavioral test coverage to reduce manual verification during future design-system rollouts.',
+    ],
     reflection: [
       'Design system migrations look visual on the surface, but they often expose behavioral and accessibility gaps that deserve equal attention.',
       'I would formalize migration checklists earlier so shared teams can align on validation standards from the start.',
@@ -224,6 +258,14 @@ export const projects: Project[] = [
     impact: [
       'Created a reusable theming foundation that made shared chat UI components easier to scale across packages and teams.',
       'Improved long-term consistency by pairing implementation with documentation and team alignment work.',
+    ],
+    tradeoffs: [
+      'Keeping the theming model modular improved adoption across packages, but it required more upfront design work than a local, product-specific solution.',
+      'Documenting ownership boundaries reduced long-term ambiguity, while adding short-term coordination overhead across teams.',
+    ],
+    nextImprovements: [
+      'Add more concrete adoption examples and starter patterns so new teams can implement the architecture faster.',
+      'Extend the shared foundation with stronger validation patterns if theming usage expands across more component surfaces.',
     ],
     reflection: [
       'Architecture work lands best when documentation and implementation evolve together instead of as separate tracks.',

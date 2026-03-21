@@ -1,5 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 
+import { getButtonClassName } from './buttonClassName'
+
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode
   variant?: 'primary' | 'secondary'
@@ -12,18 +14,10 @@ export function Button({
   variant = 'primary',
   ...props
 }: ButtonProps) {
-  const baseClasses =
-    'inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60'
-
-  const variantClasses =
-    variant === 'primary'
-      ? 'bg-primary text-primary-foreground hover:opacity-90'
-      : 'border border-border bg-surface text-foreground hover:bg-surface-muted'
-
   return (
     <button
       type={type}
-      className={[baseClasses, variantClasses, className].join(' ').trim()}
+      className={[getButtonClassName(variant), className].join(' ').trim()}
       {...props}
     >
       {children}

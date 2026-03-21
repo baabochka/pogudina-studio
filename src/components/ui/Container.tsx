@@ -7,7 +7,12 @@ type ContainerProps = HTMLAttributes<HTMLDivElement> & {
 export function Container({ children, className = '', ...props }: ContainerProps) {
   return (
     <div
-      className={['mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8', className].join(' ').trim()}
+      className={[
+        'mx-auto w-full max-w-6xl px-[var(--space-container-inline)] sm:px-[var(--space-container-inline-md)] lg:px-[var(--space-container-inline-lg)]',
+        className,
+      ]
+        .join(' ')
+        .trim()}
       {...props}
     >
       {children}

@@ -1,14 +1,34 @@
+import { Suspense, lazy } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 
 import { AppLayout } from './components/layout/AppLayout'
-import { AboutPage } from './pages/AboutPage'
-import { GameDetailPage } from './pages/GameDetailPage'
-import { GamesPage } from './pages/GamesPage'
 import { HomePage } from './pages/HomePage'
-import { NotFoundPage } from './pages/NotFoundPage'
-import { ProjectDetailPage } from './pages/ProjectDetailPage'
-import { ProjectsPage } from './pages/ProjectsPage'
 import { RouteErrorPage } from './pages/RouteErrorPage'
+
+const AboutPage = lazy(() =>
+  import('./pages/AboutPage').then((module) => ({ default: module.AboutPage })),
+)
+const GameDetailPage = lazy(() =>
+  import('./pages/GameDetailPage').then((module) => ({ default: module.GameDetailPage })),
+)
+const GamesPage = lazy(() =>
+  import('./pages/GamesPage').then((module) => ({ default: module.GamesPage })),
+)
+const NotFoundPage = lazy(() =>
+  import('./pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage })),
+)
+const ProjectDetailPage = lazy(() =>
+  import('./pages/ProjectDetailPage').then((module) => ({
+    default: module.ProjectDetailPage,
+  })),
+)
+const ProjectsPage = lazy(() =>
+  import('./pages/ProjectsPage').then((module) => ({ default: module.ProjectsPage })),
+)
+
+function withSuspense(element: React.ReactNode) {
+  return <Suspense fallback={<div className="min-h-[40vh]" aria-hidden="true" />}>{element}</Suspense>
+}
 
 export const router = createBrowserRouter(
   [
@@ -23,27 +43,27 @@ export const router = createBrowserRouter(
         },
         {
           path: 'about',
-          element: <AboutPage />,
+          element: withSuspense(<AboutPage />),
         },
         {
           path: 'projects',
-          element: <ProjectsPage />,
+          element: withSuspense(<ProjectsPage />),
         },
         {
           path: 'projects/:slug',
-          element: <ProjectDetailPage />,
+          element: withSuspense(<ProjectDetailPage />),
         },
         {
           path: 'games',
-          element: <GamesPage />,
+          element: withSuspense(<GamesPage />),
         },
         {
           path: 'games/:slug',
-          element: <GameDetailPage />,
+          element: withSuspense(<GameDetailPage />),
         },
         {
           path: '*',
-          element: <NotFoundPage />,
+          element: withSuspense(<NotFoundPage />),
         },
       ],
     },

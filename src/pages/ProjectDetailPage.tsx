@@ -8,12 +8,13 @@ import { Container } from '../components/ui/Container'
 import { projects } from '../data/projects'
 
 const caseStudySections = [
-  { id: 'context', label: 'Problem / Context' },
-  { id: 'role', label: 'Your role' },
-  { id: 'approach', label: 'Process / Approach' },
-  { id: 'solution', label: 'Solution' },
-  { id: 'impact', label: 'Impact' },
-  { id: 'reflection', label: 'Reflection' },
+  { id: 'context', label: 'Problem' },
+  { id: 'role', label: 'Ownership' },
+  { id: 'approach', label: 'Constraints and decisions' },
+  { id: 'solution', label: 'Implementation' },
+  { id: 'tradeoffs', label: 'Tradeoffs' },
+  { id: 'impact', label: 'Outcome' },
+  { id: 'next-improvements', label: 'What I would improve' },
 ]
 
 const approachCardClassName =
@@ -24,6 +25,21 @@ const approachBulletItemClassName = 'flex gap-3'
 const approachBulletDotClassName = 'mt-[10px] h-1.5 w-1.5 shrink-0 rounded-full bg-primary/65'
 const approachSupportingTextClassName =
   'mt-4 max-w-[58ch] space-y-3 text-sm leading-7 text-muted-foreground/90'
+const impactCardClassName =
+  'rounded-3xl border border-[color:color-mix(in_srgb,var(--border)_62%,var(--primary)_38%)] bg-[color:color-mix(in_srgb,var(--surface)_90%,var(--primary)_10%)] px-6 py-6 sm:px-7 sm:py-7'
+
+function BulletList({ items }: { items: string[] }) {
+  return (
+    <ul className="space-y-3.5">
+      {items.map((item) => (
+        <li key={item} className={approachBulletItemClassName}>
+          <span className={approachBulletDotClassName} />
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}
 
 export function ProjectDetailPage() {
   const { slug } = useParams()
@@ -87,7 +103,7 @@ export function ProjectDetailPage() {
   }
 
   return (
-    <section className="pt-6 pb-14 sm:pt-8 sm:pb-18 lg:pt-10">
+    <section className="pt-6 pb-12 sm:pt-8 sm:pb-16 lg:pt-10">
       <Container className="max-w-6xl">
         <CaseStudyHero project={project} />
         <CaseStudyPageNav
@@ -98,70 +114,57 @@ export function ProjectDetailPage() {
         />
 
         <div className="mt-12 grid gap-10 lg:grid-cols-[minmax(0,1fr)_240px] lg:gap-12">
-          <div className="max-w-4xl space-y-12">
-            <SectionBlock title="Problem / Context">
-              <div id="context" className="space-y-4">
-                {project.overview.map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
-              </div>
+          <div className="max-w-4xl space-y-10 sm:space-y-12">
+            <SectionBlock id="context" title="Problem and product context">
+              {project.overview.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
             </SectionBlock>
 
-            <SectionBlock title="Your role">
-              <div id="role" className="space-y-4">
-                {project.role.map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
-              </div>
+            <SectionBlock id="role" title="Ownership and scope">
+              {project.role.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
             </SectionBlock>
 
-            <SectionBlock title="Process / Approach">
-              <div id="approach" className="grid items-stretch gap-5 md:grid-cols-2">
-                <div className={approachCardClassName}>
-                  <h3 className={approachCardHeadingClassName}>Constraints</h3>
-                  <ul className={approachBulletListClassName}>
-                    {project.challenges.map((paragraph) => (
-                      <li key={paragraph} className={approachBulletItemClassName}>
-                        <span className={approachBulletDotClassName} />
-                        <span>{paragraph}</span>
-                      </li>
-                    ))}
-                  </ul>
+            <SectionBlock
+              contentClassName="grid items-stretch gap-6 md:grid-cols-2"
+              id="approach"
+              title="Constraints and implementation decisions"
+            >
+              <article className={approachCardClassName}>
+                <h3 className={approachCardHeadingClassName}>Constraints</h3>
+                <div className={approachBulletListClassName}>
+                  <BulletList items={project.challenges} />
                 </div>
-                <div className={approachCardClassName}>
-                  <h3 className={approachCardHeadingClassName}>Key decisions</h3>
-                  <ul className={approachBulletListClassName}>
-                    {project.decisions.map((paragraph) => (
-                      <li key={paragraph} className={approachBulletItemClassName}>
-                        <span className={approachBulletDotClassName} />
-                        <span>{paragraph}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  {project.decisionDetails?.length ? (
-                    <div className={approachSupportingTextClassName}>
-                      {project.decisionDetails.map((paragraph) => (
-                        <p key={paragraph}>{paragraph}</p>
-                      ))}
-                    </div>
-                  ) : null}
+              </article>
+              <article className={approachCardClassName}>
+                <h3 className={approachCardHeadingClassName}>Key engineering decisions</h3>
+                <div className={approachBulletListClassName}>
+                  <BulletList items={project.decisions} />
                 </div>
-              </div>
+                {project.decisionDetails?.length ? (
+                  <div className={approachSupportingTextClassName}>
+                    {project.decisionDetails.map((paragraph) => (
+                      <p key={paragraph}>{paragraph}</p>
+                    ))}
+                  </div>
+                ) : null}
+              </article>
             </SectionBlock>
 
-            <SectionBlock title="Solution">
-              <div id="solution" className="max-w-3xl space-y-4">
-                {project.solution.map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
-              </div>
+            <SectionBlock contentClassName="max-w-3xl" id="solution" title="Implementation details">
+              {project.solution.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
             </SectionBlock>
 
-            <SectionBlock title="Impact">
-              <div
-                id="impact"
-                className="rounded-3xl border border-[color:color-mix(in_srgb,var(--border)_62%,var(--primary)_38%)] bg-[color:color-mix(in_srgb,var(--surface)_90%,var(--primary)_10%)] px-6 py-6 sm:px-7 sm:py-7"
-              >
+            <SectionBlock contentClassName="max-w-3xl" id="tradeoffs" title="Tradeoffs and risk management">
+              <BulletList items={project.tradeoffs} />
+            </SectionBlock>
+
+            <SectionBlock title="Outcome and impact">
+              <div id="impact" className={impactCardClassName}>
                 <div className="space-y-4">
                   {project.impact.map((paragraph) => (
                     <p key={paragraph}>{paragraph}</p>
@@ -170,8 +173,15 @@ export function ProjectDetailPage() {
               </div>
             </SectionBlock>
 
-            <SectionBlock title="Reflection">
-              <div id="reflection" className="space-y-4">
+            <SectionBlock
+              contentClassName="space-y-5"
+              id="next-improvements"
+              title="What I would improve next"
+            >
+              <div className="max-w-3xl">
+                <BulletList items={project.nextImprovements} />
+              </div>
+              <div className="space-y-4">
                 {project.reflection.map((paragraph) => (
                   <p key={paragraph}>{paragraph}</p>
                 ))}

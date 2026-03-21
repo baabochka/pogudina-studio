@@ -13,11 +13,13 @@ export function HomePage() {
         title="Enterprise UI, accessibility, and design systems"
         description="These projects reflect product ownership, cross-team delivery, and the ability to connect design intent with production-ready implementation."
       >
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {projects.map((project) => (
-            <HomepageCard key={project.slug} project={project} />
+            <li key={project.slug} className="h-full">
+              <HomepageCard project={project} />
+            </li>
           ))}
-        </div>
+        </ul>
       </Section>
     </>
   );
