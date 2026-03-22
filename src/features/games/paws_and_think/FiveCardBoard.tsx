@@ -100,36 +100,34 @@ function FiveCardSlot({
   transitionRunId?: number;
 }) {
   if (previousCard && transitionRunId != null && stage !== "idle") {
-    return (
-      stage === "to-reverse" ? (
-        <div
-          key={`five-card-to-reverse-${transitionRunId}-${slotIndex}`}
-          className="card-transition-scene h-full w-full"
-        >
-          <div className="card-transition-rotor card-transition-rotor-flipping">
-            <SlotTransitionFace side="back">
-              <FiveCardSlotContent card={previousCard} />
-            </SlotTransitionFace>
-            <SlotTransitionFace side="front">
-              <FiveCardReverseContent />
-            </SlotTransitionFace>
-          </div>
+    return stage === "to-reverse" ? (
+      <div
+        key={`five-card-to-reverse-${transitionRunId}-${slotIndex}`}
+        className="card-transition-scene h-full w-full"
+      >
+        <div className="card-transition-rotor card-transition-rotor-flipping">
+          <SlotTransitionFace side="back">
+            <FiveCardSlotContent card={previousCard} />
+          </SlotTransitionFace>
+          <SlotTransitionFace side="front">
+            <FiveCardReverseContent />
+          </SlotTransitionFace>
         </div>
-      ) : (
-        <div
-          key={`five-card-to-next-${transitionRunId}-${slotIndex}`}
-          className="card-transition-scene h-full w-full"
-        >
-          <div className="card-transition-rotor card-transition-rotor-flipping">
-            <SlotTransitionFace side="back">
-              <FiveCardReverseContent />
-            </SlotTransitionFace>
-            <SlotTransitionFace side="front">
-              <FiveCardSlotContent card={card} />
-            </SlotTransitionFace>
-          </div>
+      </div>
+    ) : (
+      <div
+        key={`five-card-to-next-${transitionRunId}-${slotIndex}`}
+        className="card-transition-scene h-full w-full"
+      >
+        <div className="card-transition-rotor card-transition-rotor-flipping">
+          <SlotTransitionFace side="back">
+            <FiveCardReverseContent />
+          </SlotTransitionFace>
+          <SlotTransitionFace side="front">
+            <FiveCardSlotContent card={card} />
+          </SlotTransitionFace>
         </div>
-      )
+      </div>
     );
   }
 
@@ -157,7 +155,7 @@ export function FiveCardBoard({
   }
 
   return (
-    <div className="VAVA relative h-full w-full">
+    <div className="relative h-full w-full">
       {FIVE_CARD_SLOTS.map((slot, index) => {
         const card = cards[index];
 
@@ -171,11 +169,7 @@ export function FiveCardBoard({
             className="absolute"
             style={getSlotStyle(slot)}
           >
-            <FiveCardSlot
-              card={card}
-              stage="idle"
-              slotIndex={index}
-            />
+            <FiveCardSlot card={card} stage="idle" slotIndex={index} />
           </div>
         );
       })}
@@ -207,7 +201,7 @@ function FiveCardBoardTransition({
   }, []);
 
   return (
-    <div className="VAVA relative h-full w-full">
+    <div className="relative h-full w-full">
       {FIVE_CARD_SLOTS.map((slot, index) => {
         const card = cards[index];
 
