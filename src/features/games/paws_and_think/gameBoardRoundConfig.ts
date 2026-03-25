@@ -64,6 +64,7 @@ export function createPawTrailSteps(
   to: { x: number; y: number },
   count: number,
   runId: number,
+  viewBox = BOARD_VIEWBOX,
 ): PawTrailStep[] {
   const verticalDistance = Math.abs(to.y - from.y)
   const controlX = (from.x + to.x) / 2 - (92 + verticalDistance * 0.18)
@@ -81,8 +82,8 @@ export function createPawTrailSteps(
 
     return {
       key: `paw-step-${runId}-${index}`,
-      left: `${(x / BOARD_VIEWBOX.width) * 100}%`,
-      top: `${(y / BOARD_VIEWBOX.height) * 100}%`,
+      left: `${(x / viewBox.width) * 100}%`,
+      top: `${(y / viewBox.height) * 100}%`,
       rotation,
       delay: `${index * 180}ms`,
     }

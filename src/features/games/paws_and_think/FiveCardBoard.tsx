@@ -1,35 +1,21 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 
 import CardFrameSvg from "./assets/card_frame.svg?react";
+import { BOARD_MODE_LAYOUTS } from "./boardLayoutConfig";
 import type { ResolvedCard } from "./cardResolver";
 import reverseCard from "./assets/reverse.svg";
 import { CARD_TRANSITION_PHASE_MS } from "./gameSessionUtils";
-import { FIVE_CARD_LAYOUT_VIEWBOX, FIVE_CARD_SLOTS } from "./fiveCardLayout";
 import { ResolvedCardIllustration } from "./ResolvedCardIllustration";
 
-const CARD_FRAME_INSET = {
-  x: (28.38 / 288) * 100,
-  y: (33.31 / 432) * 100,
-  width: (231.24 / 288) * 100,
-  height: (365.39 / 432) * 100,
-} as const;
-
-function getSlotStyle({
-  height,
-  width,
-  x,
-  y,
-}: {
-  height: number;
-  width: number;
-  x: number;
-  y: number;
-}): CSSProperties {
+function getBoardRelativeSlotStyle(
+  bounds: { height: number; left: number; top: number; width: number },
+  slot: { height: number; left: number; top: number; width: number },
+): CSSProperties {
   return {
-    left: `${(x / FIVE_CARD_LAYOUT_VIEWBOX.width) * 100}%`,
-    top: `${(y / FIVE_CARD_LAYOUT_VIEWBOX.height) * 100}%`,
-    width: `${(width / FIVE_CARD_LAYOUT_VIEWBOX.width) * 100}%`,
-    height: `${(height / FIVE_CARD_LAYOUT_VIEWBOX.height) * 100}%`,
+    left: `${bounds.left + (bounds.width * slot.left) / 100}%`,
+    top: `${bounds.top + (bounds.height * slot.top) / 100}%`,
+    width: `${(bounds.width * slot.width) / 100}%`,
+    height: `${(bounds.height * slot.height) / 100}%`,
   };
 }
 
@@ -56,21 +42,11 @@ function FiveCardSlotContent({ card }: { card: ResolvedCard }) {
         aria-hidden="true"
         className="absolute inset-0 h-full w-full"
       />
-      <div
-        className="absolute"
-        style={{
-          left: `${CARD_FRAME_INSET.x}%`,
-          top: `${CARD_FRAME_INSET.y}%`,
-          width: `${CARD_FRAME_INSET.width}%`,
-          height: `${CARD_FRAME_INSET.height}%`,
-        }}
-      >
-        <ResolvedCardIllustration
-          card={card}
-          wrapperClassName="flex h-full w-full items-center justify-center"
-          className="block h-auto max-h-full w-full max-w-full"
-        />
-      </div>
+      <ResolvedCardIllustration
+        card={card}
+        wrapperClassName={null}
+        className="relative z-10 block h-auto max-h-full w-full max-w-full"
+      />
     </>
   );
 }
@@ -136,10 +112,12 @@ function FiveCardSlot({
 
 export function FiveCardBoard({
   cards,
+  contentBounds,
   previousCards,
   transitionRunId,
 }: {
   cards: ResolvedCard[];
+  contentBounds: { height: number; left: number; top: number; width: number };
   previousCards?: ResolvedCard[] | null;
   transitionRunId?: number;
 }) {
@@ -148,6 +126,7 @@ export function FiveCardBoard({
       <FiveCardBoardTransition
         key={transitionRunId}
         cards={cards}
+        contentBounds={contentBounds}
         previousCards={previousCards}
         transitionRunId={transitionRunId}
       />
@@ -155,8 +134,8 @@ export function FiveCardBoard({
   }
 
   return (
-    <div className="relative h-full w-full">
-      {FIVE_CARD_SLOTS.map((slot, index) => {
+    <>
+      {BOARD_MODE_LAYOUTS["five-card"].cardSlots.map((slot, index) => {
         const card = cards[index];
 
         if (!card) {
@@ -166,23 +145,25 @@ export function FiveCardBoard({
         return (
           <div
             key={`${card.illustration}-${index}`}
-            className="absolute"
-            style={getSlotStyle(slot)}
+            className="absolute box-border flex items-center justify-center transition-[left,top,width,height] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+            style={getBoardRelativeSlotStyle(contentBounds, slot)}
           >
             <FiveCardSlot card={card} stage="idle" slotIndex={index} />
           </div>
         );
       })}
-    </div>
+    </>
   );
 }
 
 function FiveCardBoardTransition({
   cards,
+  contentBounds,
   previousCards,
   transitionRunId,
 }: {
   cards: ResolvedCard[];
+  contentBounds: { height: number; left: number; top: number; width: number };
   previousCards: ResolvedCard[];
   transitionRunId: number;
 }) {
@@ -201,8 +182,8 @@ function FiveCardBoardTransition({
   }, []);
 
   return (
-    <div className="relative h-full w-full">
-      {FIVE_CARD_SLOTS.map((slot, index) => {
+    <>
+      {BOARD_MODE_LAYOUTS["five-card"].cardSlots.map((slot, index) => {
         const card = cards[index];
 
         if (!card) {
@@ -212,8 +193,8 @@ function FiveCardBoardTransition({
         return (
           <div
             key={`${card.illustration}-${index}`}
-            className="absolute"
-            style={getSlotStyle(slot)}
+            className="absolute box-border flex items-center justify-center transition-[left,top,width,height] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+            style={getBoardRelativeSlotStyle(contentBounds, slot)}
           >
             <FiveCardSlot
               card={card}
@@ -225,6 +206,6 @@ function FiveCardBoardTransition({
           </div>
         );
       })}
-    </div>
+    </>
   );
 }

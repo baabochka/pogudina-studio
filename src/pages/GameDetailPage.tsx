@@ -1,10 +1,15 @@
-import { Suspense, lazy, useEffect, useState } from 'react'
+import { Suspense, lazy, type CSSProperties, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
 import { CaseStudyPageNav } from '../components/case-study/CaseStudyPageNav'
 import { SectionBlock } from '../components/case-study/SectionBlock'
 import { Container } from '../components/ui/Container'
 import { getGameBySlug } from '../data/games'
+import {
+  BOARD_SHELL_FOOTPRINT_CLASSES,
+} from '../features/games/paws_and_think/boardLayoutConfig'
+import type { GameMode } from '../features/games/paws_and_think/gameMode'
+import { fixedDetails } from '../features/games/paws_and_think/palettes'
 
 const GameBoardRound = lazy(() =>
   import('../features/games/paws_and_think/GameBoardRound').then((module) => ({
@@ -103,7 +108,7 @@ function BulletList({ items }: { items: string[] }) {
 function GameBoardFallback() {
   return (
     <div
-      className="h-[560px] rounded-[var(--radius-xl)] border border-border/70 bg-[color:color-mix(in_srgb,var(--surface)_94%,white)] sm:h-[600px]"
+      className="absolute inset-0 rounded-[var(--radius-xl)] border border-border/70 bg-[color:color-mix(in_srgb,var(--surface)_94%,white)]"
       aria-hidden="true"
     />
   )
@@ -115,6 +120,11 @@ export function GameDetailPage() {
   const [activeSectionId, setActiveSectionId] = useState<
     (typeof gameSections)[number]['id']
   >(gameSections[0].id)
+  const [activeBoardMode, setActiveBoardMode] = useState<GameMode>('single-card')
+  const boardRootStyle = {
+    '--board-light-fill': fixedDetails.board.light,
+    '--board-dark-fill': fixedDetails.board.dark,
+  } as CSSProperties
 
   useEffect(() => {
     const sectionElements = gameSections
@@ -205,9 +215,12 @@ export function GameDetailPage() {
 
             <div className="mt-8 space-y-10">
               <section id="play">
-                <div className="mb-10 w-full max-w-[24rem] sm:mb-12 lg:max-w-[400px]">
+                <div
+                  className={`mb-10 sm:mb-12 transition-[max-width,aspect-ratio] duration-380 ease-[cubic-bezier(0.22,1,0.36,1)] ${BOARD_SHELL_FOOTPRINT_CLASSES[activeBoardMode]}`}
+                  style={boardRootStyle}
+                >
                   <Suspense fallback={<GameBoardFallback />}>
-                    <GameBoardRound boardHeightClassName="h-[560px] sm:h-[600px]" />
+                    <GameBoardRound onModeChange={setActiveBoardMode} />
                   </Suspense>
                 </div>
               </section>

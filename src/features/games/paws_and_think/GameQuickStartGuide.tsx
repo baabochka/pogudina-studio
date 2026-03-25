@@ -72,6 +72,16 @@ function GuideLabel({
 
 export function GameQuickStartGuide({ isLarge = false }: { isLarge?: boolean }) {
   const guide = isLarge ? LARGE_GUIDE : SMALL_GUIDE;
+  const title = "Use the tokens on the right to choose the correct answer.";
+  const bodyParagraphs = isLarge
+    ? [
+        "Find answer for each of the card appearing on the screen, select answer that repeated twice.",
+      ]
+    : [
+        "Match the object whose original color appears on the card.",
+        "If none match, eliminate the shown objects and shown colors.",
+        "The only token left is the answer.",
+      ];
 
   return (
     <div className="relative h-full w-full">
@@ -121,15 +131,15 @@ export function GameQuickStartGuide({ isLarge = false }: { isLarge?: boolean }) 
             className="max-w-[10.5rem] text-[12px] font-semibold leading-[1.25]"
             style={{ fontFamily: '"Hannotate TC", sans-serif' }}
           >
-            Use the tokens on the right to choose the correct answer.
+            {title}
           </p>
           <div
             className="mt-3 max-w-[11rem] space-y-2 text-[11px] leading-[1.3]"
             style={{ fontFamily: '"Hannotate TC", sans-serif' }}
           >
-            <p>Match the object whose original color appears on the card.</p>
-            <p>If none match, eliminate the shown objects and shown colors.</p>
-            <p>The only token left is the answer.</p>
+            {bodyParagraphs.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
           </div>
         </div>
       </div>

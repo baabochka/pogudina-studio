@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactElement } from "react";
 
 import {
   createCatBallTokens,
@@ -37,13 +37,15 @@ export function ResolvedCardIllustration({
   illustrationTranslateY?: string;
   alignBottom?: boolean;
   className?: string;
-  wrapperClassName?: string;
+  wrapperClassName?: string | null;
 }) {
   const illustrationClassName = className
     ?? (alignBottom
       ? "absolute bottom-0 left-1/2 block h-full w-auto max-w-none -translate-x-1/2"
       : "block h-full w-auto max-w-none");
-  const resolvedWrapperClassName = wrapperClassName
+  const resolvedWrapperClassName = wrapperClassName === null
+    ? null
+    : wrapperClassName
     ?? (alignBottom ? "relative h-full w-full" : "h-full");
   const style = illustrationScale || illustrationTranslateY
     ? ({
@@ -56,96 +58,88 @@ export function ResolvedCardIllustration({
       } as CSSProperties)
     : undefined;
 
+  function renderIllustration(illustration: ReactElement) {
+    if (resolvedWrapperClassName === null) {
+      return illustration;
+    }
+
+    return (
+      <div className={resolvedWrapperClassName} style={style}>
+        {illustration}
+      </div>
+    );
+  }
+
   switch (card.illustration) {
     case "cat-ball":
-      return (
-        <div className={resolvedWrapperClassName} style={style}>
+      return renderIllustration(
           <CatBallIllustration
             tokens={createCatBallTokens(card.colorA, card.colorB)}
             className={illustrationClassName}
           />
-        </div>
       );
     case "cat-cheese":
-      return (
-        <div className={resolvedWrapperClassName} style={style}>
+      return renderIllustration(
           <CatCheeseIllustration
             tokens={createCatCheeseTokens(card.colorA, card.colorB)}
             className={illustrationClassName}
           />
-        </div>
       );
     case "cat-mouse":
-      return (
-        <div className={resolvedWrapperClassName} style={style}>
+      return renderIllustration(
           <CatMouseIllustration
             tokens={createCatMouseTokens(card.colorA, card.colorB)}
             className={illustrationClassName}
           />
-        </div>
       );
     case "cat-pillow":
-      return (
-        <div className={resolvedWrapperClassName} style={style}>
+      return renderIllustration(
           <CatPillowIllustration
             tokens={createCatPillowTokens(card.colorA, card.colorB)}
             className={illustrationClassName}
           />
-        </div>
       );
     case "ball-cheese":
-      return (
-        <div className={resolvedWrapperClassName} style={style}>
+      return renderIllustration(
           <CheeseBallIllustration
             tokens={createCheeseBallTokens(card.colorB, card.colorA)}
             className={illustrationClassName}
           />
-        </div>
       );
     case "ball-mouse":
-      return (
-        <div className={resolvedWrapperClassName} style={style}>
+      return renderIllustration(
           <MouseBallIllustration
             tokens={createMouseBallTokens(card.colorB, card.colorA)}
             className={illustrationClassName}
           />
-        </div>
       );
     case "ball-pillow":
-      return (
-        <div className={resolvedWrapperClassName} style={style}>
+      return renderIllustration(
           <PillowBallIllustration
             tokens={createPillowBallTokens(card.colorB, card.colorA)}
             className={illustrationClassName}
           />
-        </div>
       );
     case "cheese-mouse":
-      return (
-        <div className={resolvedWrapperClassName} style={style}>
+      return renderIllustration(
           <MouseCheeseIllustration
             tokens={createMouseCheeseTokens(card.colorB, card.colorA)}
             className={illustrationClassName}
           />
-        </div>
       );
     case "cheese-pillow":
-      return (
-        <div className={resolvedWrapperClassName} style={style}>
+      return renderIllustration(
           <PillowCheeseIllustration
             tokens={createPillowCheeseTokens(card.colorB, card.colorA)}
             className={illustrationClassName}
           />
-        </div>
       );
     case "mouse-pillow":
-      return (
-        <div className={resolvedWrapperClassName} style={style}>
+      return renderIllustration(
           <PillowMouseIllustration
             tokens={createPillowMouseTokens(card.colorB, card.colorA)}
             className={illustrationClassName}
           />
-        </div>
       );
   }
 }
