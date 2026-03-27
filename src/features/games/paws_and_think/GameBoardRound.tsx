@@ -651,7 +651,7 @@ export function GameBoardRound({
               >
                 <div className="flex items-center gap-1.5">
                   <span className="whitespace-nowrap text-[11px] font-bold leading-none text-white">
-                    Complexity:
+                    Difficulty:
                   </span>
                   <div className="flex items-center gap-1">
                     {([3, 4, 5, 6] as const).map((count) => {
