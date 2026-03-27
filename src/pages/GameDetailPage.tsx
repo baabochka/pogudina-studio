@@ -14,76 +14,75 @@ const GameBoardRound = lazy(() =>
 const gameSections = [
   { id: 'play', label: 'Game' },
   { id: 'context', label: 'Problem' },
-  { id: 'challenges', label: 'Challenges' },
-  { id: 'approach', label: 'Approach' },
-  { id: 'engineering-notes', label: 'Engineering notes' },
-  { id: 'design-decisions', label: 'Design tradeoffs' },
+  { id: 'constraints', label: 'Constraints' },
+  { id: 'implementation', label: 'Implementation' },
+  { id: 'tradeoffs', label: 'Tradeoffs' },
   { id: 'impact', label: 'Outcome' },
   { id: 'next-steps', label: 'Next steps' },
 ] as const
 
 const pawsAndThinkDetails = {
-  context: [
-    'Paws and Think started as a physical educational game built to help children practice color recognition, object matching, and logical elimination through tactile play.',
-    'The web version emerged during remote learning, when the game needed to work without printed materials or in-person facilitation while keeping the rules easy to understand.',
-    'The current direction is focused on performance and scalability so the system can support more cards, more modes, and more interaction depth without turning into a maintenance-heavy asset library.',
-  ],
-  challenges: [
-    'Managing 50+ static card variations made the original implementation difficult to maintain and extend.',
-    'The game assets created a large bundle footprint of about 9.6 MB, which was too heavy for a lightweight browser experience.',
-    'The system needed to become scalable enough to support future cards, levels, and interaction states without multiplying asset complexity.',
-    'Usability still had to stay approachable for young users, which meant preserving visual clarity and simple feedback.',
-  ],
-  approach: [
-    'Switched to SVG-based rendering instead of relying on a large library of static assets.',
-    'Built reusable illustration components so new combinations could be assembled through code rather than duplicated files.',
-    'Introduced dynamic theming to keep artwork, controls, and overlays visually consistent across the game.',
-    'Simplified the UI so the board, card area, and answer tokens stayed easy to read on both desktop and mobile.',
-  ],
-  engineeringNotes: {
-    svgSystem: [
-      'The board and card visuals are composed from reusable SVG illustration components instead of exported image variants.',
-      'Keeping structure in code makes combinations easier to generate, update, and validate as the game grows.',
-    ],
-    reuseAndTheming: [
-      'Shared palette tokens let the same illustration logic drive artwork, answer states, and overlays without duplicating visual assets.',
-      'That reuse makes future card sets and modes easier to extend while preserving a consistent visual language.',
-    ],
-    performance: [
-      'Moving from static assets to composable SVG dramatically reduced asset weight and removed the need to manage dozens of individual files.',
-      'The lighter bundle improves load time on lower-bandwidth devices while also lowering maintenance overhead.',
+  context: {
+    anchor:
+      'This project shifted from “make the game work in the browser” to “build a board system that can absorb iteration without collapsing under its own UI.”',
+    bullets: [
+      'The original implementation solved the core interaction, but too much board structure lived inside nested SVG composition and one-off layout decisions.',
+      'As the game expanded from a single-card flow into multi-card modes, each new state added DOM depth, positioning exceptions, and harder-to-reason-about behavior.',
+      'The problem shifted from asset conversion to UI architecture: I needed a board that could support mode changes, overlays, review states, and future rule variants without reworking the rendering tree each time.',
     ],
   },
-  designDecisions: {
-    svg: [
-      'Replaced 50+ PNG/JPG card variations with a small set of reusable SVG illustrations.',
-      'By separating structure (shapes) from appearance (color + composition), the system can generate many card combinations without storing each variation.',
-    ],
-    scalability: [
-      'Instead of hardcoding card combinations, I built a composable system that allows new cards and variations to be created programmatically.',
-      'This makes it easy to expand the game with additional levels and mechanics without increasing maintenance overhead.',
-    ],
-    simplicity: [
-      'The interface is reduced to one board, one card area, and minimal controls.',
-      'This keeps the focus on logic and pattern recognition, which is especially important for younger users.',
-    ],
-    responsive: [
-      'The layout adapts across desktop, tablet, and mobile while preserving the same rules and interaction model.',
-      'No alternate UI modes are introduced — only layout adjustments.',
+  constraints: {
+    anchor:
+      'The main constraint was not visual fidelity, but preserving interaction correctness while restructuring a board that mixed layout, decoration, and hit areas.',
+    bullets: [
+      'I split the board into a layered system so each responsibility had a stable home: base structure, card content, decoration, and interaction targets.',
+      'I separated the outer shell from the inner board coordinate system so mode changes could resize the footprint without forcing every child to recalculate from a different model.',
+      'I moved toward a panel-based board structure, with the teal shell and white content area rendered as layout primitives instead of relying on pixel-perfect SVG alignment for the full frame.',
+      'I kept the visual language where it mattered, but reduced how much UI logic lived inside decorative assets so future changes could happen in React rather than exported art files.',
     ],
   },
-  impact: [
-    '9.6 MB → 356 KB (~96% reduction) in asset size',
-    'Reduced asset count from 50+ static images to ~10 reusable SVG components',
-    'Faster load times and improved performance on low-bandwidth devices',
-    'Significantly lower maintenance cost, with no need to manage individual card assets',
-    'Enabled rapid expansion with new game variations and future complexity levels',
-  ],
-  nextSteps: [
-    'Introduce additional levels and more complex deduction patterns once the current core loop is fully tuned.',
-    'Expand the system with new card sets, rules, and difficulty adjustments while keeping the same visual language.',
-    'Continue reducing bundle cost and improving component reuse as the game library grows.',
-  ],
+  implementation: {
+    anchor:
+      'The implementation work was mostly about replacing implicit layout behavior with explicit systems.',
+    bullets: [
+      'I refactored the board into a clear layer model, removing unnecessary wrappers and making ownership of structure, visuals, and event handling explicit.',
+      'I simplified slot rendering into a predictable layer-and-slot model so cards could be swapped, reviewed, and transitioned without special-case markup for each mode.',
+      'I stabilized the board shell for single-card and multi-card modes by making the frame stretch through defined sides and insets rather than repositioning independent pieces.',
+      'I tightened the answer-token and overlay positioning logic so the board uses consistent coordinate rules instead of mixing percentage placement, SVG offsets, and ad hoc pixel corrections.',
+    ],
+  },
+  tradeoffs: {
+    anchor:
+      'Most of the tradeoffs were about choosing system clarity over short-term convenience.',
+    bullets: [
+      'I kept fixed pixel positioning where the artwork required precision, but constrained it to defined board regions instead of letting it leak across the full layout.',
+      'I used explicit layering and pointer-events rules for interaction targeting instead of click-through hacks, because decorative overlays and interactive controls were already beginning to conflict.',
+      'I accepted some duplication between single-card and multi-card rendering where it preserved clearer behavior and simpler transitions, rather than forcing one abstraction to handle every visual case.',
+      'I favored a hard separation between structure and decoration, even though the earlier SVG-first approach was faster to assemble, because maintainability had become the larger risk.',
+    ],
+  },
+  impact: {
+    anchor:
+      'The outcome is a board that is easier to extend, debug, and reason about under state changes.',
+    bullets: [
+      'The rendering tree is flatter and responsibilities are clearer, which makes iterative UI work more stable.',
+      'Mode switching, rules overlays, review states, and quick-start behavior now sit on a more stable board shell instead of fighting the same nested structure.',
+      'Interaction targeting is more predictable because decorative layers no longer participate in pointer handling.',
+      'Animation quality improved as corner anchoring and frame stretching became consistent, removing visual seams and motion mismatches during board transitions.',
+      'Replacing static image assets with a reusable SVG system reduced bundle size from ~9.6 MB to ~356 KB (~96% reduction) and cut asset count from 50+ images to ~10 reusable components.',
+      'The board is now closer to a reusable UI system than a one-off game screen, which is the right foundation for adding more content and rule complexity later.',
+    ],
+  },
+  nextSteps: {
+    anchor:
+      'The next step is to keep pushing the board toward a cleaner system boundary rather than adding features on top of accidental complexity.',
+    bullets: [
+      'I would extract the remaining board measurements into a more explicit layout contract so slot placement, overlays, and controls all derive from the same source of truth.',
+      'I would continue reducing the places where visual state is encoded through naming leftovers or historical structure, especially around board-mode terminology and asset organization.',
+      'I would make transitions more declarative so animation timing and staging are easier to reuse across single-card, multi-card, and review flows.',
+      'I would formalize more of the board states through tests, especially around mode switching, overlay behavior, and restored session snapshots.',
+    ],
+  },
 }
 
 function BulletList({ items }: { items: string[] }) {
@@ -219,105 +218,47 @@ export function GameDetailPage() {
               />
 
               <SectionBlock id="context" title="Problem and product context">
-                <div className="max-w-[68ch] space-y-4">
-                  {pawsAndThinkDetails.context.map((paragraph) => (
-                    <p key={paragraph}>{paragraph}</p>
-                  ))}
+                <div className="max-w-[68ch] space-y-5">
+                  <p>{pawsAndThinkDetails.context.anchor}</p>
+                  <BulletList items={pawsAndThinkDetails.context.bullets} />
                 </div>
               </SectionBlock>
 
-              <SectionBlock id="challenges" title="Challenges">
-                <div className="max-w-[68ch]">
-                  <BulletList items={pawsAndThinkDetails.challenges} />
+              <SectionBlock
+                id="constraints"
+                title="Constraints and implementation decisions"
+              >
+                <div className="max-w-[68ch] space-y-5">
+                  <p>{pawsAndThinkDetails.constraints.anchor}</p>
+                  <BulletList items={pawsAndThinkDetails.constraints.bullets} />
                 </div>
               </SectionBlock>
 
-              <SectionBlock id="approach" title="Approach">
-                <div className="max-w-[68ch]">
-                  <BulletList items={pawsAndThinkDetails.approach} />
+              <SectionBlock id="implementation" title="Implementation details">
+                <div className="max-w-[68ch] space-y-5">
+                  <p>{pawsAndThinkDetails.implementation.anchor}</p>
+                  <BulletList items={pawsAndThinkDetails.implementation.bullets} />
                 </div>
               </SectionBlock>
 
-              <SectionBlock id="engineering-notes" title="Engineering notes">
-                <div className="max-w-[68ch] space-y-8">
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">
-                      SVG composition instead of static assets
-                    </h3>
-                    <div className="mt-4">
-                      <BulletList items={pawsAndThinkDetails.engineeringNotes.svgSystem} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">
-                      Reuse and theming benefits
-                    </h3>
-                    <div className="mt-4">
-                      <BulletList items={pawsAndThinkDetails.engineeringNotes.reuseAndTheming} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">
-                      Asset and performance advantages
-                    </h3>
-                    <div className="mt-4">
-                      <BulletList items={pawsAndThinkDetails.engineeringNotes.performance} />
-                    </div>
-                  </div>
-                </div>
-              </SectionBlock>
-
-              <SectionBlock id="design-decisions" title="Design and implementation tradeoffs">
-                <div className="max-w-[68ch] space-y-8">
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">
-                      SVG-based rendering instead of static assets
-                    </h3>
-                    <div className="mt-4">
-                      <BulletList items={pawsAndThinkDetails.designDecisions.svg} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">
-                      Designing for scalability, not just completion
-                    </h3>
-                    <div className="mt-4">
-                      <BulletList items={pawsAndThinkDetails.designDecisions.scalability} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">
-                      Intentional UI simplicity
-                    </h3>
-                    <div className="mt-4">
-                      <BulletList items={pawsAndThinkDetails.designDecisions.simplicity} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">
-                      Consistent responsive behavior
-                    </h3>
-                    <div className="mt-4">
-                      <BulletList items={pawsAndThinkDetails.designDecisions.responsive} />
-                    </div>
-                  </div>
+              <SectionBlock id="tradeoffs" title="Tradeoffs and risk management">
+                <div className="max-w-[68ch] space-y-5">
+                  <p>{pawsAndThinkDetails.tradeoffs.anchor}</p>
+                  <BulletList items={pawsAndThinkDetails.tradeoffs.bullets} />
                 </div>
               </SectionBlock>
 
               <SectionBlock id="impact" title="Outcome and impact">
-                <div className="max-w-[68ch]">
-                  <BulletList items={pawsAndThinkDetails.impact} />
+                <div className="max-w-[68ch] space-y-5">
+                  <p>{pawsAndThinkDetails.impact.anchor}</p>
+                  <BulletList items={pawsAndThinkDetails.impact.bullets} />
                 </div>
               </SectionBlock>
 
-              <SectionBlock id="next-steps" title="Next steps">
-                <div className="max-w-[68ch]">
-                  <BulletList items={pawsAndThinkDetails.nextSteps} />
+              <SectionBlock id="next-steps" title="What I would improve next">
+                <div className="max-w-[68ch] space-y-5">
+                  <p>{pawsAndThinkDetails.nextSteps.anchor}</p>
+                  <BulletList items={pawsAndThinkDetails.nextSteps.bullets} />
                 </div>
               </SectionBlock>
             </div>
