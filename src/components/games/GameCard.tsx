@@ -14,11 +14,11 @@ export function GameCard({ game }: GameCardProps) {
     <Link to={`/games/${game.slug}`} className="cardLink group">
       <Card className="flex h-full flex-col p-5 transition-[border-color,transform,box-shadow] duration-[var(--duration-interactive)] ease-[var(--easing-interactive)] group-hover:translate-y-[var(--translate-interactive-hover)] group-hover:border-border/90 group-hover:shadow-sm motion-reduce:transform-none motion-reduce:transition-none sm:p-6">
         <div className="mb-6">
-        <GamePreview
-          src={game.previewImage}
-          alt={game.previewAlt}
-          variant={game.previewVariant}
-        />
+          <GamePreview
+            src={game.previewImage}
+            alt={game.previewAlt}
+            variant={game.previewVariant}
+          />
         </div>
 
         <div className="flex flex-1 flex-col">

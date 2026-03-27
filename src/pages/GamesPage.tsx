@@ -11,13 +11,13 @@ export function GamesPage() {
       titleAs="h1"
       description="A small collection of browser-based games and interactive experiments focused on logic, SVG-driven interfaces, and polished UI behavior. Each game is built to feel playful, responsive, and intentional within the same design system as the rest of the portfolio."
     >
-      <ul className="grid items-stretch gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <ul className="grid items-stretch gap-6 sm:grid-cols-2 xl:grid-cols-3">
         {games.map((game) => (
-          <li key={game.slug} className="h-full">
+          <li key={game.slug} className="mx-auto h-full w-full min-w-[200px] max-w-[350px]">
             <GameCard game={game} />
           </li>
         ))}
-        <li className="h-full">
+        <li className="mx-auto h-full w-full min-w-[200px] max-w-[350px]">
           <ComingSoonCard />
         </li>
       </ul>

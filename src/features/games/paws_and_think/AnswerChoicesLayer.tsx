@@ -5,6 +5,13 @@ import CatComposedSvg from "./assets/answer_cat_composed.svg?react";
 import CheeseComposedSvg from "./assets/answer_cheese_composed.svg?react";
 import MouseComposedSvg from "./assets/answer_mouse_composed.svg?react";
 import PillowComposedSvg from "./assets/answer_pillow_composed.svg?react";
+import {
+  ANSWER_TOKEN_ORDER,
+  ANSWER_TOKEN_SIZE_PX,
+  LARGE_MODE_TOKEN_TOPS_PX,
+  SMALL_MODE_TOKEN_GAP_PX,
+  SMALL_MODE_TOKEN_STACK_START_TOP_PX,
+} from "./answerChoiceLayout";
 import { BOARD_ART_STYLE } from "./boardSvgStyle";
 import type { ObjectName } from "./cardResolver";
 import {
@@ -20,17 +27,6 @@ import {
 import { fixedDetails } from "./palettes";
 
 const HIGHLIGHTED_ANSWER_PAW_SCALE = "0.65";
-const ANSWER_TOKEN_SIZE_PX = 75;
-const TOKEN_STACK_START_TOP_PX = 135;
-const SMALL_MODE_TOKEN_GAP_PX = 73;
-const LARGE_MODE_TOKEN_GAP_PX = 80;
-const ANSWER_TOKEN_ORDER: ObjectName[] = [
-  "mouse",
-  "cat",
-  "cheese",
-  "ball",
-  "pillow",
-];
 
 const ANSWER_ASSETS = {
   mouse: {
@@ -84,10 +80,10 @@ function getRectStyle(
   const widthPx = ANSWER_TOKEN_SIZE_PX;
   const heightPx = ANSWER_TOKEN_SIZE_PX;
   const answerIndex = ANSWER_TOKEN_ORDER.indexOf(answer);
-  const gapPx = isBoardStretched
-    ? LARGE_MODE_TOKEN_GAP_PX
-    : SMALL_MODE_TOKEN_GAP_PX;
-  const stackedTopPx = TOKEN_STACK_START_TOP_PX + answerIndex * gapPx;
+  const stackedTopPx = isBoardStretched
+    ? LARGE_MODE_TOKEN_TOPS_PX[answer]
+    : SMALL_MODE_TOKEN_STACK_START_TOP_PX +
+      answerIndex * SMALL_MODE_TOKEN_GAP_PX;
 
   return {
     right: "0",
@@ -102,6 +98,7 @@ const AnswerChoice = memo(function AnswerChoice({
   canAnswer,
   disabledByOverlay,
   hasStarted,
+  isInteractive,
   isActive,
   isHovered,
   isRoundFinished,
@@ -121,6 +118,7 @@ const AnswerChoice = memo(function AnswerChoice({
   canAnswer: boolean;
   disabledByOverlay: boolean;
   hasStarted: boolean;
+  isInteractive: boolean;
   isActive: boolean;
   isHovered: boolean;
   isRoundFinished: boolean;
@@ -170,22 +168,24 @@ const AnswerChoice = memo(function AnswerChoice({
         className="pointer-events-none absolute inset-0 z-10 card-svg h-full w-full"
         style={svgStyle}
       />
-      <button
-        type="button"
-        onClick={() => onAnswerClick(answer)}
-        onMouseEnter={() => onAnswerHoverStart(answer)}
-        onMouseLeave={() => onAnswerHoverEnd(answer)}
-        onFocus={() => onAnswerFocus(answer)}
-        onBlur={() => onAnswerBlur(answer)}
-        data-answer-object={answer}
-        data-selected={isActive}
-        data-hovered={isHovered}
-        disabled={
-          ((!hasStarted || !canAnswer) && !isRoundFinished) || disabledByOverlay
-        }
-        className="absolute inset-0 z-40 rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-default"
-        aria-label={`Choose ${answer} as the answer`}
-      />
+      {isInteractive ? (
+        <button
+          type="button"
+          onClick={() => onAnswerClick(answer)}
+          onMouseEnter={() => onAnswerHoverStart(answer)}
+          onMouseLeave={() => onAnswerHoverEnd(answer)}
+          onFocus={() => onAnswerFocus(answer)}
+          onBlur={() => onAnswerBlur(answer)}
+          data-answer-object={answer}
+          data-selected={isActive}
+          data-hovered={isHovered}
+          disabled={
+            ((!hasStarted || !canAnswer) && !isRoundFinished) || disabledByOverlay
+          }
+          className="absolute inset-0 z-40 rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-default"
+          aria-label={`Choose ${answer} as the answer`}
+        />
+      ) : null}
     </div>
   );
 });
@@ -195,6 +195,7 @@ export function AnswerChoicesLayer({
   disabledByOverlay,
   hasStarted,
   hoveredAnswer,
+  isInteractive = true,
   isBoardStretched,
   isRoundFinished,
   onAnswerBlur,
@@ -213,6 +214,7 @@ export function AnswerChoicesLayer({
   disabledByOverlay: boolean;
   hasStarted: boolean;
   hoveredAnswer: ObjectName | null;
+  isInteractive?: boolean;
   isBoardStretched: boolean;
   isRoundFinished: boolean;
   onAnswerBlur: (answer: ObjectName) => void;
@@ -241,6 +243,7 @@ export function AnswerChoicesLayer({
           canAnswer={canAnswer}
           disabledByOverlay={disabledByOverlay}
           hasStarted={hasStarted}
+          isInteractive={isInteractive}
           isActive={selectedAnswer === answer}
           isHovered={hoveredAnswer === answer}
           isRoundFinished={isRoundFinished}

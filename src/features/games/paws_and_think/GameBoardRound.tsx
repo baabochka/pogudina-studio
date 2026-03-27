@@ -1,43 +1,27 @@
-import {
-  useCallback,
-  type CSSProperties,
-  type ReactNode,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { type CSSProperties, useEffect, useId, useRef, useState } from "react";
 
 import { AnswerChoicesLayer } from "./AnswerChoicesLayer";
-import { BoardDecorationLayer } from "./BoardDecorationLayer";
-import { BoardFrame } from "./BoardFrame";
-import { BoardHud } from "./BoardHud";
-import { CardSlotsLayer } from "./CardSlotsLayer";
-import { HintPawStep } from "./HintPawStep";
+import {
+  ANSWER_TOKEN_ORDER,
+  ANSWER_TOKEN_SIZE_PX,
+  LARGE_MODE_TOKEN_TOPS_PX,
+  SMALL_MODE_TOKEN_GAP_PX,
+  SMALL_MODE_TOKEN_STACK_START_TOP_PX,
+} from "./answerChoiceLayout";
 import { GameQuickStartGuide } from "./GameQuickStartGuide";
+import { HintPawStep } from "./HintPawStep";
+import { BoardDecorationLayer } from "./BoardDecorationLayer";
+import {
+  MultiCardLayer,
+  type CardCount,
+} from "./MultiCardLayer";
+import { SingleCardLayer } from "./SingleCardLayer";
 import { ReviewCardIllustration } from "./ReviewCardIllustration";
-import { ResolvedCardIllustration } from "./ResolvedCardIllustration";
-import reverseCard from "./assets/reverse.svg";
+import { SimpleBoardBase } from "./SimpleBoardBase";
+import { SCOREBOARD_RENDER_HEIGHT_PX } from "./boardLayoutConfig";
+import type { ObjectName, ResolvedCard } from "./cardResolver";
 import {
-  BOARD_MODE_LAYOUTS,
-  STRETCHED_BOARD_VIEWBOX,
-  BOARD_VIEWBOX,
-  COMPACT_OVERLAY_BOUNDS,
-  CONTROL_LAYOUT,
-  STRETCHED_ANSWER_CENTERS,
-} from "./boardLayoutConfig";
-import {
-  ORIGINAL_COLOR_BY_OBJECT,
-  type ObjectName,
-  type PaletteName,
-} from "./cardResolver";
-import { useGameSession } from "./useGameSession";
-import {
-  ANSWER_BUTTON_CENTERS,
   ANSWER_PAW_STROKE_COLOR,
-  BOARD_ANSWER_OPTIONS,
-  BOARD_CONTROL_OVERLAYS,
   CORRECT_ANSWER_PAW_FILL_COLOR,
   createPawTrailSteps,
   getPawTrailStyle,
@@ -45,426 +29,374 @@ import {
   PAW_TRAIL_FILL_COLOR,
   PAW_TRAIL_STROKE_COLOR,
 } from "./gameBoardRoundConfig";
-import type { BoardControlName } from "./gameBoardRoundConfig";
-import type { ResolvedCard } from "./cardResolver";
-import { CARD_TRANSITION_PHASE_MS } from "./gameSessionUtils";
-import type { GameMode } from "./gameMode";
 import { fixedDetails } from "./palettes";
+import {
+  getMultiCardReviewExplanation,
+  getReviewExplanation,
+} from "./reviewExplanation";
+import {
+  FIVE_CARD_RULES_PAGES,
+  SINGLE_CARD_RULES_PAGES,
+} from "./rulesContent";
+import { BOARD_PANEL_INSETS } from "./boardPanelLayout";
+import {
+  useGameSession,
+  type GameSessionSnapshot,
+} from "./useGameSession";
+import type { GameMode } from "./gameMode";
 
-type CardTransitionStage = "idle" | "to-reverse" | "to-next";
+const SHELL_SIZES = {
+  expanded: {
+    height: 617,
+    width: 617,
+  },
+  compact: {
+    height: 602.31,
+    width: 400,
+  },
+} as const;
+const MODE_TRANSITION_MS = 320;
+const PANEL_OVERLAY_PADDING_CLASS = "px-5 pt-4 pb-4";
+type SessionCardCount = 1 | 3 | 4 | 5 | 6;
 
-const OBJECT_BY_ORIGINAL_COLOR = Object.entries(
-  ORIGINAL_COLOR_BY_OBJECT,
-).reduce(
-  (accumulator, [objectName, colorName]) => {
-    accumulator[colorName as PaletteName] = objectName as ObjectName;
-    return accumulator;
-  },
-  {} as Record<PaletteName, ObjectName>,
-);
-
-const SINGLE_CARD_RULES_PAGES = [
-  {
-    title: "How to play",
-    paragraphs: [
-      "Each object has one original color: cat is orange, mouse is grey, cheese is yellow, ball is blue, and pillow is red. The tokens on the right show the correct color for each object.",
-      "If an object on the card has its original color, that object is the correct answer.",
-      "Example: if you see an orange cat on a blue pillow, the correct answer is cat.",
-    ],
-  },
-  {
-    title: "How to play",
-    paragraphs: [
-      "If none of the objects on the card have their original colors, the answer is the object that is missing from the card and whose color is also missing.",
-      "To solve it, first remove the objects that are already on the card.",
-      "Then remove any object whose original color is already visible on the card.",
-      "The only object left is the correct answer.",
-    ],
-  },
-  {
-    title: "How to play",
-    paragraphs: [
-      "Example: if you see a grey mouse on a blue pillow, first remove mouse and pillow because they are already on the card.",
-      "Then remove mouse and ball because grey and blue are already on the card.",
-      "The only answer left is cheese.",
-      "Choose an answer by clicking one of the tokens on the right. If you choose wrong, the paw trail will guide you to the correct answer.",
-    ],
-  },
-  {
-    title: "How to play",
-    paragraphs: [
-      "Use the top-right paw to restart.",
-      "Use the back-arrow paw to review the previous answer.",
-    ],
-  },
-] as const;
-
-const FIVE_CARD_RULES_PAGES = [
-  {
-    title: "How to play",
-    paragraphs: [
-      "In five-card mode, the answer to the round is the answer that repeats twice across the five cards.",
-      "Solve each card using the one-card rules, then choose the answer that appears twice.",
-      "One-card rules:",
-      "Each object has one original color: cat is orange, mouse is grey, cheese is yellow, ball is blue, and pillow is red.",
-      "If an object on the card has its original color, that object is the correct answer for that card.",
-      "If none of the objects on the card have their original colors, remove the shown objects and any object whose original color is already visible on the card.",
-      "The only answer left is the correct answer for that card. After solving all five cards, pick the answer that repeats twice.",
-      "Use the top-right paw to restart and the back-arrow paw to review the previous answer.",
-    ],
-  },
-] as const;
-
-function RulesNavArrow({ direction }: { direction: "next" | "previous" }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 16"
-      className={direction === "next" ? "h-6 w-9 shrink-0" : "h-6 w-9 shrink-0"}
-      fill="none"
-      style={direction === "next" ? { transform: "scaleX(-1)" } : undefined}
-    >
-      <g
-        transform={direction === "next" ? "translate(0 -3)" : "translate(0 -3)"}
-      >
-        <path
-          fill={fixedDetails.board.dark}
-          d="m20.56,11.81c.15.43-.17.96-.7,1.19-.54.23-1.09.06-1.24-.37-.7-2.01-2.1-3.09-3.86-2.96-1.71.13-3.59,1.38-5.04,3.36.43.24.77.51.94.76,0,.02,0,.04,0,.07-.52.75-2.72,1.43-3.63,1.44-.05,0-.1-.02-.13-.05-.53-.52-1.13-2.15-.8-2.92,0-.02.03-.04.06-.05.49-.15,1.19-.09,1.89.09,1.09-1.5,2.39-2.69,3.77-3.46,1.04-.58,2.12-.93,3.21-1,2.58-.18,4.6,1.24,5.52,3.9Z"
-        />
-      </g>
-    </svg>
-  );
+function isCompatibleSnapshot(
+  snapshot: GameSessionSnapshot | null | undefined,
+  expectedCardCount: SessionCardCount,
+): snapshot is GameSessionSnapshot {
+  return snapshot != null && snapshot.cards.length === expectedCardCount;
 }
 
-function formatColoredObject(color: PaletteName, object: ObjectName) {
-  return `${color} ${object}`;
-}
-
-type ReviewExplanationParagraph = {
-  content: ReactNode;
-  key: string;
+const FALLBACK_SINGLE_CARD: ResolvedCard = {
+  illustration: "cat-ball",
+  objectA: "cat",
+  objectB: "ball",
+  colorA: "orange",
+  colorB: "red",
+  source: "manual",
+  targetAnswer: "cat",
 };
 
-function CardTransitionFace({
-  children,
-  side,
-}: {
-  children: ReactNode;
-  side: "back" | "front";
-}) {
-  return (
-    <div
-      className={`card-transition-face ${side === "front" ? "card-transition-face-front" : "card-transition-face-back"} flex items-center justify-center`}
-    >
-      {children}
-    </div>
-  );
-}
+const FALLBACK_MULTI_CARDS: ResolvedCard[] = [
+  {
+    illustration: "cat-cheese",
+    objectA: "cat",
+    objectB: "cheese",
+    colorA: "grey",
+    colorB: "yellow",
+    source: "manual",
+    targetAnswer: "cheese",
+  },
+  {
+    illustration: "cat-ball",
+    objectA: "cat",
+    objectB: "ball",
+    colorA: "orange",
+    colorB: "red",
+    source: "manual",
+    targetAnswer: "cat",
+  },
+  {
+    illustration: "ball-mouse",
+    objectA: "ball",
+    objectB: "mouse",
+    colorA: "red",
+    colorB: "blue",
+    source: "manual",
+    targetAnswer: "mouse",
+  },
+  {
+    illustration: "ball-pillow",
+    objectA: "ball",
+    objectB: "pillow",
+    colorA: "orange",
+    colorB: "grey",
+    source: "manual",
+    targetAnswer: "ball",
+  },
+  {
+    illustration: "cat-pillow",
+    objectA: "cat",
+    objectB: "pillow",
+    colorA: "blue",
+    colorB: "red",
+    source: "manual",
+    targetAnswer: "pillow",
+  },
+  {
+    illustration: "cheese-mouse",
+    objectA: "cheese",
+    objectB: "mouse",
+    colorA: "yellow",
+    colorB: "orange",
+    source: "manual",
+    targetAnswer: "cheese",
+  },
+] as const;
 
-function CardFlipTransition({
-  backFace,
-  className = "",
-  frontFace,
-  transitionKey,
-}: {
-  backFace: ReactNode;
-  className?: string;
-  frontFace: ReactNode;
-  transitionKey: string;
-}) {
-  return (
-    <div key={transitionKey} className="card-transition-scene h-full w-full">
-      <div className={`card-transition-rotor ${className}`.trim()}>
-        <CardTransitionFace side="back">{frontFace}</CardTransitionFace>
-        <CardTransitionFace side="front">{backFace}</CardTransitionFace>
-      </div>
-    </div>
-  );
-}
-
-function getOverlayStyle(
-  layout: { height: number; left: number; top: number; width: number },
-  rootViewBox: { height: number; width: number },
-  translateX = 0,
-  translateY = 0,
-): CSSProperties {
-  const left = layout.left + (translateX / rootViewBox.width) * 100;
-  const top = layout.top + (translateY / rootViewBox.height) * 100;
-  const formatPercent = (value: number) => {
-    const nearestInteger = Math.round(value);
-
-    if (Math.abs(value) < 0.01) {
-      return "0";
-    }
-
-    if (Math.abs(value - nearestInteger) < 0.01) {
-      return `${nearestInteger}%`;
-    }
-
-    return `${value}%`;
-  };
-
-  return {
-    left: formatPercent(left),
-    top: formatPercent(top),
-    width: formatPercent(layout.width),
-    height: formatPercent(layout.height),
-  };
-}
-
-function getFixedControlStyle(
-  control: keyof typeof CONTROL_LAYOUT,
-): CSSProperties {
-  const layout = CONTROL_LAYOUT[control];
-  const CONTROL_HIT_SCALE = control === "restart" ? 1.2 : 1.6;
-  const widthPx = (layout.width / 100) * BOARD_VIEWBOX.width * CONTROL_HIT_SCALE;
-  const heightPx =
-    (layout.height / 100) * BOARD_VIEWBOX.height * CONTROL_HIT_SCALE;
-
-  switch (control) {
-    case "previous":
-      return {
-        left: "0",
-        top: "64px",
-        width: `${widthPx}px`,
-        height: `${heightPx}px`,
-      };
-    case "restart":
-      return {
-        right: "0",
-        top: "64px",
-        width: `${widthPx}px`,
-        height: `${heightPx}px`,
-      };
-    case "rules":
-      return {
-        left: "0",
-        bottom: "0",
-        width: `${widthPx}px`,
-        height: `${heightPx}px`,
-      };
-    case "five-card-mode":
-      return {
-        right: "0",
-        bottom: "0",
-        width: `${widthPx}px`,
-        height: `${heightPx}px`,
-      };
-  }
-}
-
-function getReviewExplanation(card: {
-  objectA: ObjectName;
-  objectB: ObjectName;
-  colorA: PaletteName;
-  colorB: PaletteName;
-  targetAnswer?: ObjectName;
-}): ReviewExplanationParagraph[] {
-  const firstObjectIsCorrectlyColored =
-    ORIGINAL_COLOR_BY_OBJECT[card.objectA] === card.colorA;
-  const secondObjectIsCorrectlyColored =
-    ORIGINAL_COLOR_BY_OBJECT[card.objectB] === card.colorB;
-
-  if (firstObjectIsCorrectlyColored || secondObjectIsCorrectlyColored) {
-    const correctlyColoredObject = firstObjectIsCorrectlyColored
-      ? formatColoredObject(card.colorA, card.objectA)
-      : formatColoredObject(card.colorB, card.objectB);
-
-    return [
-      {
-        key: "correctly-colored",
-        content: (
-          <>
-            The tokens on the right show the correct color for each object. This
-            card has <strong>{correctlyColoredObject}</strong>, and it is in its
-            original color. So the correct answer is{" "}
-            <strong>{correctlyColoredObject}</strong>.
-          </>
-        ),
-      },
-    ];
-  }
-
-  const firstRemovedByColor = OBJECT_BY_ORIGINAL_COLOR[card.colorA];
-  const secondRemovedByColor = OBJECT_BY_ORIGINAL_COLOR[card.colorB];
-  const correctAnswerText = card.targetAnswer
-    ? formatColoredObject(
-        ORIGINAL_COLOR_BY_OBJECT[card.targetAnswer],
-        card.targetAnswer,
-      )
-    : "the correct answer";
-
-  return [
-    {
-      key: "card-contents",
-      content: (
-        <>
-          This card has{" "}
-          <strong>{formatColoredObject(card.colorA, card.objectA)}</strong> and{" "}
-          <strong>{formatColoredObject(card.colorB, card.objectB)}</strong>, and
-          neither one is in its original color. The tokens on the right show the
-          correct color for each object.
-        </>
-      ),
-    },
-    {
-      key: "remove-objects",
-      content: (
-        <>
-          So the answer is not <strong>{card.objectA}</strong> or{" "}
-          <strong>{card.objectB}</strong>. And the answer is not{" "}
-          <strong>{firstRemovedByColor}</strong> or{" "}
-          <strong>{secondRemovedByColor}</strong>.
-        </>
-      ),
-    },
-    {
-      key: "remaining-answer",
-      content: (
-        <>
-          This leaves us with the only possible answer:{" "}
-          <strong>{correctAnswerText}</strong>.
-        </>
-      ),
-    },
-  ];
-}
-
-function getFiveCardReviewExplanation(previousTurn: {
-  cards: ResolvedCard[];
-  correctAnswer: ObjectName;
-}) {
-  const repeatedAnswer = formatColoredObject(
-    ORIGINAL_COLOR_BY_OBJECT[previousTurn.correctAnswer],
-    previousTurn.correctAnswer,
-  );
-
-  return [
-    {
-      key: "five-card-explanation",
-      content: (
-        <>
-          In five-card mode each card has a solution, which can be found
-          according to one-card rules. The overall answer will be the token
-          that repeats for two different cards. Here, that repeated answer is{" "}
-          <strong>{repeatedAnswer}</strong>.
-        </>
-      ),
-    },
-  ] satisfies ReviewExplanationParagraph[];
-}
+const COMPACT_CARD_BOUNDS = {
+  bottom: 40,
+  left: 40,
+  right: 80,
+  top: SCOREBOARD_RENDER_HEIGHT_PX + BOARD_PANEL_INSETS.top,
+} as const;
 
 export function GameBoardRound({
   onModeChange,
 }: {
   onModeChange?: (mode: GameMode) => void;
 } = {}) {
-  const [hasStarted, setHasStarted] = useState(false);
-  const [gameMode, setGameMode] = useState<GameMode>("single-card");
+  const [isCompactBase, setIsCompactBase] = useState(true);
+  const [isQuickStartOpen, setIsQuickStartOpen] = useState(true);
+  const [displayedRulesCompactMode, setDisplayedRulesCompactMode] =
+    useState(false);
+  const [expandedCardCount, setExpandedCardCount] = useState<CardCount>(5);
+  const [isModeHovered, setIsModeHovered] = useState(false);
+  const [isPreviousHovered, setIsPreviousHovered] = useState(false);
+  const [isRestartHovered, setIsRestartHovered] = useState(false);
+  const [isRulesHovered, setIsRulesHovered] = useState(false);
   const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [isPreviousReviewOpen, setIsPreviousReviewOpen] = useState(false);
   const [isExplanationVisible, setIsExplanationVisible] = useState(false);
-  const {
-    card,
-    cards,
-    correctAnswer,
-    selectedAnswer,
-    previousTurn,
-    score,
-    answeredCount,
-    bestTotal,
-    timeLeft,
-    pawTrailRunId,
-    cardSequence,
-    isCardTransitioning,
-    canAnswer,
-    isRoundFinished,
-    submitAnswer,
-    restartRound,
-  } = useGameSession({
-    isPaused: isRulesOpen || isPreviousReviewOpen || !hasStarted,
-    mode: gameMode,
-  });
-  const [hoveredAnswer, setHoveredAnswer] = useState<
-    null | (typeof BOARD_ANSWER_OPTIONS)[number]
-  >(null);
-  const [hoveredControl, setHoveredControl] = useState<BoardControlName | null>(
-    null,
-  );
-  const [displayCard, setDisplayCard] = useState(card);
-  const [previousCard, setPreviousCard] = useState<ResolvedCard | null>(null);
-  const [cardTransitionStage, setCardTransitionStage] =
-    useState<CardTransitionStage>("idle");
+  const [hoveredAnswer, setHoveredAnswer] = useState<ObjectName | null>(null);
   const [rulesPageIndex, setRulesPageIndex] = useState(0);
-  const timeoutRefs = useRef<number[]>([]);
-  const isBoardStretched = gameMode === "five-card";
-  const lastRenderedCardRef = useRef(card);
-  const suppressNextCardTransitionRef = useRef(false);
-  const lastOverlayTriggerRef = useRef<HTMLElement | null>(null);
-  const previousOverlayOpenRef = useRef(false);
-  const rulesCloseButtonRef = useRef<HTMLButtonElement | null>(null);
-  const explanationToggleButtonRef = useRef<HTMLButtonElement | null>(null);
-  const previousControlButtonRef = useRef<HTMLButtonElement | null>(null);
-  const rulesControlButtonRef = useRef<HTMLButtonElement | null>(null);
-  const fiveCardModeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const [isBoardModeTransitioning, setIsBoardModeTransitioning] = useState(false);
+  const savedSessionSnapshotsRef = useRef<
+    Partial<Record<SessionCardCount, GameSessionSnapshot>>
+  >({});
+  const pendingModeSwitchRef = useRef<{
+    cardCount: SessionCardCount;
+    snapshot: GameSessionSnapshot | null;
+  } | null>(null);
+  const boardModeTransitionTimeoutRef = useRef<number | null>(null);
   const rulesTitleId = useId();
   const reviewTitleId = useId();
-  const effectiveHoveredAnswer =
-    hasStarted && canAnswer && !isRulesOpen && !isPreviousReviewOpen
-      ? hoveredAnswer
+  const rulesModeCompact = isRulesOpen ? displayedRulesCompactMode : isCompactBase;
+  const isRulesTransitioning =
+    isRulesOpen && displayedRulesCompactMode !== isCompactBase;
+  const rulesPages = rulesModeCompact
+    ? SINGLE_CARD_RULES_PAGES
+    : FIVE_CARD_RULES_PAGES;
+  const currentRulesPage = rulesPages[rulesPageIndex];
+  const canGoBack = rulesPageIndex > 0;
+  const canGoNext = rulesPageIndex < rulesPages.length - 1;
+  const shellSize = isCompactBase
+    ? SHELL_SIZES.compact
+    : SHELL_SIZES.expanded;
+  const activeCardCount = isCompactBase ? 1 : expandedCardCount;
+  const {
+    cards,
+    canAnswer,
+    isRoundFinished,
+    answeredCount,
+    bestTotal,
+    correctAnswer,
+    previousTurn,
+    pawTrailRunId,
+    cardSequence,
+    score,
+    selectedAnswer,
+    submitAnswer,
+    timeLeft,
+    validationResult,
+    isCardTransitioning,
+    getSnapshot,
+    restoreSnapshot,
+    restartRound,
+  } = useGameSession({
+    cardCount: activeCardCount,
+    isPaused:
+      isRulesOpen ||
+      isPreviousReviewOpen ||
+      isQuickStartOpen ||
+      isBoardModeTransitioning,
+  });
+  const showPreviousControl = previousTurn != null;
+  const activeAnswerCenters = ANSWER_TOKEN_ORDER.reduce<
+    Record<ObjectName, { x: number; y: number }>
+  >((accumulator, answer, index) => {
+    const top = isCompactBase
+      ? SMALL_MODE_TOKEN_STACK_START_TOP_PX + index * SMALL_MODE_TOKEN_GAP_PX
+      : LARGE_MODE_TOKEN_TOPS_PX[answer];
+
+    accumulator[answer] = {
+      x: shellSize.width - ANSWER_TOKEN_SIZE_PX / 2,
+      y: top + ANSWER_TOKEN_SIZE_PX / 2,
+    };
+
+    return accumulator;
+  }, {} as Record<ObjectName, { x: number; y: number }>);
+  const pawTrailSteps =
+    selectedAnswer &&
+    correctAnswer &&
+    selectedAnswer !== correctAnswer &&
+    validationResult === "wrong" &&
+    !isRulesOpen &&
+    !isPreviousReviewOpen
+      ? createPawTrailSteps(
+          activeAnswerCenters[selectedAnswer],
+          activeAnswerCenters[correctAnswer],
+          3,
+          pawTrailRunId,
+          { width: shellSize.width, height: shellSize.height },
+        )
+      : [];
+  const targetHintPosition =
+    selectedAnswer &&
+    correctAnswer &&
+    selectedAnswer !== correctAnswer &&
+    validationResult === "wrong"
+      ? activeAnswerCenters[correctAnswer]
       : null;
-  const rulesPages =
-    gameMode === "five-card" ? FIVE_CARD_RULES_PAGES : SINGLE_CARD_RULES_PAGES;
-  const clampedRulesPageIndex = Math.min(
-    rulesPageIndex,
-    rulesPages.length - 1,
-  );
-  const currentRulesPage = rulesPages[clampedRulesPageIndex];
-  const canGoToPreviousRulesPage = clampedRulesPageIndex > 0;
-  const canGoToNextRulesPage = clampedRulesPageIndex < rulesPages.length - 1;
-  const closeRules = useCallback(() => setIsRulesOpen(false), []);
-  const closePreviousReview = useCallback(() => {
-    suppressNextCardTransitionRef.current = true;
-    setPreviousCard(null);
-    setCardTransitionStage("idle");
-    setDisplayCard(card);
-    lastRenderedCardRef.current = card;
+  const targetHintDelay =
+    pawTrailSteps.length > 0 ? `${pawTrailSteps.length * 180 + 220}ms` : "0ms";
+  const currentReviewCards = previousTurn?.cards ?? [];
+  const reviewCardCount = (currentReviewCards.length || 5) as CardCount;
+  const reviewExplanation = previousTurn
+    ? previousTurn.cards.length === 1
+      ? getReviewExplanation(previousTurn.cards[0])
+      : getMultiCardReviewExplanation({
+          correctAnswer: previousTurn.correctAnswer,
+        })
+    : [];
+  const largeExplanationCardContentClassName =
+    reviewCardCount === 3
+      ? "flex h-full w-full flex-col items-center justify-center gap-4 p-8"
+      : "flex h-full w-full flex-col items-center justify-end gap-4 pb-6";
+  const largeExplanationCardScale = reviewCardCount === 3 ? 1 : 0.8;
+  const largeExplanationBadgeScale = reviewCardCount === 3 ? 1.25 : 1;
+  const largeExplanationBadgeBottom = reviewCardCount === 3 ? "-15px" : undefined;
+  const largeExplanationRowClassName =
+    reviewCardCount === 3
+      ? "flex w-full items-center justify-center gap-8"
+      : "flex w-full items-center justify-center gap-4";
+  const largeReviewCardContentClassName =
+    reviewCardCount === 3
+      ? "flex h-full w-full flex-col items-center justify-center gap-4 p-8"
+      : "flex h-full w-full flex-col items-center justify-end gap-4 pb-6";
+  const largeReviewRowClassName =
+    reviewCardCount === 3
+      ? "flex w-full items-center justify-center gap-8"
+      : "flex w-full items-center justify-center gap-4";
+
+  const startQuickStartRound = () => {
+    const startingCardCount = isCompactBase ? 1 : expandedCardCount;
+
+    setDisplayedRulesCompactMode(isCompactBase);
+    setHoveredAnswer(null);
     setIsPreviousReviewOpen(false);
     setIsExplanationVisible(false);
-  }, [card]);
-  const isPreviousReviewAvailable = previousTurn != null;
-  const isInteractionOverlayOpen = isRulesOpen || isPreviousReviewOpen;
+    setIsRulesOpen(false);
+    setRulesPageIndex(0);
+    setIsQuickStartOpen(false);
+    restartRound(startingCardCount);
+  };
+
+  const toggleBoardMode = () => {
+    if (isRulesOpen) {
+      return;
+    }
+
+    if (isQuickStartOpen) {
+      setIsBoardModeTransitioning(true);
+      if (boardModeTransitionTimeoutRef.current != null) {
+        window.clearTimeout(boardModeTransitionTimeoutRef.current);
+      }
+      boardModeTransitionTimeoutRef.current = window.setTimeout(() => {
+        setIsBoardModeTransitioning(false);
+        boardModeTransitionTimeoutRef.current = null;
+      }, MODE_TRANSITION_MS);
+
+      setIsCompactBase((current) => !current);
+      setHoveredAnswer(null);
+      setIsPreviousReviewOpen(false);
+      setIsExplanationVisible(false);
+      setRulesPageIndex(0);
+      return;
+    }
+
+    setIsCompactBase((current) => {
+      const nextIsCompact = !current;
+      const currentCardCount = current ? 1 : expandedCardCount;
+      const nextCardCount = nextIsCompact ? 1 : expandedCardCount;
+      const currentSnapshot = getSnapshot();
+
+      savedSessionSnapshotsRef.current[currentCardCount] = currentSnapshot;
+      setIsBoardModeTransitioning(true);
+      if (boardModeTransitionTimeoutRef.current != null) {
+        window.clearTimeout(boardModeTransitionTimeoutRef.current);
+      }
+      boardModeTransitionTimeoutRef.current = window.setTimeout(() => {
+        setIsBoardModeTransitioning(false);
+        boardModeTransitionTimeoutRef.current = null;
+      }, MODE_TRANSITION_MS);
+      setHoveredAnswer(null);
+      setIsPreviousReviewOpen(false);
+      setIsExplanationVisible(false);
+      setRulesPageIndex(0);
+
+      const nextSnapshot = savedSessionSnapshotsRef.current[nextCardCount] ?? null;
+
+      if (isCompatibleSnapshot(nextSnapshot, nextCardCount)) {
+        restoreSnapshot(nextSnapshot, nextCardCount);
+      } else {
+        restartRound(nextCardCount);
+      }
+
+      return nextIsCompact;
+    });
+  };
+
+  useEffect(() => {
+    if (!isRulesOpen || displayedRulesCompactMode === isCompactBase) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setDisplayedRulesCompactMode(isCompactBase);
+      setRulesPageIndex(0);
+
+      const pendingModeSwitch = pendingModeSwitchRef.current;
+
+      if (pendingModeSwitch) {
+        if (pendingModeSwitch.snapshot) {
+          restoreSnapshot(pendingModeSwitch.snapshot, pendingModeSwitch.cardCount);
+        } else {
+          restartRound(pendingModeSwitch.cardCount);
+        }
+
+        pendingModeSwitchRef.current = null;
+      }
+    }, MODE_TRANSITION_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [
+    displayedRulesCompactMode,
+    isCompactBase,
+    isRulesOpen,
+    restartRound,
+    restoreSnapshot,
+  ]);
 
   useEffect(() => {
     return () => {
-      timeoutRefs.current.forEach((timeoutId) =>
-        window.clearTimeout(timeoutId),
-      );
-      timeoutRefs.current = [];
+      if (boardModeTransitionTimeoutRef.current != null) {
+        window.clearTimeout(boardModeTransitionTimeoutRef.current);
+      }
     };
   }, []);
 
   useEffect(() => {
-    if (isRulesOpen) {
-      rulesCloseButtonRef.current?.focus();
-      previousOverlayOpenRef.current = true;
-      return;
-    }
-
-    if (isPreviousReviewOpen) {
-      explanationToggleButtonRef.current?.focus();
-      previousOverlayOpenRef.current = true;
-      return;
-    }
-
-    if (previousOverlayOpenRef.current) {
-      lastOverlayTriggerRef.current?.focus();
-      previousOverlayOpenRef.current = false;
-    }
-  }, [isPreviousReviewOpen, isRulesOpen]);
+    onModeChange?.(isCompactBase ? "single-card" : "five-card");
+  }, [isCompactBase, onModeChange]);
 
   useEffect(() => {
-    if (!isInteractionOverlayOpen) {
+    setDisplayedRulesCompactMode(isCompactBase);
+  }, [isCompactBase]);
+
+  useEffect(() => {
+    if (!isRulesOpen) {
       return;
     }
 
@@ -474,15 +406,7 @@ export function GameBoardRound({
       }
 
       event.preventDefault();
-
-      if (isRulesOpen) {
-        closeRules();
-        return;
-      }
-
-      if (isPreviousReviewOpen) {
-        closePreviousReview();
-      }
+      setIsRulesOpen(false);
     };
 
     window.addEventListener("keydown", handleEscape);
@@ -490,528 +414,239 @@ export function GameBoardRound({
     return () => {
       window.removeEventListener("keydown", handleEscape);
     };
-  }, [
-    closePreviousReview,
-    closeRules,
-    isInteractionOverlayOpen,
-    isPreviousReviewOpen,
-    isRulesOpen,
-  ]);
+  }, [isRulesOpen]);
 
-  useEffect(() => {
-    if (suppressNextCardTransitionRef.current) {
-      timeoutRefs.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
-      timeoutRefs.current = [];
-      suppressNextCardTransitionRef.current = false;
-      lastRenderedCardRef.current = card;
-      return;
-    }
-
-    if (isBoardStretched) {
-      lastRenderedCardRef.current = card;
-      return;
-    }
-
-    if (lastRenderedCardRef.current === card) {
-      return;
-    }
-
-    timeoutRefs.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
-    timeoutRefs.current = [];
-
-    const outgoingCard = lastRenderedCardRef.current;
-    setPreviousCard(outgoingCard);
-    setDisplayCard(card);
-    setCardTransitionStage("to-reverse");
-
-    const toNextTimeoutId = window.setTimeout(() => {
-      setCardTransitionStage("to-next");
-    }, CARD_TRANSITION_PHASE_MS);
-
-    const finishTimeoutId = window.setTimeout(() => {
-      setCardTransitionStage("idle");
-      setPreviousCard(null);
-      lastRenderedCardRef.current = card;
-    }, CARD_TRANSITION_PHASE_MS * 2);
-
-    timeoutRefs.current = [toNextTimeoutId, finishTimeoutId];
-  }, [card, cardSequence, isBoardStretched]);
-
-  const answerPawFillColor =
-    selectedAnswer == null
-      ? undefined
-      : selectedAnswer === correctAnswer
-        ? CORRECT_ANSWER_PAW_FILL_COLOR
-        : INCORRECT_ANSWER_PAW_FILL_COLOR;
-  const answerPawStrokeColor =
-    selectedAnswer == null ? undefined : ANSWER_PAW_STROKE_COLOR;
-
-  const activeRootViewBox = isBoardStretched
-    ? STRETCHED_BOARD_VIEWBOX
-    : BOARD_VIEWBOX;
-  const activeAnswerCenters = isBoardStretched
-    ? STRETCHED_ANSWER_CENTERS
-    : ANSWER_BUTTON_CENTERS;
-
-  const pawTrailSteps = useMemo(() => {
-    if (
-      !selectedAnswer ||
-      !correctAnswer ||
-      selectedAnswer === correctAnswer
-    ) {
-      return [];
-    }
-
-    return createPawTrailSteps(
-      activeAnswerCenters[selectedAnswer],
-      activeAnswerCenters[correctAnswer],
-      3,
-      pawTrailRunId,
-      activeRootViewBox,
-    );
-  }, [activeAnswerCenters, activeRootViewBox, correctAnswer, pawTrailRunId, selectedAnswer]);
-
-  const targetHintPosition =
-    selectedAnswer && correctAnswer && selectedAnswer !== correctAnswer
-      ? activeAnswerCenters[correctAnswer]
-      : null;
-  const targetHintDelay =
-    pawTrailSteps.length > 0 ? `${pawTrailSteps.length * 180 + 220}ms` : "0ms";
-  const isAnimatingCardTransition =
-    cardTransitionStage !== "idle" && previousCard != null;
-  const previousReviewExplanation = previousTurn
-    ? previousTurn.mode === "five-card"
-      ? getFiveCardReviewExplanation(previousTurn)
-      : getReviewExplanation(previousTurn.cards[0])
-    : [];
-  const useCompactOverlayViewport =
-    (isRulesOpen && !isBoardStretched) ||
-    (isPreviousReviewOpen && previousTurn?.mode !== "five-card");
-  const shouldRenderHintLayer =
-    !isInteractionOverlayOpen &&
-    (pawTrailSteps.length > 0 || targetHintPosition != null);
-
-  useEffect(() => {
-    onModeChange?.(gameMode);
-  }, [gameMode, onModeChange]);
-
-  return (
-    <>
+  const board = (
+    <div
+      className="relative overflow-visible"
+      style={{
+        "--board-light-fill": "#008D96",
+        "--board-dark-fill": "#005157",
+        transition:
+          `width ${MODE_TRANSITION_MS}ms cubic-bezier(0.22,1,0.36,1), height ${MODE_TRANSITION_MS}ms cubic-bezier(0.22,1,0.36,1)`,
+        width: `${shellSize.width}px`,
+        height: `${shellSize.height}px`,
+      } as CSSProperties}
+    >
+        <div className="BoardBaseLayer absolute inset-0 z-0">
+          <SimpleBoardBase
+            bestTotal={bestTotal}
+            isBoardStretched={!isCompactBase}
+            score={score}
+            timeLeft={timeLeft}
+          />
+        </div>
+        <div className="BoardCardLayer absolute inset-0 z-5">
+          {isCompactBase &&
+          !isQuickStartOpen &&
+          !isRulesOpen &&
+          !isRoundFinished &&
+          !isBoardModeTransitioning &&
+          !isPreviousReviewOpen ? (
+            <SingleCardLayer
+              card={cards[0] ?? FALLBACK_SINGLE_CARD}
+              previousCard={isCardTransitioning ? previousTurn?.cards[0] : undefined}
+              transitionRunId={isCardTransitioning ? cardSequence : undefined}
+              bounds={COMPACT_CARD_BOUNDS}
+            />
+          ) : null}
+          {!isCompactBase &&
+          !isQuickStartOpen &&
+          !isRulesOpen &&
+          !isRoundFinished &&
+          !isBoardModeTransitioning &&
+          !isPreviousReviewOpen ? (
+            <MultiCardLayer
+              cards={cards.length > 0 ? cards : FALLBACK_MULTI_CARDS}
+              count={expandedCardCount}
+              previousCards={isCardTransitioning ? previousTurn?.cards : undefined}
+              transitionRunId={isCardTransitioning ? cardSequence : undefined}
+            />
+          ) : null}
+        </div>
         <div
-          className="BaseBoardLayer pointer-events-none absolute inset-0 z-0"
-          aria-hidden="true"
+          className="BoardDecorationLayer pointer-events-none absolute z-10 overflow-visible"
+          style={{
+            left: `${BOARD_PANEL_INSETS.left}px`,
+            top: `${SCOREBOARD_RENDER_HEIGHT_PX + BOARD_PANEL_INSETS.top}px`,
+            right: `${BOARD_PANEL_INSETS.right}px`,
+            bottom: `${BOARD_PANEL_INSETS.bottom}px`,
+          }}
         >
-        <BoardFrame />
-        </div>
-
-        <div className="CardSlotsLayer absolute inset-0 z-10">
-          {isRulesOpen ? null : isPreviousReviewOpen && previousTurn ? (
-              <section
-                className="absolute"
-                style={getOverlayStyle(
-                  useCompactOverlayViewport
-                    ? COMPACT_OVERLAY_BOUNDS
-                    : isBoardStretched
-                      ? BOARD_MODE_LAYOUTS["five-card"].contentBounds
-                      : BOARD_MODE_LAYOUTS["single-card"].contentBounds,
-                  activeRootViewBox,
-                )}
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby={reviewTitleId}
-              >
-                <h2 id={reviewTitleId} className="sr-only">
-                  Previous card review
-                </h2>
-                {previousTurn.mode === "five-card" ? (
-                  isExplanationVisible ? (
-                    <div className="absolute inset-0 flex items-end justify-center pb-12">
-                      <div
-                        className="h-full w-full"
-                        style={{
-                          transform: "scale(0.8)",
-                          transformOrigin: "center bottom",
-                        }}
-                      >
-                        <CardSlotsLayer
-                          cards={previousTurn.cards}
-                          isBoardStretched
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="absolute inset-0 flex items-end justify-center pb-12">
-                      <div
-                        className="h-full w-full"
-                        style={{
-                          transform: "scale(0.9)",
-                          transformOrigin: "center bottom",
-                        }}
-                      >
-                        <CardSlotsLayer
-                          cards={previousTurn.cards}
-                          isBoardStretched
-                        />
-                      </div>
-                    </div>
-                  )
-                ) : (
-                  <ReviewCardIllustration
-                    card={previousTurn.cards[0]}
-                    isExplanationVisible={isExplanationVisible}
-                  />
-                )}
-              </section>
-            ) : isRoundFinished ? null : isAnimatingCardTransition ? (
-              cardTransitionStage === "to-reverse" ? (
-                <div
-                  className="absolute"
-                  style={getOverlayStyle(
-                    isBoardStretched
-                      ? BOARD_MODE_LAYOUTS["five-card"].contentBounds
-                      : BOARD_MODE_LAYOUTS["single-card"].contentBounds,
-                    activeRootViewBox,
-                  )}
-                >
-                  <CardFlipTransition
-                    transitionKey={`to-reverse-${cardSequence}`}
-                    className="card-transition-rotor-flipping"
-                    frontFace={
-                      <ResolvedCardIllustration card={previousCard} />
-                    }
-                    backFace={
-                      <img
-                        src={reverseCard}
-                        alt=""
-                        aria-hidden="true"
-                        className="pointer-events-none -mt-[10px] block h-[70%] w-auto max-w-none select-none"
-                      />
-                    }
-                  />
-                </div>
-              ) : (
-                <div
-                  className="absolute"
-                  style={getOverlayStyle(
-                    isBoardStretched
-                      ? BOARD_MODE_LAYOUTS["five-card"].contentBounds
-                      : BOARD_MODE_LAYOUTS["single-card"].contentBounds,
-                    activeRootViewBox,
-                  )}
-                >
-                  <CardFlipTransition
-                    transitionKey={`to-next-${cardSequence}`}
-                    className="card-transition-rotor-flipping"
-                    frontFace={
-                      <img
-                        src={reverseCard}
-                        alt=""
-                        aria-hidden="true"
-                        className="pointer-events-none -mt-[10px] block h-[70%] w-auto max-w-none select-none"
-                      />
-                    }
-                    backFace={<ResolvedCardIllustration card={displayCard} />}
-                  />
-                </div>
-              )
-            ) : !hasStarted ? null : isBoardStretched ? (
-              <CardSlotsLayer
-                cards={cards}
-                isBoardStretched
-                previousCards={
-                  isCardTransitioning && previousTurn?.mode === "five-card"
-                    ? previousTurn.cards
-                    : undefined
-                }
-                transitionRunId={isCardTransitioning ? cardSequence : undefined}
-              />
-            ) : (
-              <CardSlotsLayer
-                cards={[displayCard]}
-                isBoardStretched={false}
-              />
-            )}
-        </div>
-
-        <div className="DecorationLayer absolute inset-0 z-20">
           <BoardDecorationLayer
-            hoveredControl={hoveredControl}
             isPreviousReviewActive={isPreviousReviewOpen}
+            isPreviousReviewHovered={isRulesOpen ? false : isPreviousHovered}
+            isRestartHovered={isRulesOpen ? false : isRestartHovered}
+            isModeHovered={isRulesOpen ? false : isModeHovered}
             isRulesActive={isRulesOpen}
-            showPreviousControl={isPreviousReviewAvailable}
+            isRulesHovered={isRulesOpen ? false : isRulesHovered}
+            showPreviousControl={showPreviousControl}
           />
         </div>
 
-        {isRulesOpen ? (
-          <div className="OverlayLayer absolute inset-0 z-40">
-            <section
-              className={`absolute flex flex-col text-[#22304a] ${
-                isBoardStretched ? "pt-14 pl-12 pb-12 pr-24" : "px-5 pt-6 pb-4"
-              }`}
-              style={getOverlayStyle(
-                useCompactOverlayViewport
-                  ? COMPACT_OVERLAY_BOUNDS
-                  : isBoardStretched
-                    ? BOARD_MODE_LAYOUTS["five-card"].contentBounds
-                    : BOARD_MODE_LAYOUTS["single-card"].contentBounds,
-                activeRootViewBox,
-              )}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby={rulesTitleId}
-            >
-              <header className="relative text-center">
-                <button
-                  ref={rulesCloseButtonRef}
-                  type="button"
-                  onClick={closeRules}
-                  className="absolute right-0 -top-[10px] text-[20px] leading-none"
-                  style={{
-                    fontFamily: '"Hannotate TC", sans-serif',
-                    fontWeight: 700,
-                    color: fixedDetails.board.dark,
-                  }}
-                  aria-label="Close rules"
-                >
-                  ×
-                </button>
-                <p
-                  id={rulesTitleId}
-                  className="text-[19px] leading-none"
-                  style={{
-                    fontFamily: '"Hannotate TC", sans-serif',
-                    fontWeight: 700,
-                  }}
-                >
-                  {currentRulesPage.title}
-                </p>
-              </header>
-
-              <article className="mt-2 flex-1 min-h-0">
-                <div
-                  className="h-full px-1 text-left text-[15px] leading-[1.35] text-[#22304a]"
-                  style={{
-                    fontFamily: '"Hannotate TC", sans-serif',
-                    fontWeight: 400,
-                  }}
-                >
-                  {currentRulesPage.paragraphs.map((paragraph) => (
-                    <p
-                      key={paragraph}
-                      className={
-                        paragraph === "One-card rules:"
-                          ? "mb-3 text-center font-semibold last:mb-0"
-                          : "mb-3 last:mb-0"
-                      }
-                    >
-                      {paragraph}
-                    </p>
-                  ))}
-                </div>
-              </article>
-
-              <nav
-                className="mt-2 flex items-center justify-between gap-3"
-                aria-label="Rules pages"
-              >
-                {canGoToPreviousRulesPage ? (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setRulesPageIndex((current) => Math.max(0, current - 1))
-                    }
-                    className="flex items-center gap-1 rounded-full px-1 py-1 text-[15px]"
-                    style={{
-                      fontFamily: '"Hannotate TC", sans-serif',
-                      fontWeight: 700,
-                      color: fixedDetails.board.dark,
-                    }}
-                  >
-                    <RulesNavArrow direction="previous" />
-                    Back
-                  </button>
-                ) : (
-                  <div className="w-[58px]" aria-hidden="true" />
-                )}
-
-                <p
-                  className="shrink-0 text-[13px] leading-none text-[#4e627c]"
-                  style={{
-                    fontFamily: '"Hannotate TC", sans-serif',
-                    fontWeight: 400,
-                  }}
-                >
-                  {rulesPageIndex + 1}/{rulesPages.length}
-                </p>
-
-                {canGoToNextRulesPage ? (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setRulesPageIndex((current) =>
-                        Math.min(rulesPages.length - 1, current + 1),
-                      )
-                    }
-                    className="flex items-center gap-1 rounded-full px-1 py-1 text-[15px]"
-                    style={{
-                      fontFamily: '"Hannotate TC", sans-serif',
-                      fontWeight: 700,
-                      color: fixedDetails.board.dark,
-                    }}
-                  >
-                    Next
-                    <RulesNavArrow direction="next" />
-                  </button>
-                ) : (
-                  <div className="w-[58px]" aria-hidden="true" />
-                )}
-              </nav>
-            </section>
-          </div>
-        ) : null}
-
-        {isRoundFinished &&
-        !isExplanationVisible &&
-        !isRulesOpen &&
-        !isPreviousReviewOpen ? (
-          <div className="OverlayLayer pointer-events-none absolute inset-0 z-40">
-            <div
-              className={`absolute flex -translate-y-[20px] flex-col items-center justify-center text-center text-[#22304a] ${
-                isBoardStretched ? "pl-10 pr-20" : "px-10"
-              }`}
-              style={{
-                ...getOverlayStyle(
-                  useCompactOverlayViewport
-                    ? COMPACT_OVERLAY_BOUNDS
-                    : isBoardStretched
-                      ? BOARD_MODE_LAYOUTS["five-card"].contentBounds
-                      : BOARD_MODE_LAYOUTS["single-card"].contentBounds,
-                  activeRootViewBox,
-                ),
-                fontFamily: '"Hannotate TC", sans-serif',
+        <div className="BoardInteractionLayer absolute inset-0 z-20">
+          {!isRoundFinished || isPreviousReviewOpen ? (
+            <AnswerChoicesLayer
+              canAnswer={
+                isPreviousReviewOpen || isBoardModeTransitioning || isQuickStartOpen
+                  ? false
+                  : canAnswer
+              }
+              disabledByOverlay={
+                isRulesOpen || isPreviousReviewOpen || isQuickStartOpen
+              }
+              hasStarted={!isQuickStartOpen}
+              hoveredAnswer={hoveredAnswer}
+              isBoardStretched={!isCompactBase}
+              isRoundFinished={isRoundFinished}
+              highlightedAnswer={
+                isPreviousReviewOpen ? previousTurn?.correctAnswer ?? null : null
+              }
+              answerPawFillColor={
+                isPreviousReviewOpen
+                  ? previousTurn?.wasCorrect
+                    ? CORRECT_ANSWER_PAW_FILL_COLOR
+                    : INCORRECT_ANSWER_PAW_FILL_COLOR
+                  : validationResult === "correct"
+                  ? CORRECT_ANSWER_PAW_FILL_COLOR
+                  : validationResult === "wrong"
+                    ? INCORRECT_ANSWER_PAW_FILL_COLOR
+                    : undefined
+              }
+              answerPawStrokeColor={
+                (isPreviousReviewOpen
+                  ? previousTurn?.selectedAnswer
+                  : selectedAnswer) != null
+                  ? ANSWER_PAW_STROKE_COLOR
+                  : undefined
+              }
+              highlightedAnswerPawFillColor={
+                isPreviousReviewOpen &&
+                previousTurn?.selectedAnswer !== previousTurn?.correctAnswer
+                  ? CORRECT_ANSWER_PAW_FILL_COLOR
+                  : undefined
+              }
+              highlightedAnswerPawStrokeColor={
+                isPreviousReviewOpen &&
+                previousTurn?.selectedAnswer !== previousTurn?.correctAnswer
+                  ? ANSWER_PAW_STROKE_COLOR
+                  : undefined
+              }
+              onAnswerBlur={(answer) => {
+                setHoveredAnswer((current) =>
+                  current === answer ? null : current,
+                );
               }}
-            >
-              <p className="text-[22px] leading-none">Round complete</p>
-              <p className="mt-6 text-[22px] leading-none">
-                Score: {score}/{answeredCount}
-              </p>
-              <p className="mt-8 max-w-[250px] text-[18px] leading-snug">
-                Click the paw in the top right corner to play again
-              </p>
-            </div>
-          </div>
-        ) : null}
-
-        <div className="InteractionLayer absolute inset-0 z-30">
-        <BoardHud
-          bestTotal={bestTotal}
-          isBoardStretched={isBoardStretched}
-          score={score}
-          timeLeft={timeLeft}
-        />
-
-          {!hasStarted ? (
-            <div
-              className="absolute z-30"
-              style={getOverlayStyle(
-                isBoardStretched
-                  ? BOARD_MODE_LAYOUTS["five-card"].contentBounds
-                  : BOARD_MODE_LAYOUTS["single-card"].contentBounds,
-                activeRootViewBox,
-              )}
-            >
-              <GameQuickStartGuide isLarge={isBoardStretched} />
-            </div>
+              onAnswerClick={(answer) => {
+                submitAnswer(answer);
+              }}
+              onAnswerFocus={(answer) => {
+                setHoveredAnswer(answer);
+              }}
+              onAnswerHoverEnd={(answer) => {
+                setHoveredAnswer((current) =>
+                  current === answer ? null : current,
+                );
+              }}
+              onAnswerHoverStart={(answer) => {
+                setHoveredAnswer(answer);
+              }}
+              selectedAnswer={
+                isPreviousReviewOpen
+                  ? previousTurn?.selectedAnswer ?? null
+                  : selectedAnswer
+              }
+            />
           ) : null}
 
-          {isPreviousReviewOpen && previousTurn ? (
+          {!isCompactBase ? (
             <div
-              className="absolute z-40"
-              style={
-                previousTurn.mode === "five-card"
-                  ? getOverlayStyle(BOARD_MODE_LAYOUTS["five-card"].contentBounds, STRETCHED_BOARD_VIEWBOX)
-                  : getOverlayStyle(COMPACT_OVERLAY_BOUNDS, BOARD_VIEWBOX)
-              }
+              className="absolute left-[40px] right-[80px] z-30 flex justify-center"
+              aria-label="Card complexity"
+              style={{ bottom: "5px" }}
             >
               <div
-                className={
-                  previousTurn.mode === "five-card"
-                    ? "absolute inset-0 pt-14 pl-12 pb-12 pr-24"
-                    : "absolute inset-x-0 top-[15px]"
-                }
+                className="rounded-[8px] border border-black/10 px-2 py-1"
+                style={{
+                  background: fixedDetails.board.dark,
+                  fontFamily: '"Hannotate TC", sans-serif',
+                }}
               >
-                <div className="relative flex flex-col items-center">
-                  {!isExplanationVisible ? (
-                    <button
-                      type="button"
-                      onClick={closePreviousReview}
-                      className="absolute right-[15px] top-0 text-[20px] leading-none"
-                      style={{
-                        fontFamily: '"Hannotate TC", sans-serif',
-                        fontWeight: 700,
-                        color: fixedDetails.board.dark,
-                      }}
-                      aria-label="Close review"
-                    >
-                      ×
-                    </button>
-                  ) : null}
-                  <button
-                    ref={explanationToggleButtonRef}
-                    type="button"
-                    onClick={() =>
-                      setIsExplanationVisible((current) => !current)
-                    }
-                    className="whitespace-nowrap text-[15px] leading-none text-[#22304a] underline underline-offset-2"
-                    style={{ fontFamily: '"Hannotate TC", sans-serif' }}
-                  >
-                    {isExplanationVisible
-                      ? "Hide explanation"
-                      : "Show explanation"}
-                  </button>
-                  {isExplanationVisible ? (
-                    <div
-                      className={
-                        previousTurn.mode === "five-card"
-                          ? "mt-2 w-full text-center text-[14px] leading-snug text-[#22304a]"
-                          : "mt-2 w-full px-[10px] text-center text-[14px] leading-snug text-[#22304a]"
-                      }
-                      style={{ fontFamily: '"Hannotate TC", sans-serif' }}
-                    >
-                      {previousReviewExplanation.map((paragraph) => (
-                        <p key={paragraph.key} className="mb-1 last:mb-0">
-                          {paragraph.content}
-                        </p>
-                      ))}
-                    </div>
-                  ) : null}
+                <div className="flex items-center gap-1.5">
+                  <span className="whitespace-nowrap text-[11px] font-bold leading-none text-white">
+                    Complexity:
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {([3, 4, 5, 6] as const).map((count) => {
+                      const isActive = expandedCardCount === count;
+
+                      return (
+                        <button
+                          key={count}
+                          type="button"
+                          onClick={() => {
+                            const currentCardCount = isCompactBase
+                              ? 1
+                              : expandedCardCount;
+                            const currentSnapshot = getSnapshot();
+
+                            savedSessionSnapshotsRef.current[currentCardCount] =
+                              currentSnapshot;
+                            setExpandedCardCount(count);
+                            setHoveredAnswer(null);
+                            setIsPreviousReviewOpen(false);
+                            setIsExplanationVisible(false);
+                            const nextSnapshot =
+                              savedSessionSnapshotsRef.current[count] ?? null;
+
+                            if (isCompatibleSnapshot(nextSnapshot, count)) {
+                              restoreSnapshot(nextSnapshot, count);
+                            } else {
+                              restartRound(count);
+                            }
+                          }}
+                          disabled={isRulesOpen || isPreviousReviewOpen}
+                          className="inline-flex min-w-[24px] items-center justify-center rounded-[5px] px-1.5 py-1 text-[11px] font-bold leading-none text-white transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-default disabled:opacity-80"
+                          style={{
+                            background: isActive
+                              ? fixedDetails.board.light
+                              : "transparent",
+                          }}
+                          aria-label={`Show ${count} cards`}
+                          aria-pressed={isActive}
+                        >
+                          {count}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
           ) : null}
 
-          {shouldRenderHintLayer ? (
-            <div className="pointer-events-none absolute inset-0 z-50" aria-hidden="true">
+          {pawTrailSteps.length > 0 || targetHintPosition ? (
+            <div className="pointer-events-none absolute inset-0 z-30" aria-hidden="true">
               {pawTrailSteps.map((step) => (
-                  <div
-                    key={step.key}
-                    className="paw-step-trail absolute"
-                    style={getPawTrailStyle(step)}
-                  >
-                    <HintPawStep
-                      fill={PAW_TRAIL_FILL_COLOR}
-                      stroke={PAW_TRAIL_STROKE_COLOR}
-                      className="h-11 w-11"
-                    />
-                  </div>
-                ))}
+                <div
+                  key={step.key}
+                  className="paw-step-trail absolute"
+                  style={getPawTrailStyle(step)}
+                >
+                  <HintPawStep
+                    fill={PAW_TRAIL_FILL_COLOR}
+                    stroke={PAW_TRAIL_STROKE_COLOR}
+                    className="h-11 w-11"
+                  />
+                </div>
+              ))}
               {targetHintPosition ? (
                 <div
                   key={`target-paw-${pawTrailRunId}`}
                   className="paw-step-target absolute"
                   style={{
-                    left: `${(targetHintPosition.x / activeRootViewBox.width) * 100}%`,
-                    top: `${(targetHintPosition.y / activeRootViewBox.height) * 100}%`,
+                    left: `${targetHintPosition.x}px`,
+                    top: `${targetHintPosition.y}px`,
                     animationDelay: targetHintDelay,
                   }}
                 >
@@ -1025,239 +660,458 @@ export function GameBoardRound({
             </div>
           ) : null}
 
-          <AnswerChoicesLayer
-            canAnswer={canAnswer}
-            disabledByOverlay={isPreviousReviewOpen || isRulesOpen}
-            hasStarted={hasStarted}
-            hoveredAnswer={effectiveHoveredAnswer}
-            isBoardStretched={isBoardStretched}
-            isRoundFinished={isRoundFinished}
-            highlightedAnswer={
-              isPreviousReviewOpen ? previousTurn?.correctAnswer ?? null : null
-            }
-            answerPawFillColor={
-              isPreviousReviewOpen
-                ? previousTurn?.wasCorrect
-                  ? CORRECT_ANSWER_PAW_FILL_COLOR
-                  : INCORRECT_ANSWER_PAW_FILL_COLOR
-                : answerPawFillColor
-            }
-            answerPawStrokeColor={
-              isPreviousReviewOpen
-                ? previousTurn?.selectedAnswer
-                  ? ANSWER_PAW_STROKE_COLOR
-                  : undefined
-                : answerPawStrokeColor
-            }
-            highlightedAnswerPawFillColor={
-              isPreviousReviewOpen ? CORRECT_ANSWER_PAW_FILL_COLOR : undefined
-            }
-            highlightedAnswerPawStrokeColor={
-              isPreviousReviewOpen ? ANSWER_PAW_STROKE_COLOR : undefined
-            }
-            onAnswerBlur={(answer) =>
-              setHoveredAnswer((current) =>
-                current === answer ? null : current,
-              )
-            }
-            onAnswerClick={(answer) => {
-              if (isRulesOpen) {
-                closeRules();
-              }
+        </div>
 
-              if (isRoundFinished) {
-                setHasStarted(true);
-                restartRound();
-                return;
-              }
-
-              if (isPreviousReviewOpen) {
-                closePreviousReview();
-                return;
-              }
-
-              if (!hasStarted) {
-                return;
-              }
-
-              submitAnswer(answer);
+        {isQuickStartOpen && !isRulesOpen ? (
+          <div
+            className="absolute z-[35]"
+            style={{
+              left: `${BOARD_PANEL_INSETS.left}px`,
+              top: `${SCOREBOARD_RENDER_HEIGHT_PX + BOARD_PANEL_INSETS.top}px`,
+              right: `${BOARD_PANEL_INSETS.right}px`,
+              bottom: `${BOARD_PANEL_INSETS.bottom}px`,
             }}
-            onAnswerFocus={(answer) => {
-              if (hasStarted && canAnswer) {
-                setHoveredAnswer(answer);
-              }
-            }}
-            onAnswerHoverEnd={(answer) =>
-              setHoveredAnswer((current) =>
-                current === answer ? null : current,
-              )
-            }
-            onAnswerHoverStart={(answer) => {
-              if (hasStarted && canAnswer) {
-                setHoveredAnswer(answer);
-              }
-            }}
-            selectedAnswer={
-              isPreviousReviewOpen
-                ? previousTurn?.selectedAnswer ?? null
-                : selectedAnswer
-            }
-          />
+          >
+            <GameQuickStartGuide
+              isLarge={!isCompactBase}
+              onOpenRules={() => {
+                setIsRulesOpen(true);
+                setDisplayedRulesCompactMode(isCompactBase);
+                setRulesPageIndex(0);
+                setIsPreviousReviewOpen(false);
+                setIsExplanationVisible(false);
+              }}
+              onStart={startQuickStartRound}
+            />
+          </div>
+        ) : null}
 
-            {isPreviousReviewAvailable ? (
+        <div
+          className="BoardOverlayLayer pointer-events-none absolute z-30"
+          style={{
+            left: `${BOARD_PANEL_INSETS.left}px`,
+            top: `${SCOREBOARD_RENDER_HEIGHT_PX + BOARD_PANEL_INSETS.top}px`,
+            right: `${BOARD_PANEL_INSETS.right}px`,
+            bottom: `${BOARD_PANEL_INSETS.bottom}px`,
+          }}
+        >
+          {isRulesOpen &&
+          (isPreviousHovered || isRestartHovered || isRulesHovered || isModeHovered) ? (
+            <div className="absolute inset-0 z-40">
+              <GameQuickStartGuide
+                isLarge={!isCompactBase}
+                visibleBubbles={{
+                  reviewPrevious: isPreviousHovered,
+                  startNewGame: isRestartHovered,
+                  gameRules: isRulesHovered,
+                  changeLevel: isModeHovered,
+                  quickStart: false,
+                }}
+              />
+            </div>
+          ) : null}
+
+          {isPreviousReviewOpen && previousTurn ? (
+            <div className="pointer-events-auto absolute inset-0 z-30">
+              <section
+                className="absolute"
+                style={{
+                  left: isCompactBase ? "-5px" : "0",
+                  top: "0",
+                  right: isCompactBase ? "0" : "0",
+                  bottom: "0",
+                }}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={reviewTitleId}
+              >
+                <h2 id={reviewTitleId} className="sr-only">
+                  Previous round review
+                </h2>
+                {isCompactBase ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPreviousReviewOpen(false);
+                      setIsExplanationVisible(false);
+                    }}
+                    className="absolute right-[20px] top-[12px] z-10 text-[20px] leading-none"
+                    style={{
+                      fontFamily: '"Hannotate TC", sans-serif',
+                      fontWeight: 700,
+                      color: fixedDetails.board.dark,
+                    }}
+                    aria-label="Close review"
+                  >
+                    ×
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPreviousReviewOpen(false);
+                      setIsExplanationVisible(false);
+                    }}
+                    className="absolute right-[20px] top-[12px] z-10 text-[20px] leading-none"
+                    style={{
+                      fontFamily: '"Hannotate TC", sans-serif',
+                      fontWeight: 700,
+                      color: fixedDetails.board.dark,
+                    }}
+                    aria-label="Close review"
+                  >
+                    ×
+                  </button>
+                )}
+                {isCompactBase ? (
+                  <div className="absolute inset-0 overflow-hidden">
+                    <ReviewCardIllustration
+                      card={currentReviewCards[0] ?? FALLBACK_SINGLE_CARD}
+                      isExplanationVisible={isExplanationVisible}
+                    />
+                  </div>
+                ) : isExplanationVisible ? (
+                  <div className="absolute inset-0 overflow-hidden">
+                    <MultiCardLayer
+                      cards={currentReviewCards}
+                      count={reviewCardCount}
+                      renderContentOnly
+                      cardScale={largeExplanationCardScale}
+                      answerBadgeBottom={largeExplanationBadgeBottom}
+                      answerBadgeScale={largeExplanationBadgeScale}
+                      contentClassName={largeExplanationCardContentClassName}
+                      rowClassName={largeExplanationRowClassName}
+                      showAnswerBadges
+                    />
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 overflow-hidden">
+                    <MultiCardLayer
+                      cards={currentReviewCards}
+                      count={reviewCardCount}
+                      renderContentOnly
+                      contentClassName={largeReviewCardContentClassName}
+                      rowClassName={largeReviewRowClassName}
+                    />
+                  </div>
+                )}
+                <div
+                  className={
+                    isCompactBase
+                      ? "absolute inset-x-0 top-[15px]"
+                      : `absolute inset-0 ${PANEL_OVERLAY_PADDING_CLASS}`
+                  }
+                >
+                  <div className="relative flex flex-col items-center">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setIsExplanationVisible((current) => !current)
+                      }
+                      className="whitespace-nowrap text-[15px] leading-none text-[#22304a] underline underline-offset-2"
+                      style={{ fontFamily: '"Hannotate TC", sans-serif' }}
+                    >
+                      {isExplanationVisible ? "Hide explanation" : "Show explanation"}
+                    </button>
+                    {isExplanationVisible && reviewExplanation.length > 0 ? (
+                      <div
+                        className={
+                          isCompactBase
+                            ? "mt-3 w-full px-[10px] text-center text-[#22304a]"
+                            : "mt-3 w-full text-center text-[#22304a]"
+                        }
+                        style={{ fontFamily: '"Hannotate TC", sans-serif' }}
+                      >
+                        {isCompactBase ? (
+                          <div className="text-[14px] leading-snug">
+                            {reviewExplanation.map((paragraph) => (
+                              <p key={paragraph.key} className="mb-3 last:mb-0">
+                                {paragraph.content}
+                              </p>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-[14px] leading-snug">
+                            {reviewExplanation.map((paragraph) => (
+                              <p key={paragraph.key} className="mb-3 last:mb-0">
+                                {paragraph.content}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </section>
+            </div>
+          ) : null}
+
+          {isRoundFinished && !isRulesOpen && !isPreviousReviewOpen ? (
+            <div className="pointer-events-none absolute inset-0 z-30">
+              <div
+                className="absolute flex -translate-y-[20px] flex-col items-center justify-center px-10 text-center text-[#22304a]"
+                style={{
+                  left: isCompactBase ? "-5px" : "0",
+                  top: "0",
+                  right: isCompactBase ? "0" : "0",
+                  bottom: "0",
+                }}
+              >
+                <p
+                  className="text-[22px] leading-none"
+                  style={{ fontFamily: '"Hannotate TC", sans-serif' }}
+                >
+                  Round complete
+                </p>
+                <p
+                  className="mt-6 text-[22px] leading-none"
+                  style={{ fontFamily: '"Hannotate TC", sans-serif' }}
+                >
+                  Score: {score}/{answeredCount}
+                </p>
+                <p
+                  className="mt-8 max-w-[250px] text-[18px] leading-snug"
+                  style={{ fontFamily: '"Hannotate TC", sans-serif' }}
+                >
+                  Click the paw in the top right corner to play again
+                </p>
+              </div>
+            </div>
+          ) : null}
+
+          {isRulesOpen ? (
+            <section
+              className={`pointer-events-auto absolute z-30 flex flex-col text-[#22304a] ${PANEL_OVERLAY_PADDING_CLASS}`}
+              style={{
+                left: "0",
+                top: "0",
+                right: "0",
+                bottom: "0",
+              }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={rulesTitleId}
+            >
+              <button
+                type="button"
+                onClick={() => setIsRulesOpen(false)}
+                className="absolute right-[20px] top-[12px] z-10 text-[20px] leading-none"
+                style={{
+                  fontFamily: '"Hannotate TC", sans-serif',
+                  fontWeight: 700,
+                  color: fixedDetails.board.dark,
+                }}
+                aria-label="Close rules"
+              >
+                ×
+              </button>
+              <header className="relative text-center">
+                <p
+                  id={rulesTitleId}
+                  className="text-[19px] leading-none"
+                  style={{
+                    fontFamily: '"Hannotate TC", sans-serif',
+                    fontWeight: 700,
+                  }}
+                >
+                  {currentRulesPage.title}
+                </p>
+              </header>
+
+              <article className="mt-3 flex-1 min-h-0">
+                <div
+                  className="h-full px-1 text-left text-[15px] leading-[1.35] text-[#22304a]"
+                  style={{
+                    fontFamily: '"Hannotate TC", sans-serif',
+                    fontWeight: 400,
+                  }}
+                >
+                  {isRulesTransitioning ? null : (
+                    <>
+                      {currentRulesPage.paragraphs.map((paragraph) => (
+                        <p
+                          key={paragraph}
+                          className={
+                            paragraph === "One-card rules:"
+                              ? "mb-3 text-center font-semibold last:mb-0"
+                              : "mb-3 last:mb-0"
+                          }
+                        >
+                          {paragraph}
+                        </p>
+                      ))}
+                    </>
+                  )}
+                </div>
+              </article>
+
+              <nav
+                className="mt-2 flex items-center justify-between gap-3"
+                aria-label="Rules pages"
+              >
+                {canGoBack ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setRulesPageIndex((current) => Math.max(0, current - 1))
+                    }
+                    className="rounded-full px-2 py-1 text-[15px]"
+                    style={{
+                      fontFamily: '"Hannotate TC", sans-serif',
+                      fontWeight: 700,
+                      color: fixedDetails.board.dark,
+                    }}
+                  >
+                    Back
+                  </button>
+                ) : (
+                  <div className="w-[58px]" aria-hidden="true" />
+                )}
+
+              <p
+                className="shrink-0 text-[13px] leading-none text-[#4e627c]"
+                style={{
+                  fontFamily: '"Hannotate TC", sans-serif',
+                  fontWeight: 400,
+                }}
+              >
+                {isRulesTransitioning
+                  ? ""
+                  : `${rulesPageIndex + 1}/${rulesPages.length}`}
+              </p>
+
+                {canGoNext ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setRulesPageIndex((current) =>
+                        Math.min(rulesPages.length - 1, current + 1),
+                      )
+                    }
+                    className="rounded-full px-2 py-1 text-[15px]"
+                    style={{
+                      fontFamily: '"Hannotate TC", sans-serif',
+                      fontWeight: 700,
+                      color: fixedDetails.board.dark,
+                    }}
+                  >
+                    Next
+                  </button>
+                ) : (
+                  <div className="w-[58px]" aria-hidden="true" />
+                )}
+              </nav>
+            </section>
+          ) : null}
+        </div>
+
+        <div className="BoardControlLayer pointer-events-none absolute inset-0 z-40">
+          {showPreviousControl || isRulesOpen ? (
             <button
-              ref={previousControlButtonRef}
               type="button"
               onClick={() => {
                 if (isRulesOpen) {
-                  closeRules();
+                  return;
                 }
 
                 if (isPreviousReviewOpen) {
-                  closePreviousReview();
+                  setIsPreviousReviewOpen(false);
+                  setIsExplanationVisible(false);
                   return;
                 }
 
-                if (previousTurn == null) {
-                  return;
-                }
-
-                lastOverlayTriggerRef.current = previousControlButtonRef.current;
                 setIsPreviousReviewOpen(true);
                 setIsExplanationVisible(false);
               }}
-              onMouseEnter={() => setHoveredControl("previous")}
-              onMouseLeave={() =>
-                setHoveredControl((current) =>
-                  current === "previous" ? null : current,
-                )
-              }
-              onFocus={() => setHoveredControl("previous")}
-              onBlur={() =>
-                setHoveredControl((current) =>
-                  current === "previous" ? null : current,
-                )
-              }
-              className="absolute z-40 rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-              style={getFixedControlStyle("previous")}
-              aria-label={
-                isPreviousReviewOpen
-                  ? "Return to the current game"
-                  : BOARD_CONTROL_OVERLAYS.previous.label
-              }
+              onMouseEnter={() => setIsPreviousHovered(true)}
+              onMouseLeave={() => setIsPreviousHovered(false)}
+              onFocus={() => setIsPreviousHovered(true)}
+              onBlur={() => setIsPreviousHovered(false)}
+              className="pointer-events-auto absolute rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              style={{
+                left: "0",
+                top: "64px",
+                width: "74px",
+                height: "64px",
+              }}
+              aria-label="Review the previous round"
             />
-            ) : null}
-
-            <button
-            type="button"
-            onClick={() => {
-              setHoveredAnswer(null);
-
-              if (isRulesOpen) {
-                closeRules();
-              }
-
-              if (isPreviousReviewOpen) {
-                closePreviousReview();
-              }
-
-              setHasStarted(true);
-              restartRound();
-            }}
-            onMouseEnter={() => setHoveredControl("restart")}
-            onMouseLeave={() =>
-              setHoveredControl((current) =>
-                current === "restart" ? null : current,
-              )
-            }
-            onFocus={() => setHoveredControl("restart")}
-            onBlur={() =>
-              setHoveredControl((current) =>
-                current === "restart" ? null : current,
-              )
-            }
-            className="absolute z-40 rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            style={getFixedControlStyle("restart")}
-            aria-label={BOARD_CONTROL_OVERLAYS.restart.label}
-            />
-
-            <button
-            ref={rulesControlButtonRef}
-            type="button"
-            onClick={() => {
-              setHoveredAnswer(null);
-
-              if (isPreviousReviewOpen) {
-                closePreviousReview();
-              }
-
-              lastOverlayTriggerRef.current = rulesControlButtonRef.current;
-              setIsRulesOpen((current) => !current);
-              setRulesPageIndex(0);
-            }}
-            onMouseEnter={() => setHoveredControl("rules")}
-            onMouseLeave={() =>
-              setHoveredControl((current) =>
-                current === "rules" ? null : current,
-              )
-            }
-            onFocus={() => setHoveredControl("rules")}
-            onBlur={() =>
-              setHoveredControl((current) =>
-                current === "rules" ? null : current,
-              )
-            }
-            className="absolute z-40 rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            style={getFixedControlStyle("rules")}
-            aria-label={BOARD_CONTROL_OVERLAYS.rules.label}
-            />
+          ) : null}
 
           <button
-            ref={fiveCardModeButtonRef}
             type="button"
             onClick={() => {
-              setHoveredAnswer(null);
-
               if (isRulesOpen) {
-                closeRules();
+                return;
               }
 
-              if (isPreviousReviewOpen) {
-                closePreviousReview();
+              setHoveredAnswer(null);
+              setIsPreviousReviewOpen(false);
+              setIsExplanationVisible(false);
+              if (isQuickStartOpen) {
+                startQuickStartRound();
+                return;
               }
 
-              const nextMode =
-                gameMode === "five-card" ? "single-card" : "five-card";
-
-              suppressNextCardTransitionRef.current = true;
-              setPreviousCard(null);
-              setCardTransitionStage("idle");
-              setDisplayCard(card);
-              lastRenderedCardRef.current = card;
-              setGameMode(nextMode);
-              restartRound(nextMode);
+              restartRound();
             }}
-            onMouseEnter={() => setHoveredControl("five-card-mode")}
-            onMouseLeave={() =>
-              setHoveredControl((current) =>
-                current === "five-card-mode" ? null : current,
-              )
-            }
-            onFocus={() => setHoveredControl("five-card-mode")}
-            onBlur={() =>
-              setHoveredControl((current) =>
-                current === "five-card-mode" ? null : current,
-              )
-            }
-            className="absolute z-40 rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            style={getFixedControlStyle("five-card-mode")}
-            aria-label={
-              isBoardStretched
-                ? "Switch to single card mode"
-                : "Switch to five card mode"
-            }
+            onMouseEnter={() => setIsRestartHovered(true)}
+            onMouseLeave={() => setIsRestartHovered(false)}
+            onFocus={() => setIsRestartHovered(true)}
+            onBlur={() => setIsRestartHovered(false)}
+            className="pointer-events-auto absolute rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            style={{
+              right: "0",
+              top: "64px",
+              width: "86px",
+              height: "66px",
+            }}
+            aria-label="Restart round"
+          />
+
+          <button
+            type="button"
+            onClick={() => {
+              setIsRulesOpen((current) => !current);
+              setDisplayedRulesCompactMode(isCompactBase);
+              setRulesPageIndex(0);
+              setIsPreviousReviewOpen(false);
+              setIsExplanationVisible(false);
+            }}
+            onMouseEnter={() => setIsRulesHovered(true)}
+            onMouseLeave={() => setIsRulesHovered(false)}
+            onFocus={() => setIsRulesHovered(true)}
+            onBlur={() => setIsRulesHovered(false)}
+            className="pointer-events-auto absolute rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            style={{
+              left: "0",
+              bottom: "0",
+              width: "74px",
+              height: "64px",
+            }}
+            aria-label="Show rules"
+          />
+
+          <button
+            type="button"
+            onClick={toggleBoardMode}
+            onMouseEnter={() => setIsModeHovered(true)}
+            onMouseLeave={() => setIsModeHovered(false)}
+            onFocus={() => setIsModeHovered(true)}
+            onBlur={() => setIsModeHovered(false)}
+            className="pointer-events-auto absolute rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            style={{
+              right: "0",
+              bottom: "0",
+              width: "112px",
+              height: "84px",
+            }}
+            aria-label="Toggle board size"
           />
         </div>
-    </>
+    </div>
   );
+
+  return board;
 }

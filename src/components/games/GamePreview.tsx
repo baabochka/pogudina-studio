@@ -1,12 +1,15 @@
 const GAME_PREVIEW_VARIANT_STYLES = {
   landscape: {
     frame: 'aspect-[4/3] p-3',
+    image: 'max-h-full max-w-full object-contain object-center',
   },
   portrait: {
-    frame: 'aspect-[3/4] p-2.5',
+    frame: 'aspect-[798/1203] p-0',
+    image: 'h-full w-full rounded-[16px] object-cover object-center',
   },
   square: {
     frame: 'aspect-square p-3',
+    image: 'max-h-full max-w-full object-contain object-center',
   },
 } as const
 
@@ -33,7 +36,7 @@ export function GamePreview({ alt, className = '', src, variant }: GamePreviewPr
       <img
         src={src}
         alt={alt}
-        className="max-h-full max-w-full object-contain object-center"
+        className={variantStyles.image}
       />
     </div>
   )

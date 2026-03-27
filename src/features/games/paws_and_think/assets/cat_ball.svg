@@ -105,7 +105,7 @@
     </g>
     <g id="nose-mouth">
       <ellipse
-        class="fill-nose stroke-outline miter stroke-2 non-scaling-stroke"
+        class="fill-nose stroke-outline miter stroke-2"
         cx="139.12"
         cy="173.01"
         rx="7.14"

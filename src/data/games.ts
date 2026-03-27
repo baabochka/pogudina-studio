@@ -1,4 +1,4 @@
-import pawsThinkImage from '../assets/paws_think.jpg'
+import pawsThinkGamePreview from '../assets/PawsThinkGamePreview.png'
 
 export type Game = {
   detailDescription: string
@@ -17,7 +17,7 @@ export const games: Game[] = [
   {
     slug: 'paws-and-think',
     title: 'Paws and Think',
-    previewImage: pawsThinkImage,
+    previewImage: pawsThinkGamePreview,
     previewAlt: 'Paws and Think game preview',
     previewVariant: 'portrait',
     summary:

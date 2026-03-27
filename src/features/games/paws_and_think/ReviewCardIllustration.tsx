@@ -6,7 +6,7 @@ type ReviewCardIllustrationProps = {
   isExplanationVisible: boolean;
 };
 
-const REVIEW_EXPLANATION_SCALE = 0.5;
+const REVIEW_EXPLANATION_SCALE = 0.6;
 
 export function ReviewCardIllustration({
   card,
@@ -17,7 +17,7 @@ export function ReviewCardIllustration({
       {isExplanationVisible ? (
         <div className="absolute inset-0 flex items-end justify-center">
           <div
-            className="h-full"
+            className="relative h-full"
             style={{
               transform: `scale(${REVIEW_EXPLANATION_SCALE})`,
               transformOrigin: "center bottom",

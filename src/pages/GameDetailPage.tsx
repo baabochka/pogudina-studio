@@ -1,16 +1,10 @@
-import { Suspense, lazy, type CSSProperties, useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
 import { CaseStudyPageNav } from '../components/case-study/CaseStudyPageNav'
 import { SectionBlock } from '../components/case-study/SectionBlock'
 import { Container } from '../components/ui/Container'
 import { getGameBySlug } from '../data/games'
-import {
-  BOARD_SHELL_FOOTPRINT_CLASSES,
-} from '../features/games/paws_and_think/boardLayoutConfig'
-import type { GameMode } from '../features/games/paws_and_think/gameMode'
-import { fixedDetails } from '../features/games/paws_and_think/palettes'
-
 const GameBoardRound = lazy(() =>
   import('../features/games/paws_and_think/GameBoardRound').then((module) => ({
     default: module.GameBoardRound,
@@ -120,11 +114,6 @@ export function GameDetailPage() {
   const [activeSectionId, setActiveSectionId] = useState<
     (typeof gameSections)[number]['id']
   >(gameSections[0].id)
-  const [activeBoardMode, setActiveBoardMode] = useState<GameMode>('single-card')
-  const boardRootStyle = {
-    '--board-light-fill': fixedDetails.board.light,
-    '--board-dark-fill': fixedDetails.board.dark,
-  } as CSSProperties
 
   useEffect(() => {
     const sectionElements = gameSections
@@ -215,12 +204,9 @@ export function GameDetailPage() {
 
             <div className="mt-8 space-y-10">
               <section id="play">
-                <div
-                  className={`mb-10 sm:mb-12 transition-[max-width,aspect-ratio] duration-380 ease-[cubic-bezier(0.22,1,0.36,1)] ${BOARD_SHELL_FOOTPRINT_CLASSES[activeBoardMode]}`}
-                  style={boardRootStyle}
-                >
+                <div className="mb-10 sm:mb-12">
                   <Suspense fallback={<GameBoardFallback />}>
-                    <GameBoardRound onModeChange={setActiveBoardMode} />
+                    <GameBoardRound />
                   </Suspense>
                 </div>
               </section>
