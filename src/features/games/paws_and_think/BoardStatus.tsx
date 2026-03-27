@@ -51,7 +51,7 @@ export function BoardStatus({
 }) {
   return (
     <div
-      className="pointer-events-none absolute inset-x-0 top-0 z-30 grid grid-cols-3 items-center px-5"
+      className="pointer-events-none absolute inset-x-0 top-0 z-30 grid grid-cols-3 items-center rounded-t-[10px] px-5"
       style={{
         height: `${SCOREBOARD_RENDER_HEIGHT_PX}px`,
         background: "var(--board-dark-fill)",

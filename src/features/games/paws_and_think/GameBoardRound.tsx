@@ -63,7 +63,13 @@ function isCompatibleSnapshot(
   snapshot: GameSessionSnapshot | null | undefined,
   expectedCardCount: SessionCardCount,
 ): snapshot is GameSessionSnapshot {
-  return snapshot != null && snapshot.cards.length === expectedCardCount;
+  return (
+    snapshot != null &&
+    snapshot.cards.length === expectedCardCount &&
+    snapshot.validationResult === "idle" &&
+    !snapshot.isCardTransitioning &&
+    snapshot.timeLeft > 0
+  );
 }
 
 const FALLBACK_SINGLE_CARD: ResolvedCard = {
@@ -145,6 +151,7 @@ export function GameBoardRound({
 }: {
   onModeChange?: (mode: GameMode) => void;
 } = {}) {
+  const boardViewportRef = useRef<HTMLDivElement | null>(null);
   const [isCompactBase, setIsCompactBase] = useState(true);
   const [isQuickStartOpen, setIsQuickStartOpen] = useState(true);
   const [displayedRulesCompactMode, setDisplayedRulesCompactMode] =
@@ -182,6 +189,10 @@ export function GameBoardRound({
   const shellSize = isCompactBase
     ? SHELL_SIZES.compact
     : SHELL_SIZES.expanded;
+  const [availableWidth, setAvailableWidth] = useState<number>(shellSize.width);
+  const [viewportWidth, setViewportWidth] = useState<number>(() =>
+    typeof window === "undefined" ? shellSize.width : window.innerWidth,
+  );
   const activeCardCount = isCompactBase ? 1 : expandedCardCount;
   const {
     cards,
@@ -247,6 +258,11 @@ export function GameBoardRound({
     validationResult === "wrong"
       ? activeAnswerCenters[correctAnswer]
       : null;
+  const isHintAnimationActive =
+    validationResult === "wrong" &&
+    (pawTrailSteps.length > 0 || targetHintPosition != null);
+  const isAnswerFeedbackActive =
+    validationResult === "correct" || isHintAnimationActive;
   const targetHintDelay =
     pawTrailSteps.length > 0 ? `${pawTrailSteps.length * 180 + 220}ms` : "0ms";
   const currentReviewCards = previousTurn?.cards ?? [];
@@ -292,7 +308,7 @@ export function GameBoardRound({
   };
 
   const toggleBoardMode = () => {
-    if (isRulesOpen) {
+    if (isRulesOpen || isAnswerFeedbackActive) {
       return;
     }
 
@@ -416,18 +432,79 @@ export function GameBoardRound({
     };
   }, [isRulesOpen]);
 
+  useEffect(() => {
+    const viewportElement = boardViewportRef.current;
+
+    if (!viewportElement || typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const updateAvailableWidth = () => {
+      setAvailableWidth(viewportElement.clientWidth);
+    };
+
+    updateAvailableWidth();
+
+    const observer = new ResizeObserver(() => {
+      updateAvailableWidth();
+    });
+
+    observer.observe(viewportElement);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const updateViewportWidth = () => {
+      setViewportWidth(window.innerWidth);
+    };
+
+    updateViewportWidth();
+    window.addEventListener("resize", updateViewportWidth);
+
+    return () => {
+      window.removeEventListener("resize", updateViewportWidth);
+    };
+  }, []);
+
+  const minScaledWidth = isCompactBase ? 250 : 400;
+  const viewportLimitedWidth = Math.max(minScaledWidth, viewportWidth - 32);
+  const maxRenderableWidth = Math.max(
+    minScaledWidth,
+    Math.min(availableWidth, viewportLimitedWidth),
+  );
+  const boardScale = Math.min(1, maxRenderableWidth / shellSize.width);
+  const scaledBoardWidth = shellSize.width * boardScale;
+  const scaledBoardHeight = shellSize.height * boardScale;
+
   const board = (
-    <div
-      className="relative overflow-visible"
-      style={{
-        "--board-light-fill": "#008D96",
-        "--board-dark-fill": "#005157",
-        transition:
-          `width ${MODE_TRANSITION_MS}ms cubic-bezier(0.22,1,0.36,1), height ${MODE_TRANSITION_MS}ms cubic-bezier(0.22,1,0.36,1)`,
-        width: `${shellSize.width}px`,
-        height: `${shellSize.height}px`,
-      } as CSSProperties}
-    >
+    <div ref={boardViewportRef} className="w-full overflow-visible">
+      <div
+        className="relative mx-auto overflow-visible"
+        style={{
+          width: `${scaledBoardWidth}px`,
+          height: `${scaledBoardHeight}px`,
+        }}
+      >
+        <div
+          className="relative overflow-visible"
+          style={{
+            "--board-light-fill": "#008D96",
+            "--board-dark-fill": "#005157",
+            transition:
+              `width ${MODE_TRANSITION_MS}ms cubic-bezier(0.22,1,0.36,1), height ${MODE_TRANSITION_MS}ms cubic-bezier(0.22,1,0.36,1), transform ${MODE_TRANSITION_MS}ms cubic-bezier(0.22,1,0.36,1)`,
+            width: `${shellSize.width}px`,
+            height: `${shellSize.height}px`,
+            transform: `scale(${boardScale})`,
+            transformOrigin: "top left",
+          } as CSSProperties}
+        >
         <div className="BoardBaseLayer absolute inset-0 z-0">
           <SimpleBoardBase
             bestTotal={bestTotal}
@@ -585,6 +662,10 @@ export function GameBoardRound({
                           key={count}
                           type="button"
                           onClick={() => {
+                            if (isAnswerFeedbackActive) {
+                              return;
+                            }
+
                             const currentCardCount = isCompactBase
                               ? 1
                               : expandedCardCount;
@@ -605,7 +686,11 @@ export function GameBoardRound({
                               restartRound(count);
                             }
                           }}
-                          disabled={isRulesOpen || isPreviousReviewOpen}
+                          disabled={
+                            isRulesOpen ||
+                            isPreviousReviewOpen ||
+                            isAnswerFeedbackActive
+                          }
                           className="inline-flex min-w-[24px] items-center justify-center rounded-[5px] px-1.5 py-1 text-[11px] font-bold leading-none text-white transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-default disabled:opacity-80"
                           style={{
                             background: isActive
@@ -1011,7 +1096,7 @@ export function GameBoardRound({
             <button
               type="button"
               onClick={() => {
-                if (isRulesOpen) {
+                if (isRulesOpen || isAnswerFeedbackActive) {
                   return;
                 }
 
@@ -1072,10 +1157,14 @@ export function GameBoardRound({
 
           <button
             type="button"
-            onClick={() => {
-              setIsRulesOpen((current) => !current);
-              setDisplayedRulesCompactMode(isCompactBase);
-              setRulesPageIndex(0);
+              onClick={() => {
+                if (isAnswerFeedbackActive) {
+                  return;
+                }
+
+                setIsRulesOpen((current) => !current);
+                setDisplayedRulesCompactMode(isCompactBase);
+                setRulesPageIndex(0);
               setIsPreviousReviewOpen(false);
               setIsExplanationVisible(false);
             }}
@@ -1083,15 +1172,16 @@ export function GameBoardRound({
             onMouseLeave={() => setIsRulesHovered(false)}
             onFocus={() => setIsRulesHovered(true)}
             onBlur={() => setIsRulesHovered(false)}
-            className="pointer-events-auto absolute rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            style={{
-              left: "0",
-              bottom: "0",
-              width: "74px",
-              height: "64px",
-            }}
-            aria-label="Show rules"
-          />
+              className="pointer-events-auto absolute rounded-full bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              style={{
+                left: "0",
+                bottom: "0",
+                width: "74px",
+                height: "64px",
+              }}
+              aria-label="Show rules"
+              disabled={isAnswerFeedbackActive}
+            />
 
           <button
             type="button"
@@ -1108,8 +1198,11 @@ export function GameBoardRound({
               height: "84px",
             }}
             aria-label="Toggle board size"
+            disabled={isAnswerFeedbackActive}
           />
         </div>
+        </div>
+      </div>
     </div>
   );
 

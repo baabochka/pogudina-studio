@@ -23,7 +23,7 @@ export function SimpleBoardBase({
       />
 
       <div
-        className="absolute inset-x-0 bottom-0 z-0"
+        className="absolute inset-x-0 bottom-0 z-0 rounded-b-[10px]"
         style={{
           top: `${SCOREBOARD_RENDER_HEIGHT_PX}px`,
           background: "var(--board-light-fill)",
