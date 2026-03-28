@@ -6,8 +6,8 @@ import DecorativePawsLightSvg from "./assets/board_decorative_paws_light.svg?rea
 import TopLeftCornerSvg from "./assets/board_corner_top_left.svg?react";
 import TopRightCornerSvg from "./assets/board_corner_top_right.svg?react";
 import { BOARD_ART_STYLE } from "./boardSvgStyle";
+import { BOARD_CONTROL_HOVER_FILL_COLOR } from "./boardConfig";
 import { BoardSvgAsset } from "./BoardSvgAsset";
-import { BOARD_CONTROL_HOVER_FILL_COLOR } from "./gameBoardRoundConfig";
 
 const FIXED_CORNER_RENDER_SIZES = {
   topLeft: { width: 118, height: 83 },

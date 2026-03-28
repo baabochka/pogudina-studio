@@ -1,4 +1,4 @@
-import { SCOREBOARD_RENDER_HEIGHT_PX } from "./boardLayoutConfig";
+import { SCOREBOARD_RENDER_HEIGHT_PX } from "./boardConfig";
 
 const statusLabelStyle = {
   fontFamily: '"Hannotate TC", sans-serif',

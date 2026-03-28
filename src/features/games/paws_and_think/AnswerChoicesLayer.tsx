@@ -11,19 +11,15 @@ import {
   LARGE_MODE_TOKEN_TOPS_PX,
   SMALL_MODE_TOKEN_GAP_PX,
   SMALL_MODE_TOKEN_STACK_START_TOP_PX,
-} from "./answerChoiceLayout";
-import { BOARD_ART_STYLE } from "./boardSvgStyle";
-import type { ObjectName } from "./cardResolver";
-import {
   BOARD_ANSWER_OPTIONS,
   BOARD_CONTROL_HOVER_FILL_COLOR,
-} from "./gameBoardRoundConfig";
-import {
   BOARD_VIEWBOX,
   DEFAULT_ANSWER_LAYOUT,
   STRETCHED_ANSWER_LAYOUT,
   STRETCHED_BOARD_VIEWBOX,
-} from "./boardLayoutConfig";
+} from "./boardConfig";
+import { BOARD_ART_STYLE } from "./boardSvgStyle";
+import type { ObjectName } from "./cardResolver";
 import { fixedDetails } from "./palettes";
 
 const HIGHLIGHTED_ANSWER_PAW_SCALE = "0.65";

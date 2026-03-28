@@ -1,6 +1,5 @@
 import { BoardStatus } from "./BoardStatus";
-import { SCOREBOARD_RENDER_HEIGHT_PX } from "./boardLayoutConfig";
-import { BOARD_PANEL_INSETS } from "./boardPanelLayout";
+import { BOARD_PANEL_INSETS, SCOREBOARD_RENDER_HEIGHT_PX } from "./boardConfig";
 
 export function SimpleBoardBase({
   bestTotal,

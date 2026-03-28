@@ -4,10 +4,28 @@ import { AnswerChoicesLayer } from "./AnswerChoicesLayer";
 import {
   ANSWER_TOKEN_ORDER,
   ANSWER_TOKEN_SIZE_PX,
+  ANSWER_PAW_STROKE_COLOR,
+  BOARD_PANEL_INSETS,
+  COMPACT_CARD_BOUNDS,
+  CORRECT_ANSWER_PAW_FILL_COLOR,
+  createPawTrailSteps,
+  getPawTrailStyle,
+  INCORRECT_ANSWER_PAW_FILL_COLOR,
   LARGE_MODE_TOKEN_TOPS_PX,
+  MODE_TRANSITION_MS,
+  PAW_TRAIL_FILL_COLOR,
+  PAW_TRAIL_STROKE_COLOR,
+  SCOREBOARD_RENDER_HEIGHT_PX,
+  SHELL_SIZES,
   SMALL_MODE_TOKEN_GAP_PX,
   SMALL_MODE_TOKEN_STACK_START_TOP_PX,
-} from "./answerChoiceLayout";
+} from "./boardConfig";
+import {
+  FIVE_CARD_RULES_PAGES,
+  getMultiCardReviewExplanation,
+  getReviewExplanation,
+  SINGLE_CARD_RULES_PAGES,
+} from "./boardContent";
 import { GameQuickStartGuide } from "./GameQuickStartGuide";
 import { HintPawStep } from "./HintPawStep";
 import { BoardDecorationLayer } from "./BoardDecorationLayer";
@@ -18,44 +36,14 @@ import {
 import { SingleCardLayer } from "./SingleCardLayer";
 import { ReviewCardIllustration } from "./ReviewCardIllustration";
 import { SimpleBoardBase } from "./SimpleBoardBase";
-import { SCOREBOARD_RENDER_HEIGHT_PX } from "./boardLayoutConfig";
 import type { ObjectName, ResolvedCard } from "./cardResolver";
-import {
-  ANSWER_PAW_STROKE_COLOR,
-  CORRECT_ANSWER_PAW_FILL_COLOR,
-  createPawTrailSteps,
-  getPawTrailStyle,
-  INCORRECT_ANSWER_PAW_FILL_COLOR,
-  PAW_TRAIL_FILL_COLOR,
-  PAW_TRAIL_STROKE_COLOR,
-} from "./gameBoardRoundConfig";
 import { fixedDetails } from "./palettes";
-import {
-  getMultiCardReviewExplanation,
-  getReviewExplanation,
-} from "./reviewExplanation";
-import {
-  FIVE_CARD_RULES_PAGES,
-  SINGLE_CARD_RULES_PAGES,
-} from "./rulesContent";
-import { BOARD_PANEL_INSETS } from "./boardPanelLayout";
 import {
   useGameSession,
   type GameSessionSnapshot,
 } from "./useGameSession";
 import type { GameMode } from "./gameMode";
 
-const SHELL_SIZES = {
-  expanded: {
-    height: 617,
-    width: 617,
-  },
-  compact: {
-    height: 602.31,
-    width: 400,
-  },
-} as const;
-const MODE_TRANSITION_MS = 320;
 const PANEL_OVERLAY_PADDING_CLASS = "px-5 pt-4 pb-4";
 type SessionCardCount = 1 | 3 | 4 | 5 | 6;
 
@@ -138,13 +126,6 @@ const FALLBACK_MULTI_CARDS: ResolvedCard[] = [
     targetAnswer: "cheese",
   },
 ] as const;
-
-const COMPACT_CARD_BOUNDS = {
-  bottom: 40,
-  left: 40,
-  right: 80,
-  top: SCOREBOARD_RENDER_HEIGHT_PX + BOARD_PANEL_INSETS.top,
-} as const;
 
 export function GameBoardRound({
   onModeChange,
@@ -1014,7 +995,7 @@ export function GameBoardRound({
                 >
                   {isRulesTransitioning ? null : (
                     <>
-                      {currentRulesPage.paragraphs.map((paragraph) => (
+                      {currentRulesPage.paragraphs.map((paragraph: string) => (
                         <p
                           key={paragraph}
                           className={

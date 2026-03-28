@@ -1,40 +1,14 @@
 import type { CSSProperties, ReactNode } from "react";
-
-type BubbleName =
-  | "changeLevel"
-  | "gameRules"
-  | "quickStart"
-  | "reviewPrevious"
-  | "startNewGame";
-
-const SMALL_GUIDE = {
-  bubbles: {
-    reviewPrevious: { left: 15, top: 15, width: 115, height: 35 },
-    startNewGame: { right: 15, top: 15, width: 115, height: 35 },
-    quickStart: { right: 10, top: 84, width: 260, height: 270 },
-    changeLevel: { right: 15, bottom: 15, width: 90, height: 35 },
-    gameRules: { left: 15, bottom: 15, width: 90, height: 35 },
-  },
-} as const;
-
-const LARGE_GUIDE = {
-  bubbles: {
-    reviewPrevious: { left: 15, top: 15, width: 115, height: 35 },
-    startNewGame: { right: 15, top: 15, width: 115, height: 35 },
-    quickStart: { right: 10, top: 96, width: 260, height: 270 },
-    changeLevel: { right: 15, bottom: 15, width: 90, height: 35 },
-    gameRules: { left: 15, bottom: 15, width: 90, height: 35 },
-  },
-} as const;
-
-type BubbleBounds = {
-  width: number;
-  height: number;
-  bottom?: number;
-  left?: number;
-  right?: number;
-  top?: number;
-};
+import {
+  type GuideBubbleBounds as BubbleBounds,
+  type GuideBubbleName as BubbleName,
+  QUICK_START_GUIDE_LAYOUT,
+} from "./boardConfig";
+import {
+  QUICK_START_BODY_PARAGRAPHS,
+  QUICK_START_BUBBLE_LABELS,
+  QUICK_START_HEADING,
+} from "./boardContent";
 
 function getBoundsStyle(bounds: BubbleBounds): CSSProperties {
   return {
@@ -104,18 +78,11 @@ export function GameQuickStartGuide({
   onStart?: () => void;
   visibleBubbles?: Partial<Record<BubbleName, boolean>>;
 }) {
-  const guide = isLarge ? LARGE_GUIDE : SMALL_GUIDE;
+  const guide = isLarge ? QUICK_START_GUIDE_LAYOUT.large : QUICK_START_GUIDE_LAYOUT.small;
   const isVisible = (bubbleName: BubbleName) => visibleBubbles?.[bubbleName] ?? true;
   const bodyParagraphs = isLarge
-    ? [
-        "Solve each card using the one-card rules.",
-        "Pick the token that repeats twice across the cards.",
-      ]
-    : [
-        "Match the object whose original color appears on the card.",
-        "If nothing matches, eliminate the shown objects and the shown colors.",
-        "The only token left is the answer.",
-      ];
+    ? QUICK_START_BODY_PARAGRAPHS.large
+    : QUICK_START_BODY_PARAGRAPHS.small;
 
   return (
     <section
@@ -128,9 +95,12 @@ export function GameQuickStartGuide({
           className="px-4 text-[11px] leading-[1.1]"
         >
           <p style={{ fontFamily: '"Hannotate TC", sans-serif' }}>
-            Review previous
-            <br />
-            response
+            {QUICK_START_BUBBLE_LABELS.reviewPrevious.split("\n").map((line, index) => (
+              <span key={line}>
+                {index > 0 ? <br /> : null}
+                {line}
+              </span>
+            ))}
           </p>
         </HintBubble>
       ) : null}
@@ -141,7 +111,9 @@ export function GameQuickStartGuide({
           className="px-4 text-[11px] leading-[1.1]"
         >
           <GuideAction onClick={onStart}>
-            <p style={{ fontFamily: '"Hannotate TC", sans-serif' }}>Start new game</p>
+            <p style={{ fontFamily: '"Hannotate TC", sans-serif' }}>
+              {QUICK_START_BUBBLE_LABELS.startNewGame}
+            </p>
           </GuideAction>
         </HintBubble>
       ) : null}
@@ -151,7 +123,9 @@ export function GameQuickStartGuide({
           style={getBoundsStyle(guide.bubbles.changeLevel)}
           className="px-3 text-[11px] leading-[1.1]"
         >
-          <p style={{ fontFamily: '"Hannotate TC", sans-serif' }}>Change level</p>
+          <p style={{ fontFamily: '"Hannotate TC", sans-serif' }}>
+            {QUICK_START_BUBBLE_LABELS.changeLevel}
+          </p>
         </HintBubble>
       ) : null}
 
@@ -161,7 +135,9 @@ export function GameQuickStartGuide({
           className="px-3 text-[11px] leading-[1.1]"
         >
           <GuideAction onClick={onOpenRules}>
-            <p style={{ fontFamily: '"Hannotate TC", sans-serif' }}>Game rules</p>
+            <p style={{ fontFamily: '"Hannotate TC", sans-serif' }}>
+              {QUICK_START_BUBBLE_LABELS.gameRules}
+            </p>
           </GuideAction>
         </HintBubble>
       ) : null}
@@ -176,7 +152,7 @@ export function GameQuickStartGuide({
             style={{ fontFamily: '"Hannotate TC", sans-serif' }}
           >
             <p className="max-w-[13rem] text-[14px] font-semibold leading-[1.25]">
-              Use the tokens on the right to choose the correct answer.
+              {QUICK_START_HEADING}
             </p>
             <div className="mt-4 max-w-[13rem] space-y-3 text-[13px] leading-[1.3]">
               {bodyParagraphs.map((paragraph) => (
