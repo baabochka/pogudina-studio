@@ -1,5 +1,7 @@
 @theme inline {
   --font-sans: var(--font-family-sans);
+  --font-game: var(--font-family-game);
+  --font-ui: var(--font-family-ui);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
@@ -12,6 +14,65 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-ring: var(--ring);
+  --color-hs-shell: var(--hs-shell);
+  --color-hs-topbar: var(--hs-topbar);
+  --color-hs-surface: var(--hs-surface);
+  --color-hs-panel: var(--hs-panel);
+  --color-hs-panelMuted: var(--hs-panel-muted);
+  --color-hs-board: var(--hs-board);
+  --color-hs-grid: var(--hs-grid);
+  --color-hs-boardBorder: var(--hs-board-border);
+  --color-hs-coordinate: var(--hs-coordinate);
+  --color-hs-textPrimary: var(--hs-text-primary);
+  --color-hs-textSecondary: var(--hs-text-secondary);
+  --color-hs-textStrong: var(--hs-text-strong);
+  --color-hs-textInverse: var(--hs-text-inverse);
+  --color-hs-control: var(--hs-control);
+  --color-hs-controlHover: var(--hs-control-hover);
+  --color-hs-controlActive: var(--hs-control-active);
+  --color-hs-controlSelected: var(--hs-control-selected);
+  --color-hs-highlight: var(--hs-highlight);
+  --color-hs-highlightSoft: var(--hs-highlight-soft);
+  --color-hs-correct: var(--hs-correct);
+  --color-hs-wrong: var(--hs-wrong);
+  --color-hs-focus: var(--hs-focus);
+  --shadow-hs-soft: var(--hs-shadow-soft);
+  --shadow-hs-panel: var(--hs-shadow-panel);
+  --shadow-hs-button: var(--hs-shadow-button);
+  --shadow-hs-glow: var(--hs-shadow-glow);
+  --shadow-hs-glow-soft: var(--hs-shadow-glow-soft);
+}
+
+:root {
+  --font-family-game: 'Baloo 2', 'Trebuchet MS', sans-serif;
+  --font-family-ui: 'Nunito Sans', 'Segoe UI', sans-serif;
+  --hs-shell: #009199;
+  --hs-topbar: #005358;
+  --hs-surface: #e8e7e4;
+  --hs-panel: #7eb6ba;
+  --hs-panel-muted: #8fb8c0;
+  --hs-board: #f2f1ef;
+  --hs-grid: #6f7477;
+  --hs-board-border: #111111;
+  --hs-coordinate: #f8f7f4;
+  --hs-text-primary: #1e5059;
+  --hs-text-secondary: #486c73;
+  --hs-text-strong: #234d55;
+  --hs-text-inverse: #f8f7f4;
+  --hs-control: #7fb8c4;
+  --hs-control-hover: #8ec4cf;
+  --hs-control-active: #6ea9b6;
+  --hs-control-selected: #dff3f4;
+  --hs-highlight: #cfeff0;
+  --hs-highlight-soft: #eaf8f8;
+  --hs-correct: #8ccb8a;
+  --hs-wrong: #e59b9b;
+  --hs-focus: #d9ffff;
+  --hs-shadow-soft: 0 2px 8px rgb(31 74 80 / 0.08);
+  --hs-shadow-panel: 0 4px 10px rgb(31 74 80 / 0.08);
+  --hs-shadow-button: 0 3px 0 rgb(46 102 112 / 0.24);
+  --hs-shadow-glow: 0 0 12px rgb(207 239 240 / 0.9);
+  --hs-shadow-glow-soft: 0 0 10px rgb(207 239 240 / 0.72);
 }
 
 :root,

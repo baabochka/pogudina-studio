@@ -1,7 +1,7 @@
 const GAME_PREVIEW_VARIANT_STYLES = {
   landscape: {
-    frame: 'aspect-[4/3] p-3',
-    image: 'max-h-full max-w-full object-contain object-center',
+    frame: 'aspect-[4/3] p-0',
+    image: 'h-full w-full rounded-[16px] object-cover object-center',
   },
   portrait: {
     frame: 'aspect-[798/1203] p-0',

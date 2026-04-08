@@ -10,6 +10,11 @@ const GameBoardRound = lazy(() =>
     default: module.GameBoardRound,
   })),
 )
+const HideSqueakGame = lazy(() =>
+  import('../features/games/hide_squeak').then((module) => ({
+    default: module.HideSqueakGame,
+  })),
+)
 
 const gameSections = [
   { id: 'play', label: 'Game' },
@@ -21,7 +26,34 @@ const gameSections = [
   { id: 'next-steps', label: 'Next steps' },
 ] as const
 
-const pawsAndThinkDetails = {
+type GameCaseStudyDetails = {
+  context: {
+    anchor: string
+    bullets: string[]
+  }
+  constraints: {
+    anchor: string
+    bullets: string[]
+  }
+  implementation: {
+    anchor: string
+    bullets: string[]
+  }
+  tradeoffs: {
+    anchor: string
+    bullets: string[]
+  }
+  impact: {
+    anchor: string
+    bullets: string[]
+  }
+  nextSteps: {
+    anchor: string
+    bullets: string[]
+  }
+}
+
+const pawsAndThinkDetails: GameCaseStudyDetails = {
   context: {
     anchor:
       'This project shifted from “make the game work in the browser” to “build a board system that can absorb iteration without collapsing under its own UI.”',
@@ -85,6 +117,79 @@ const pawsAndThinkDetails = {
   },
 }
 
+const hideSqueakDetails: GameCaseStudyDetails = {
+  context: {
+    anchor:
+      'Hide & Squeak is built around one simple question: after following a generated path, where does the mouse end up?',
+    bullets: [
+      'The core challenge is mental path tracking rather than reaction time, so the board, commands, hints, and answers all need to stay readable under different difficulty modes.',
+      'The game supports visible-mouse and hidden-mouse play, which means the same round model has to feed direct board answers, multiple choice, and typed coordinate entry without duplicating logic.',
+      'Because rounds are generated endlessly, the implementation needed predictable generation rules, failure recovery, and a clean session model before the UI could feel stable.',
+    ],
+  },
+  constraints: {
+    anchor:
+      'The main constraint was keeping the puzzle logic flexible without letting the UI or state model become tangled.',
+    bullets: [
+      'Command generation has to stay inside bounds, avoid immediate reversals, allow loops, and still force the last move to land on an item.',
+      'Hints, previous-round review, and timed mode all pause or reveal different parts of the experience, so phase-driven state was more reliable than scattered flags.',
+      'The board needed to support click play, keyboard play, and hidden-mouse difficulties while keeping the component tree relatively flat.',
+    ],
+  },
+  implementation: {
+    anchor:
+      'The implementation is organized as a generated-game pipeline with a small React shell on top.',
+    bullets: [
+      'Board generation, path generation, answer generation, and coordinate utilities all live in separate pure modules so the puzzle rules can evolve independently from rendering.',
+      'Session flow is managed through an explicit reducer that handles phases like round generation, playing, hints, previous-round review, and timed completion.',
+      'The UI is split into a small set of focused regions: the board surface, command panel, answer panel, and review panel.',
+    ],
+  },
+  tradeoffs: {
+    anchor:
+      'Most tradeoffs were about choosing clarity over over-abstraction while the game is still growing.',
+    bullets: [
+      'I kept the route integration intentionally close to the existing single-game pattern instead of introducing a larger game registry refactor in the same step.',
+      'The detail-page preview metadata is minimal for now so the game can be opened and playtested without blocking on polished promotional assets.',
+      'The item asset system is lightweight on purpose: families and recolors are supported, but it is not trying to become a full illustration framework yet.',
+    ],
+  },
+  impact: {
+    anchor:
+      'The result is a playable second game that now runs through the same normal app flow as the rest of the portfolio.',
+    bullets: [
+      'Hide & Squeak can now be discovered from the games list and opened directly through its own slug route.',
+      'The game is ready for app-level playtesting across easy, medium, hard, and super-hard modes, including hints, review, and timed play.',
+      'The underlying structure is set up to add more item families, new presets, and presentation polish without rewriting the round engine.',
+    ],
+  },
+  nextSteps: {
+    anchor:
+      'The next improvements are mostly about polish and product fit rather than missing technical foundations.',
+    bullets: [
+      'Replace the placeholder preview metadata with a real Hide & Squeak preview image once the visual treatment is final.',
+      'Add a lightweight game registry or detail-content mapping if more games are introduced and the page starts to outgrow a simple slug switch.',
+      'Refine the item art and board styling so the production presentation matches the strength of the generation and input systems.',
+    ],
+  },
+}
+
+function getGameCaseStudyDetails(slug: string): GameCaseStudyDetails {
+  if (slug === 'hide-and-squeak') {
+    return hideSqueakDetails
+  }
+
+  return pawsAndThinkDetails
+}
+
+function GameExperience({ slug }: { slug: string }) {
+  if (slug === 'hide-and-squeak') {
+    return <HideSqueakGame />
+  }
+
+  return <GameBoardRound />
+}
+
 function BulletList({ items }: { items: string[] }) {
   return (
     <ul className="space-y-3">
@@ -110,6 +215,7 @@ function GameBoardFallback() {
 export function GameDetailPage() {
   const { slug } = useParams()
   const game = getGameBySlug(slug)
+  const caseStudyDetails = game ? getGameCaseStudyDetails(game.slug) : null
   const [activeSectionId, setActiveSectionId] = useState<
     (typeof gameSections)[number]['id']
   >(gameSections[0].id)
@@ -205,7 +311,7 @@ export function GameDetailPage() {
               <section id="play">
                 <div className="mb-10 sm:mb-12">
                   <Suspense fallback={<GameBoardFallback />}>
-                    <GameBoardRound />
+                    <GameExperience slug={game.slug} />
                   </Suspense>
                 </div>
               </section>
@@ -219,8 +325,8 @@ export function GameDetailPage() {
 
               <SectionBlock id="context" title="Problem and product context">
                 <div className="max-w-[68ch] space-y-5">
-                  <p>{pawsAndThinkDetails.context.anchor}</p>
-                  <BulletList items={pawsAndThinkDetails.context.bullets} />
+                  <p>{caseStudyDetails?.context.anchor}</p>
+                  <BulletList items={caseStudyDetails?.context.bullets ?? []} />
                 </div>
               </SectionBlock>
 
@@ -229,36 +335,36 @@ export function GameDetailPage() {
                 title="Constraints and implementation decisions"
               >
                 <div className="max-w-[68ch] space-y-5">
-                  <p>{pawsAndThinkDetails.constraints.anchor}</p>
-                  <BulletList items={pawsAndThinkDetails.constraints.bullets} />
+                  <p>{caseStudyDetails?.constraints.anchor}</p>
+                  <BulletList items={caseStudyDetails?.constraints.bullets ?? []} />
                 </div>
               </SectionBlock>
 
               <SectionBlock id="implementation" title="Implementation details">
                 <div className="max-w-[68ch] space-y-5">
-                  <p>{pawsAndThinkDetails.implementation.anchor}</p>
-                  <BulletList items={pawsAndThinkDetails.implementation.bullets} />
+                  <p>{caseStudyDetails?.implementation.anchor}</p>
+                  <BulletList items={caseStudyDetails?.implementation.bullets ?? []} />
                 </div>
               </SectionBlock>
 
               <SectionBlock id="tradeoffs" title="Tradeoffs and risk management">
                 <div className="max-w-[68ch] space-y-5">
-                  <p>{pawsAndThinkDetails.tradeoffs.anchor}</p>
-                  <BulletList items={pawsAndThinkDetails.tradeoffs.bullets} />
+                  <p>{caseStudyDetails?.tradeoffs.anchor}</p>
+                  <BulletList items={caseStudyDetails?.tradeoffs.bullets ?? []} />
                 </div>
               </SectionBlock>
 
               <SectionBlock id="impact" title="Outcome and impact">
                 <div className="max-w-[68ch] space-y-5">
-                  <p>{pawsAndThinkDetails.impact.anchor}</p>
-                  <BulletList items={pawsAndThinkDetails.impact.bullets} />
+                  <p>{caseStudyDetails?.impact.anchor}</p>
+                  <BulletList items={caseStudyDetails?.impact.bullets ?? []} />
                 </div>
               </SectionBlock>
 
               <SectionBlock id="next-steps" title="What I would improve next">
                 <div className="max-w-[68ch] space-y-5">
-                  <p>{pawsAndThinkDetails.nextSteps.anchor}</p>
-                  <BulletList items={pawsAndThinkDetails.nextSteps.bullets} />
+                  <p>{caseStudyDetails?.nextSteps.anchor}</p>
+                  <BulletList items={caseStudyDetails?.nextSteps.bullets ?? []} />
                 </div>
               </SectionBlock>
             </div>

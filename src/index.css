@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 @import "./styles/design-tokens.css";
 
@@ -200,6 +201,334 @@
     ):focus-visible {
     outline: var(--outline-width-focus) solid var(--ring);
     outline-offset: var(--outline-offset-focus);
+  }
+}
+
+@keyframes hs-difficulty-mouse-body-wiggle {
+  0%,
+  100% {
+    transform: var(--hs-difficulty-mouse-transform) translateX(0) rotate(0deg);
+  }
+
+  25% {
+    transform: var(--hs-difficulty-mouse-transform) translateX(0.7px) rotate(1.6deg);
+  }
+
+  75% {
+    transform: var(--hs-difficulty-mouse-transform) translateX(-0.7px) rotate(-1.6deg);
+  }
+}
+
+@keyframes hs-difficulty-tail-flip {
+  0%,
+  100% {
+    transform: rotate(10deg);
+  }
+
+  50% {
+    transform: rotate(-12deg);
+  }
+}
+
+@keyframes hs-difficulty-whiskers-flick {
+  0%,
+  100% {
+    transform: rotate(0deg) translateX(0);
+  }
+
+  35% {
+    transform: rotate(4deg) translateX(0.9px);
+  }
+
+  70% {
+    transform: rotate(-4deg) translateX(-0.6px);
+  }
+}
+
+@keyframes hs-difficulty-mouse-idle-breathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  45% {
+    transform: translateY(0.45px) scale(1.015, 0.988);
+  }
+
+  55% {
+    transform: translateY(0.65px) scale(1.02, 0.984);
+  }
+}
+
+@keyframes hs-difficulty-idle-whiskers-flick {
+  0%,
+  82%,
+  100% {
+    transform: rotate(0deg) translateX(0);
+  }
+
+  86% {
+    transform: rotate(5deg) translateX(0.9px);
+  }
+
+  91% {
+    transform: rotate(-4deg) translateX(-0.5px);
+  }
+
+  95% {
+    transform: rotate(2deg) translateX(0.3px);
+  }
+}
+
+@keyframes hs-difficulty-idle-tail-twitch {
+  0%,
+  70%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  75% {
+    transform: rotate(7deg);
+  }
+
+  82% {
+    transform: rotate(-5deg);
+  }
+
+  88% {
+    transform: rotate(2deg);
+  }
+}
+
+.hsDifficultyMouseSvg {
+  transform: var(--hs-difficulty-mouse-transform);
+  transform-origin: center center;
+}
+
+.hsDifficultyMouseIdleLeft {
+  transform: var(--hs-difficulty-mouse-transform) translate(-0.6px, -0.6px);
+}
+
+.hsDifficultyMouseIdleRight {
+  transform: var(--hs-difficulty-mouse-transform) translate(0.4px, -10px);
+}
+
+.hsDifficultyMouseIdleBottomRight {
+  transform: var(--hs-difficulty-mouse-transform) translate(0.4px, -7px);
+}
+
+.hsDifficultyMouseTurningTowardRight {
+  transform: var(--hs-difficulty-mouse-transform) translate(0.4px, -10px);
+}
+
+.hsDifficultyMouseSvg #head {
+  transform-box: fill-box;
+  transform-origin: 48% 16%;
+  transition: transform 180ms ease-out;
+}
+
+.hsDifficultyMouseSvg #whiskers {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+.hsDifficultyMouseIdleLife #body {
+  animation: hs-difficulty-mouse-idle-breathe 2.2s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 45%;
+}
+
+.hsDifficultyMouseIdleLife #tail {
+  animation: hs-difficulty-idle-tail-twitch 4.7s ease-in-out infinite;
+  animation-delay: -1.3s;
+  transform-box: fill-box;
+  transform-origin: 35% 85%;
+}
+
+.hsDifficultyMouseDragging #tail {
+  animation: hs-difficulty-tail-flip 220ms ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 35% 85%;
+}
+
+.hsDifficultyMouseIdleLife #whiskers {
+  animation: hs-difficulty-idle-whiskers-flick 6.2s ease-in-out infinite;
+  animation-delay: -3.1s;
+}
+
+.hsDifficultyMouseIdleLeft #head {
+  transform: rotate(-42deg) translate(-0.55px, 0.85px);
+}
+
+.hsDifficultyMouseIdleRight #head {
+  transform: rotate(44deg) translate(1.25px, 1.1px);
+}
+
+.hsDifficultyMouseIdleBottomRight #head {
+  transform: rotate(44deg) translate(1.25px, 1.1px);
+}
+
+.hsDifficultyMouseSvg .cls-1 {
+  fill: #808283;
+  stroke: #000;
+  stroke-miterlimit: 10;
+}
+
+.hsDifficultyMouseSvg .cls-2 {
+  fill: none;
+  stroke: #000;
+  stroke-width: 0.5px;
+  stroke-miterlimit: 10;
+}
+
+.hsDifficultyMouseSvg .cls-3 {
+  fill: #000;
+  stroke-width: 0;
+}
+
+.hsDifficultyMouseSvg .cls-4 {
+  fill: #fff;
+  stroke-width: 0;
+}
+
+.hsCharacterMouseSvg .cls-1 {
+  fill: #808384;
+  stroke: #000;
+  stroke-width: 2px;
+  stroke-miterlimit: 10;
+}
+
+.hsCharacterMouseSvg .cls-2 {
+  fill: #39b54a;
+  stroke: #000;
+  stroke-width: 2px;
+  stroke-miterlimit: 10;
+}
+
+.hsCharacterMouseSvg .cls-3 {
+  fill: none;
+  stroke: #000;
+  stroke-miterlimit: 10;
+}
+
+.hsCharacterMouseSvg .cls-4 {
+  fill: #000;
+  stroke-width: 0;
+}
+
+.hsCharacterMouseSvg .cls-5 {
+  fill: #fff;
+  stroke-width: 0;
+}
+
+.hsCharacterMouseSvg .cls-6 {
+  fill: #010101;
+  stroke-width: 0;
+}
+
+.hsCharacterMouseSvg .hs-mouse-standing-body {
+  fill: #808384;
+  stroke: #000;
+  stroke-width: 2px;
+  stroke-miterlimit: 10;
+}
+
+.hsCharacterMouseSvg .hs-mouse-standing-bow {
+  fill: #39b54a;
+  stroke: #000;
+  stroke-width: 2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hsCharacterMouseSvg .hs-mouse-standing-whiskers {
+  fill: none;
+  stroke: #000;
+  stroke-miterlimit: 10;
+}
+
+.hsCharacterMouseSvg .hs-mouse-standing-detail {
+  fill: #000;
+  stroke-width: 0;
+}
+
+.hsCharacterMouseSvg .hs-mouse-standing-eye {
+  fill: #010101;
+  stroke-width: 0;
+}
+
+.hsCharacterMouseSvg .hs-mouse-standing-eye-highlight {
+  fill: #fff;
+  stroke-width: 0;
+}
+
+.hsDifficultyMouseMoving {
+  animation: hs-difficulty-mouse-body-wiggle 220ms ease-in-out infinite;
+}
+
+.hsDifficultyMouseMoving #tail {
+  animation: hs-difficulty-tail-flip 220ms ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 35% 85%;
+}
+
+.hsDifficultyMouseWhiskersWiggle #whiskers {
+  animation: hs-difficulty-whiskers-flick 260ms ease-out 1;
+}
+
+.hsHideSqueakPawTrail {
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(var(--hs-paw-step-rotation, 0deg))
+    scale(0.34);
+  animation: hs-hide-squeak-paw-step-appear 1200ms ease-out forwards;
+}
+
+.hsHideSqueakPawTarget {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.72);
+  animation: hs-hide-squeak-paw-target-appear 480ms ease-out forwards;
+}
+
+@keyframes hs-hide-squeak-paw-step-appear {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%)
+      rotate(var(--hs-paw-step-rotation, 0deg)) scale(0.24);
+  }
+
+  40% {
+    opacity: 1;
+    transform: translate(-50%, -50%)
+      rotate(var(--hs-paw-step-rotation, 0deg)) scale(0.38);
+  }
+
+  72% {
+    opacity: 1;
+    transform: translate(-50%, -50%)
+      rotate(var(--hs-paw-step-rotation, 0deg)) scale(0.41);
+  }
+
+  100% {
+    opacity: 0.12;
+    transform: translate(-50%, -50%)
+      rotate(var(--hs-paw-step-rotation, 0deg)) scale(0.34);
+  }
+}
+
+@keyframes hs-hide-squeak-paw-target-appear {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.72);
+  }
+
+  70% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 
