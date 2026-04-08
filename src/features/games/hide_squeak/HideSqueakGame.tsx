@@ -110,6 +110,8 @@ const DIFFICULTY_BOTTOM_TURN_SETTLE_PAUSE_MS = DIFFICULTY_TURN_SETTLE_PAUSE_MS;
 const DIFFICULTY_SINGLE_STEP_MOVE_DURATION_MS = 260;
 const DIFFICULTY_WHISKER_WIGGLE_DELAY_MS = 50;
 const DIFFICULTY_WHISKER_WIGGLE_DURATION_MS = 200;
+const HIDE_SQUEAK_GAME_BASE_WIDTH_PX = 788;
+const HIDE_SQUEAK_GAME_BASE_HEIGHT_PX = 601;
 
 type CommandDisplayMode = "symbol" | "text";
 type HideSqueakSettingsDraft = {
@@ -1492,12 +1494,14 @@ const HideSqueakSettingsPanel = memo(function HideSqueakSettingsPanel({
 });
 
 export function HideSqueakGame() {
+  const gameViewportRef = useRef<HTMLDivElement | null>(null);
   const [state, dispatch] = useReducer(
     reduceHideSqueakSessionState,
     createHideSqueakSessionState({
       difficulty: "easy",
     }),
   );
+  const [availableWidth, setAvailableWidth] = useState<number | null>(null);
   const [commandDisplayMode, setCommandDisplayMode] =
     useState<CommandDisplayMode>("text");
   const [boardFocusState, setBoardFocusState] = useState<{
@@ -1618,6 +1622,30 @@ export function HideSqueakGame() {
 
     openSettingsPanel();
   }, [closeSettingsPanel, isSettingsOpen, openSettingsPanel]);
+
+  useEffect(() => {
+    const viewportElement = gameViewportRef.current;
+
+    if (!viewportElement || typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const updateAvailableWidth = () => {
+      setAvailableWidth(viewportElement.clientWidth);
+    };
+
+    updateAvailableWidth();
+
+    const observer = new ResizeObserver(() => {
+      updateAvailableWidth();
+    });
+
+    observer.observe(viewportElement);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -1876,11 +1904,31 @@ export function HideSqueakGame() {
     (reviewSnapshot.round.difficulty === "hard" ||
       reviewSnapshot.round.difficulty === "super-hard");
   const hasReviewPreviousAccess = state.previousRound != null;
+  const gameScale =
+    availableWidth != null
+      ? Math.min(1, availableWidth / HIDE_SQUEAK_GAME_BASE_WIDTH_PX)
+      : 1;
+  const scaledGameWidth = HIDE_SQUEAK_GAME_BASE_WIDTH_PX * gameScale;
+  const scaledGameHeight = HIDE_SQUEAK_GAME_BASE_HEIGHT_PX * gameScale;
 
   return (
-    <div
-      className={`${GAME_CHROME_RADIUS_CLASS_NAME} bg-hs-shell shadow-hs-panel`}
-    >
+    <div ref={gameViewportRef} className="w-full overflow-visible">
+      <div
+        className="relative overflow-visible"
+        style={{
+          width: scaledGameWidth ? `${scaledGameWidth}px` : undefined,
+          height: scaledGameHeight ? `${scaledGameHeight}px` : undefined,
+        }}
+      >
+        <div
+          className={`${GAME_CHROME_RADIUS_CLASS_NAME} bg-hs-shell shadow-hs-panel`}
+          style={{
+            width: `${HIDE_SQUEAK_GAME_BASE_WIDTH_PX}px`,
+            height: `${HIDE_SQUEAK_GAME_BASE_HEIGHT_PX}px`,
+            transform: `scale(${gameScale})`,
+            transformOrigin: "top left",
+          }}
+        >
       <div className="relative">
         {isSettingsOpen ? (
           <div
@@ -1912,7 +1960,7 @@ export function HideSqueakGame() {
         </div>
 
         <div className="relative z-[1] px-2.5 pb-3.5 pt-2.5">
-          <div className="grid gap-2.5 xl:grid-cols-[minmax(0,1fr)_250px] xl:items-start">
+          <div className="grid grid-cols-[minmax(0,1fr)_250px] items-start gap-2.5">
             <div className="grid gap-1.5">
               <div className="grid grid-cols-[44px_minmax(0,1fr)_44px] items-end gap-1.5">
                 <ReviewPreviousButton
@@ -2065,7 +2113,7 @@ export function HideSqueakGame() {
               showMouse
               bubbleWrapperClassName={
                 isWideBubbleMode
-                  ? "xl:absolute xl:bottom-[80px] xl:left-[-35px] xl:mb-0 xl:mr-0"
+                  ? "absolute bottom-0 left-[-35px] mb-0 mr-0"
                   : ""
               }
               bubbleClassName={
@@ -2169,6 +2217,8 @@ export function HideSqueakGame() {
             onSelectSymbol={handleSelectSymbolDirections}
           />
         ) : null}
+      </div>
+        </div>
       </div>
     </div>
   );
