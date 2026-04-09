@@ -22,6 +22,7 @@ export function HideSqueakItemAsset({
       {...svgProps}
       title={title}
       tokens={resolvedAsset.tokens}
+      colorVariant={resolvedAsset.colorVariant}
       detailVariant={resolvedAsset.detailVariant}
     />
   )

@@ -1,5 +1,6 @@
 import { getCellKey, getEmptyCoordinates } from './boardUtils'
 import { createBoardBounds, isCoordinateWithinBounds } from './boundsUtils'
+import { getHideSqueakItemAssetColorVariants } from './itemAssets'
 import type {
   HideSqueakBoard,
   HideSqueakBoardDefinition,
@@ -7,15 +8,27 @@ import type {
   HideSqueakBoardItemConstraints,
   HideSqueakBoardSize,
   HideSqueakCoordinate,
+  HideSqueakDifficulty,
   HideSqueakItem,
   HideSqueakItemDefinition,
 } from './types'
 
 export interface HideSqueakBoardGenerationOptions {
   size: HideSqueakBoardSize
+  difficulty: HideSqueakDifficulty
   itemConstraints: HideSqueakBoardItemConstraints
   definition: HideSqueakBoardDefinition
   random?: () => number
+}
+
+const ITEM_OCCUPANCY_TARGETS: Record<
+  HideSqueakDifficulty,
+  { min: number; max: number }
+> = {
+  easy: { min: 0.18, max: 0.24 },
+  medium: { min: 0.2, max: 0.28 },
+  hard: { min: 0.24, max: 0.32 },
+  'super-hard': { min: 0.3, max: 0.4 },
 }
 
 function assertPositiveInteger(value: number, label: string) {
@@ -50,6 +63,64 @@ function getShuffledItems<T>(items: readonly T[], random: () => number) {
   return nextItems
 }
 
+function getRandomArrayItem<T>(items: readonly T[], random: () => number) {
+  if (items.length === 0) {
+    return null
+  }
+
+  return items[Math.floor(random() * items.length)] ?? null
+}
+
+function getRandomizedItemDefinition(
+  definition: HideSqueakItemDefinition,
+  random: () => number,
+): HideSqueakItemDefinition {
+  const availableColorVariants = getHideSqueakItemAssetColorVariants(
+    definition.kind,
+    definition.family,
+  )
+
+  if (availableColorVariants.length === 0) {
+    return definition
+  }
+
+  const selectedColorVariant =
+    getRandomArrayItem(availableColorVariants, random) ??
+    definition.colorVariant ??
+    null
+
+  return {
+    ...definition,
+    id: `${definition.kind}-${definition.family}-${selectedColorVariant ?? 'default'}`,
+    colorVariant: selectedColorVariant,
+  }
+}
+
+function getRandomizedItemDefinitions(
+  itemDefinitions: readonly HideSqueakItemDefinition[],
+  random: () => number,
+) {
+  return itemDefinitions.map((definition) =>
+    getRandomizedItemDefinition(definition, random),
+  )
+}
+
+function getRandomInteger(min: number, max: number, random: () => number) {
+  if (!Number.isInteger(min) || !Number.isInteger(max) || min < 0 || max < 0) {
+    throw new RangeError('Random range values must be non-negative integers.')
+  }
+
+  if (min > max) {
+    throw new RangeError('Minimum random value cannot be greater than the maximum.')
+  }
+
+  return Math.floor(random() * (max - min + 1)) + min
+}
+
+function getBoardCellCount(size: HideSqueakBoardSize) {
+  return size.rows * size.columns
+}
+
 function countItemsByAxis(
   items: readonly HideSqueakItem[],
   axis: 'row' | 'column',
@@ -64,6 +135,83 @@ function countItemsByAxis(
   return counts
 }
 
+function getMaxFeasibleItemCount(
+  size: HideSqueakBoardSize,
+  itemConstraints: HideSqueakBoardItemConstraints,
+  availableItemCount: number,
+) {
+  const cellCapacity = Math.max(0, getBoardCellCount(size) - 1)
+  const rowCapacity = size.rows * itemConstraints.maxItemsPerRow
+  const columnCapacity = size.columns * itemConstraints.maxItemsPerColumn
+
+  return Math.min(cellCapacity, rowCapacity, columnCapacity, availableItemCount)
+}
+
+function getManhattanDistance(
+  first: HideSqueakCoordinate,
+  second: HideSqueakCoordinate,
+) {
+  return Math.abs(first.row - second.row) + Math.abs(first.column - second.column)
+}
+
+function countNearbyItems(
+  coordinate: HideSqueakCoordinate,
+  items: readonly HideSqueakItem[],
+) {
+  let orthogonalNeighbors = 0
+  let nearbyNeighbors = 0
+
+  for (const item of items) {
+    const rowDistance = Math.abs(item.coordinate.row - coordinate.row)
+    const columnDistance = Math.abs(item.coordinate.column - coordinate.column)
+
+    if (rowDistance === 0 && columnDistance === 0) {
+      continue
+    }
+
+    if (rowDistance <= 1 && columnDistance <= 1) {
+      nearbyNeighbors += 1
+    }
+
+    if (rowDistance + columnDistance === 1) {
+      orthogonalNeighbors += 1
+    }
+  }
+
+  return {
+    nearbyNeighbors,
+    orthogonalNeighbors,
+  }
+}
+
+function pickWeightedItem<T>(
+  items: readonly T[],
+  getWeight: (item: T) => number,
+  random: () => number,
+) {
+  const weightedItems = items.map((item) => ({
+    item,
+    weight: Math.max(0, getWeight(item)),
+  }))
+  const totalWeight = weightedItems.reduce((sum, current) => sum + current.weight, 0)
+
+  if (totalWeight <= 0) {
+    return items[Math.floor(random() * items.length)] ?? null
+  }
+
+  let threshold = random() * totalWeight
+
+  for (const weightedItem of weightedItems) {
+    threshold -= weightedItem.weight
+
+    if (threshold <= 0) {
+      return weightedItem.item
+    }
+  }
+
+  return weightedItems[weightedItems.length - 1]?.item ?? null
+}
+
 function validateBoardFeasibility(
   size: HideSqueakBoardSize,
   itemConstraints: HideSqueakBoardItemConstraints,
@@ -75,10 +223,11 @@ function validateBoardFeasibility(
   assertPositiveInteger(itemConstraints.maxItemsPerRow, 'Max items per row')
   assertPositiveInteger(itemConstraints.maxItemsPerColumn, 'Max items per column')
 
-  const cellCapacity = size.rows * size.columns
-  const rowCapacity = size.rows * itemConstraints.maxItemsPerRow
-  const columnCapacity = size.columns * itemConstraints.maxItemsPerColumn
-  const maxFeasibleItems = Math.min(cellCapacity, rowCapacity, columnCapacity)
+  const maxFeasibleItems = getMaxFeasibleItemCount(
+    size,
+    itemConstraints,
+    uniqueItemCount,
+  )
 
   if (itemConstraints.minTotalItems > maxFeasibleItems) {
     throw new Error('Board constraints cannot fit the minimum total item count.')
@@ -140,6 +289,7 @@ function validatePlacedItems(
 function buildBoard(
   size: HideSqueakBoardSize,
   items: HideSqueakItem[],
+  itemConstraints: HideSqueakBoardItemConstraints,
 ): HideSqueakBoardGenerationResult {
   const itemByCoordinate = new Map(items.map((item) => [getCellKey(item.coordinate), item]))
   const cells = getAllCoordinates(size).map((coordinate) => {
@@ -170,44 +320,227 @@ function buildBoard(
     board,
     emptyCoordinates: getEmptyCoordinates(board),
     source: 'generated',
+    itemConstraints,
   }
 }
 
-function createRandomItems(
+export function getTargetItemCount(
   size: HideSqueakBoardSize,
+  difficulty: HideSqueakDifficulty,
   itemConstraints: HideSqueakBoardItemConstraints,
-  itemDefinitions: readonly HideSqueakItemDefinition[],
-  random: () => number,
+  availableItemCount: number,
+  random: () => number = Math.random,
 ) {
+  const occupancyTarget = ITEM_OCCUPANCY_TARGETS[difficulty]
+  const boardCellCount = getBoardCellCount(size)
+  const maxFeasibleItemCount = getMaxFeasibleItemCount(
+    size,
+    itemConstraints,
+    availableItemCount,
+  )
+  const minTargetCount = Math.max(
+    itemConstraints.minTotalItems,
+    Math.round(boardCellCount * occupancyTarget.min),
+  )
+  const maxTargetCount = Math.max(
+    minTargetCount,
+    Math.round(boardCellCount * occupancyTarget.max),
+  )
+  const boundedMinTargetCount = Math.min(minTargetCount, maxFeasibleItemCount)
+  const boundedMaxTargetCount = Math.min(maxTargetCount, maxFeasibleItemCount)
+
+  if (boundedMaxTargetCount < itemConstraints.minTotalItems) {
+    throw new Error('Board constraints cannot fit the minimum total item count.')
+  }
+
+  return getRandomInteger(
+    boundedMinTargetCount,
+    boundedMaxTargetCount,
+    random,
+  )
+}
+
+function getCandidatePlacementScore({
+  coordinate,
+  items,
+  rowCounts,
+  columnCounts,
+  difficulty,
+  startingCoordinate,
+  finalCoordinate,
+  random,
+}: {
+  coordinate: HideSqueakCoordinate
+  items: readonly HideSqueakItem[]
+  rowCounts: ReadonlyMap<number, number>
+  columnCounts: ReadonlyMap<number, number>
+  difficulty: HideSqueakDifficulty
+  startingCoordinate?: HideSqueakCoordinate | null
+  finalCoordinate?: HideSqueakCoordinate | null
+  random: () => number
+}) {
+  let score = 1 + random() * 0.08
+  const rowCount = rowCounts.get(coordinate.row) ?? 0
+  const columnCount = columnCounts.get(coordinate.column) ?? 0
+  const { nearbyNeighbors, orthogonalNeighbors } = countNearbyItems(
+    coordinate,
+    items,
+  )
+
+  score /= 1 + rowCount * 0.75
+  score /= 1 + columnCount * 0.75
+  score /= 1 + nearbyNeighbors * 0.95 + orthogonalNeighbors * 0.9
+
+  if (startingCoordinate) {
+    const distanceFromStart = getManhattanDistance(coordinate, startingCoordinate)
+
+    if (distanceFromStart <= 1) {
+      score *= 0.08
+    } else if (distanceFromStart === 2) {
+      score *= 0.35
+    } else if (distanceFromStart === 3) {
+      score *= 0.72
+    }
+  }
+
+  if (
+    finalCoordinate &&
+    (difficulty === 'hard' || difficulty === 'super-hard')
+  ) {
+    const distanceFromFinal = getManhattanDistance(coordinate, finalCoordinate)
+
+    if (distanceFromFinal <= 1) {
+      score *= 2.1
+    } else if (distanceFromFinal <= 2) {
+      score *= 1.7
+    } else if (distanceFromFinal <= 3) {
+      score *= 1.3
+    }
+
+    if (
+      coordinate.row === finalCoordinate.row ||
+      coordinate.column === finalCoordinate.column
+    ) {
+      score *= 1.22
+    }
+  }
+
+  return score
+}
+
+function placeItemsWithScoring({
+  size,
+  itemConstraints,
+  itemDefinitions,
+  difficulty,
+  targetItemCount,
+  startingCoordinate = null,
+  finalCoordinate = null,
+  reservedFinalItemId = null,
+  random,
+}: {
+  size: HideSqueakBoardSize
+  itemConstraints: HideSqueakBoardItemConstraints
+  itemDefinitions: readonly HideSqueakItemDefinition[]
+  difficulty: HideSqueakDifficulty
+  targetItemCount: number
+  startingCoordinate?: HideSqueakCoordinate | null
+  finalCoordinate?: HideSqueakCoordinate | null
+  reservedFinalItemId?: string | null
+  random: () => number
+}) {
   validateBoardFeasibility(size, itemConstraints, itemDefinitions.length)
 
-  const allCoordinates = getShuffledItems(getAllCoordinates(size), random)
+  if (
+    startingCoordinate &&
+    finalCoordinate &&
+    getCellKey(startingCoordinate) === getCellKey(finalCoordinate)
+  ) {
+    throw new Error('Start and final coordinates cannot be the same when placing board items.')
+  }
+
+  const allCoordinates = getAllCoordinates(size)
   const availableDefinitions = getShuffledItems(itemDefinitions, random)
   const rowCounts = new Map<number, number>()
   const columnCounts = new Map<number, number>()
   const items: HideSqueakItem[] = []
+  const targetCount = Math.min(targetItemCount, availableDefinitions.length)
 
-  for (const coordinate of allCoordinates) {
-    if (items.length >= itemConstraints.minTotalItems) {
+  if (reservedFinalItemId && finalCoordinate) {
+    const reservedIndex = availableDefinitions.findIndex(
+      (definition) => definition.id === reservedFinalItemId,
+    )
+
+    if (reservedIndex === -1) {
+      throw new Error(`Reserved final item "${reservedFinalItemId}" was not found in the item definitions.`)
+    }
+
+    const [reservedDefinition] = availableDefinitions.splice(reservedIndex, 1)
+
+    if (!reservedDefinition) {
+      throw new Error(`Reserved final item "${reservedFinalItemId}" could not be placed.`)
+    }
+
+    items.push({
+      ...reservedDefinition,
+      coordinate: finalCoordinate,
+    })
+    rowCounts.set(finalCoordinate.row, 1)
+    columnCounts.set(finalCoordinate.column, 1)
+  }
+
+  while (items.length < targetCount) {
+    const definitionIndex = items.length - (reservedFinalItemId ? 1 : 0)
+    const nextDefinition = availableDefinitions[definitionIndex]
+
+    if (!nextDefinition) {
+      break
+    }
+
+    const candidates = allCoordinates.filter((coordinate) => {
+      if (startingCoordinate && getCellKey(coordinate) === getCellKey(startingCoordinate)) {
+        return false
+      }
+
+      if (items.some((item) => getCellKey(item.coordinate) === getCellKey(coordinate))) {
+        return false
+      }
+
+      const rowCount = rowCounts.get(coordinate.row) ?? 0
+      const columnCount = columnCounts.get(coordinate.column) ?? 0
+
+      return (
+        rowCount < itemConstraints.maxItemsPerRow &&
+        columnCount < itemConstraints.maxItemsPerColumn
+      )
+    })
+
+    if (candidates.length === 0) {
+      break
+    }
+
+    const coordinate = pickWeightedItem(
+      candidates,
+      (candidate) =>
+        getCandidatePlacementScore({
+          coordinate: candidate,
+          items,
+          rowCounts,
+          columnCounts,
+          difficulty,
+          startingCoordinate,
+          finalCoordinate,
+          random,
+        }),
+      random,
+    )
+
+    if (!coordinate) {
       break
     }
 
     const rowCount = rowCounts.get(coordinate.row) ?? 0
     const columnCount = columnCounts.get(coordinate.column) ?? 0
-
-    if (rowCount >= itemConstraints.maxItemsPerRow) {
-      continue
-    }
-
-    if (columnCount >= itemConstraints.maxItemsPerColumn) {
-      continue
-    }
-
-    const nextDefinition = availableDefinitions[items.length]
-
-    if (!nextDefinition) {
-      break
-    }
 
     items.push({
       ...nextDefinition,
@@ -223,8 +556,69 @@ function createRandomItems(
   return items
 }
 
+function createRandomItems(
+  size: HideSqueakBoardSize,
+  difficulty: HideSqueakDifficulty,
+  itemConstraints: HideSqueakBoardItemConstraints,
+  itemDefinitions: readonly HideSqueakItemDefinition[],
+  random: () => number,
+) {
+  const randomizedDefinitions = getRandomizedItemDefinitions(itemDefinitions, random)
+  const targetItemCount = getTargetItemCount(
+    size,
+    difficulty,
+    itemConstraints,
+    randomizedDefinitions.length,
+    random,
+  )
+
+  return placeItemsWithScoring({
+    size,
+    itemConstraints,
+    itemDefinitions: randomizedDefinitions,
+    difficulty,
+    targetItemCount,
+    random,
+  })
+}
+
+export function regenerateBoardItemsForRoundContext({
+  size,
+  difficulty,
+  itemConstraints,
+  itemDefinitions,
+  startingCoordinate,
+  finalCoordinate,
+  targetItemId,
+  random = Math.random,
+}: {
+  size: HideSqueakBoardSize
+  difficulty: HideSqueakDifficulty
+  itemConstraints: HideSqueakBoardItemConstraints
+  itemDefinitions: readonly HideSqueakItemDefinition[]
+  startingCoordinate: HideSqueakCoordinate
+  finalCoordinate: HideSqueakCoordinate
+  targetItemId: string
+  random?: () => number
+}) {
+  const items = placeItemsWithScoring({
+    size,
+    itemConstraints,
+    itemDefinitions,
+    difficulty,
+    targetItemCount: itemDefinitions.length,
+    startingCoordinate,
+    finalCoordinate,
+    reservedFinalItemId: targetItemId,
+    random,
+  })
+
+  return buildBoard(size, items, itemConstraints)
+}
+
 export function generateBoardLayout({
   size,
+  difficulty,
   itemConstraints,
   definition,
   random = Math.random,
@@ -234,11 +628,18 @@ export function generateBoardLayout({
     validatePlacedItems(definition.items, size, itemConstraints)
 
     return {
-      ...buildBoard(size, definition.items),
+      ...buildBoard(size, definition.items, itemConstraints),
       source: 'preset',
     }
   }
 
-  const items = createRandomItems(size, itemConstraints, definition.itemDefinitions, random)
-  return buildBoard(size, items)
+  const items = createRandomItems(
+    size,
+    difficulty,
+    itemConstraints,
+    definition.itemDefinitions,
+    random,
+  )
+
+  return buildBoard(size, items, itemConstraints)
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 100" preserveAspectRatio="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2.76 92.85" preserveAspectRatio="none">
   <path
     fill="currentColor"
-    d="m4.06,0c1.54.43,2.85,78.53,2.85,83.41,0,5.19-1.36,9.39-3.04,9.39s-3.04-4.2-3.04-9.39C.82,78.67,1.85.65,3.33,0c.14-.06.62-.08.72-.04Z"
+    d="m1.68.91c0,.67.4,26.92.75,50.9.28,19.09.91,41.04-1.03,41.04S0,70.94.27,51.81C.62,27.75,1.02,1.41,1.02.87c0-.45.26-.79.34-.87.14.11.32.47.32.91Z"
   />
 </svg>

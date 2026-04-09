@@ -1,0 +1,66 @@
+import type { CSSProperties } from 'react'
+
+import type { HideSqueakItemAssetRenderProps } from '../types'
+
+function getMugVariantTransform(colorVariant: string | null | undefined) {
+  switch (colorVariant) {
+    case 'original':
+    default:
+      return { rotation: '0deg', scaleX: 1, scaleY: 1 }
+    case 'blueberry':
+      return { rotation: '0deg', scaleX: -0.96, scaleY: 0.94 }
+    case 'bright-blue':
+      return { rotation: '0deg', scaleX: 0.975, scaleY: 0.75 }
+    case 'cream':
+      return { rotation: '0deg', scaleX: 1.03, scaleY: 1.01 }
+    case 'rose':
+      return { rotation: '0deg', scaleX: -1.02, scaleY: 0.99 }
+    case 'bright-red':
+      return { rotation: '0deg', scaleX: 0.95, scaleY: 0.75 }
+  }
+}
+
+export function ClassicMugSvg({
+  tokens,
+  colorVariant,
+  title,
+  className,
+  style,
+  ...svgProps
+}: HideSqueakItemAssetRenderProps) {
+  const transform = getMugVariantTransform(colorVariant)
+
+  return (
+    <svg
+      viewBox="0 0 51.89 47.61"
+      xmlns="http://www.w3.org/2000/svg"
+      role={title ? 'img' : 'presentation'}
+      aria-label={title}
+      className={className}
+      style={
+        {
+          transform: `rotate(${transform.rotation}) scale(${transform.scaleX}, ${transform.scaleY})`,
+          transformOrigin: 'center center',
+          transformBox: 'fill-box',
+          ...style,
+        } as CSSProperties
+      }
+      {...svgProps}
+    >
+      {title ? <title>{title}</title> : null}
+      <path
+        fill={tokens.baseFill}
+        stroke={tokens.outline}
+        strokeMiterlimit="10"
+        strokeWidth="2"
+        d="m38.6,7.48c-2.97.01-3.12-.74-3-1.68,1.34-4.8-11.94-4.47-17.34-4.8-7.77.08-16.55.02-17.26,3.17,0,0,.46,30.97.46,31.66,1.56,8.14,7.76,10.88,14.53,10.75,8.19-.16,10.75,1.37,17.36-5.49.78-.82,1.49.11,2.74-.23,14.57-2.41,23.2-33.11,2.51-33.37Zm.46,28.23c-2.86.69-3.66.11-4-.69s.48-19.69.69-20.34c.39-1.24,2.4-3.43,3.89-3.43s5.26.11,6.4,2.06c4.08,6.56.54,19.53-6.97,22.4Z"
+      />
+      <path
+        fill={tokens.baseShade}
+        stroke={tokens.outline}
+        strokeMiterlimit="10"
+        d="m34.37,4.67c-.04,1.33-7.23,2.6-16.06,2.36S2.34,5.54,2.38,4.21s7.62-2.21,16.45-1.97c8.83.23,15.58,1.11,15.54,2.43Z"
+      />
+    </svg>
+  )
+}

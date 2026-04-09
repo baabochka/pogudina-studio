@@ -118,6 +118,7 @@ export interface HideSqueakBoardGenerationResult {
   board: HideSqueakBoard
   emptyCoordinates: HideSqueakCoordinate[]
   source: HideSqueakBoardLayoutSource
+  itemConstraints: HideSqueakBoardItemConstraints
 }
 
 export interface HideSqueakCommand {

@@ -13,6 +13,7 @@ export interface HideSqueakItemAssetTokens {
 
 export interface HideSqueakItemAssetRenderProps extends SVGProps<SVGSVGElement> {
   tokens: HideSqueakItemAssetTokens
+  colorVariant?: string | null
   detailVariant?: string | null
   title?: string
 }

@@ -73,9 +73,16 @@ Grid-based puzzle game feature notes for developers.
 ## Add A Recolor
 
 1. Open `itemAssets/registry.ts`.
-2. Add a new entry under the family `colorVariants`.
-3. Override only the token values that should change.
-4. Reference that `colorVariant` from an item definition or pinned item.
+2. Reuse `itemAssets/colorPresets.ts` if you want a starting palette for an existing item kind.
+3. Add a new entry under the family `colorVariants`.
+4. Override only the token values that should change.
+5. Reference that `colorVariant` from an item definition or pinned item.
+
+Helpers available:
+
+- `getHideSqueakItemColorPreset(kind)`: returns the base token palette for an item kind
+- `createHideSqueakItemColorVariant(kind, overrides)`: creates one recolor object from a preset palette
+- `createHideSqueakItemColorVariants(kind, variants)`: creates a full `colorVariants` map from small override objects
 
 ## Add A New Family
 

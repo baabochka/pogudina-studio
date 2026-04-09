@@ -3,9 +3,16 @@ import type { HideSqueakItemAssetRenderProps } from '../types'
 export function createStaticAssetSvg({
   src,
   viewBox,
+  imageBox,
 }: {
   src: string
   viewBox: string
+  imageBox?: {
+    x: string
+    y: string
+    width: string
+    height: string
+  }
 }) {
   return function StaticAssetSvg({
     title,
@@ -30,8 +37,10 @@ export function createStaticAssetSvg({
         {title ? <title>{title}</title> : null}
         <image
           href={src}
-          width="100%"
-          height="100%"
+          x={imageBox?.x ?? '0%'}
+          y={imageBox?.y ?? '0%'}
+          width={imageBox?.width ?? '100%'}
+          height={imageBox?.height ?? '100%'}
           preserveAspectRatio="xMidYMid meet"
         />
       </svg>

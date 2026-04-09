@@ -15,8 +15,8 @@ import type {
 
 import cheeseDragUrl from "./assets/cheese_drag.svg";
 import difficultyLadderUrl from "./assets/difficulty_ladder.svg";
-import moreInfoUrl from "./assets/more_info.svg";
 import { DirectionsBubble } from "./DirectionsBubble";
+import MoreInfoSvg from "./assets/more_info.svg?react";
 import MouseGoingUpDownSvg from "./assets/mouse_going_up_down.svg?react";
 import MouseRotationMiddleSvg from "./assets/mouse_rotation_middle.svg?react";
 import MouseRotationStartSvg from "./assets/mouse_rotation_start.svg?react";
@@ -57,6 +57,10 @@ import type {
 
 const NEXT_ROUND_DELAY_MS = 1200;
 const NEXT_ROUND_DELAY_AFTER_WRONG_MS = 1800;
+const HIDE_SQUEAK_PAW_TRAIL_STEP_STAGGER_MS = 180;
+const HIDE_SQUEAK_PAW_TARGET_DELAY_BASE_MS = 220;
+const HIDE_SQUEAK_PAW_TARGET_APPEAR_DURATION_MS = 480;
+const HIDE_SQUEAK_PAW_TARGET_POST_ARRIVAL_PAUSE_MS = 350;
 const TIMER_TICK_INTERVAL_MS = 250;
 const HIDE_SQUEAK_BEST_TIMED_SCORE_KEY = "hide-squeak-best-timed-score";
 const DIFFICULTY_LADDER_ORDER: HideSqueakDifficulty[] = [
@@ -151,6 +155,37 @@ function getDifficultyMouseTop(index: number) {
     DIFFICULTY_ROW_HEIGHT_PX / 2 -
     DIFFICULTY_MOUSE_SIZE.height / 2
   );
+}
+
+function getHideSqueakPawTrailStepCountForReveal(
+  from: HideSqueakCoordinate,
+  to: HideSqueakCoordinate,
+) {
+  const manhattanDistance =
+    Math.abs(to.row - from.row) + Math.abs(to.column - from.column);
+
+  return Math.min(Math.max(manhattanDistance, 2), 5);
+}
+
+function getWrongAnswerAdvanceDelayMs(
+  selectedAnswer: HideSqueakCoordinate | null,
+  correctAnswer: HideSqueakCoordinate,
+) {
+  if (!selectedAnswer) {
+    return NEXT_ROUND_DELAY_AFTER_WRONG_MS;
+  }
+
+  const pawTrailStepCount = getHideSqueakPawTrailStepCountForReveal(
+    selectedAnswer,
+    correctAnswer,
+  );
+  const revealSequenceDurationMs =
+    pawTrailStepCount * HIDE_SQUEAK_PAW_TRAIL_STEP_STAGGER_MS +
+    HIDE_SQUEAK_PAW_TARGET_DELAY_BASE_MS +
+    HIDE_SQUEAK_PAW_TARGET_APPEAR_DURATION_MS +
+    HIDE_SQUEAK_PAW_TARGET_POST_ARRIVAL_PAUSE_MS;
+
+  return Math.max(NEXT_ROUND_DELAY_AFTER_WRONG_MS, revealSequenceDurationMs);
 }
 
 // function getInitialSettledMouseStateForDifficulty(
@@ -1113,6 +1148,7 @@ function createPlayableRound(
   const boardSize = getBoardSizeForDifficulty(difficulty);
   const boardResult = generateBoardLayout({
     size: boardSize,
+    difficulty,
     itemConstraints: HIDE_SQUEAK_BOARD_CONSTRAINTS.itemConstraints,
     definition: createBoardDefinition(pinnedItems, boardSize),
   });
@@ -1141,42 +1177,6 @@ function getDifficultyLabel(difficulty: HideSqueakDifficulty) {
   }
 
   return difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
-}
-
-function BoardIconButton({
-  icon,
-  label,
-  isActive = false,
-  disabled = false,
-  className = "",
-  iconClassName = "h-10 w-10 object-contain",
-  onClick,
-}: {
-  icon: string;
-  label: string;
-  isActive?: boolean;
-  disabled?: boolean;
-  className?: string;
-  iconClassName?: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      aria-label={label}
-      className={[
-        ICON_CONTROL_CLASS_NAME,
-        "focus-visible:ring-offset-hs-shell",
-        disabled ? "opacity-45" : ICON_CONTROL_INTERACTION_CLASS_NAME,
-        isActive ? "opacity-90" : "",
-        className,
-      ].join(" ")}
-    >
-      <img src={icon} alt="" aria-hidden="true" className={iconClassName} />
-    </button>
-  );
 }
 
 function RestartBoardButton({
@@ -1314,7 +1314,7 @@ function ReviewPreviousButton({
         hasPreviousRound
           ? ICON_CONTROL_INTERACTION_CLASS_NAME
           : "cursor-default",
-        isReviewOpen ? "opacity-90" : "",
+        isReviewOpen ? "text-hs-highlight/80 opacity-95" : "",
       ].join(" ")}
     >
       <ReviewPreviousSvg
@@ -1322,6 +1322,13 @@ function ReviewPreviousButton({
         focusable="false"
         className={[
           "h-10 w-10 object-contain",
+          "[&_#review-arrow]:[transform-box:fill-box]",
+          "[&_#review-arrow]:origin-center",
+          "[&_#review-arrow]:transition-transform",
+          "[&_#review-arrow]:duration-150",
+          isReviewOpen
+            ? "[&_#review-arrow]:scale-x-[-1] [&_#review-arrow]:rotate-[-8deg]"
+            : "",
           !hasPreviousRound ? "[&_#review-arrow]:opacity-0" : "",
         ].join(" ")}
       />
@@ -1542,7 +1549,6 @@ export function HideSqueakGame() {
       state.progress.validationResult === "wrong");
   const isReviewOpen = state.reviewState.isOpen && state.previousRound != null;
   const isRulesOpen = state.phase === "rules";
-
   const openSettingsPanel = useCallback(() => {
     setDraftSettings({
       commandDisplayMode,
@@ -1697,13 +1703,16 @@ export function HideSqueakGame() {
   }, [isBoardPinned, pinnedBoardItems, state.difficulty, state.phase]);
 
   useEffect(() => {
-    if (!isAwaitingNextRound) {
+    if (!isAwaitingNextRound || !currentRound) {
       return;
     }
 
     const nextRoundDelayMs =
       state.progress.validationResult === "wrong"
-        ? NEXT_ROUND_DELAY_AFTER_WRONG_MS
+        ? getWrongAnswerAdvanceDelayMs(
+            state.progress.selectedAnswer,
+            currentRound.answer,
+          )
         : NEXT_ROUND_DELAY_MS;
 
     const timeoutId = window.setTimeout(() => {
@@ -1714,8 +1723,10 @@ export function HideSqueakGame() {
       window.clearTimeout(timeoutId);
     };
   }, [
+    currentRound,
     isAwaitingNextRound,
     state.previousRound?.round.id,
+    state.progress.selectedAnswer,
     state.progress.validationResult,
   ]);
 
@@ -2042,6 +2053,7 @@ export function HideSqueakGame() {
                   }
                   mousePose={isReviewOpen ? "standing" : "head"}
                   isReviewMode={isReviewOpen}
+                  isRulesMode={isRulesOpen}
                   onActiveCoordinateChange={(coordinate) => {
                     if (isReviewOpen) {
                       return;
@@ -2093,17 +2105,32 @@ export function HideSqueakGame() {
                   onClick={toggleBoardPin}
                 />
 
-                <BoardIconButton
-                  icon={moreInfoUrl}
-                  label={isRulesOpen ? "Close rules" : "Open rules"}
-                  isActive={isRulesOpen}
-                  className="absolute bottom-0 right-[-10px] z-10"
+                <button
+                  type="button"
                   onClick={() => {
                     dispatch({
                       type: isRulesOpen ? "close-rules" : "open-rules",
                     });
                   }}
-                />
+                  aria-label={isRulesOpen ? "Close rules" : "Open rules"}
+                  className={[
+                    ICON_CONTROL_CLASS_NAME,
+                    ICON_CONTROL_INTERACTION_CLASS_NAME,
+                    "absolute bottom-0 right-[-10px] z-10 focus-visible:ring-offset-hs-shell",
+                    isRulesOpen
+                      ? "text-hs-controlSelected/84 opacity-88 drop-shadow-[0_1px_3px_rgb(31_74_80_/_0.06)]"
+                      : "text-hs-topbar",
+                  ].join(" ")}
+                >
+                  <MoreInfoSvg
+                    aria-hidden="true"
+                    focusable="false"
+                    className={[
+                      "h-10 w-10 object-contain transition-colors duration-150",
+                      "text-inherit",
+                    ].join(" ")}
+                  />
+                </button>
               </div>
             </div>
 

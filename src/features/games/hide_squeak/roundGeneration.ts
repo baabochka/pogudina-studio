@@ -1,4 +1,5 @@
 import { getItemAtCoordinate } from './boardUtils'
+import { regenerateBoardItemsForRoundContext } from './boardGeneration'
 import { createBoardBounds, isCoordinateWithinBounds } from './boundsUtils'
 import { HIDE_SQUEAK_DIFFICULTY_PRESETS } from './difficultyPresets'
 import { areOppositeDirections, HIDE_SQUEAK_DIRECTIONS } from './directionUtils'
@@ -12,6 +13,7 @@ import type {
   HideSqueakDifficulty,
   HideSqueakDirection,
   HideSqueakGeneratedRound,
+  HideSqueakItemDefinition,
   HideSqueakRoundRules,
 } from './types'
 
@@ -292,6 +294,15 @@ function withStartingCoordinate(
   }
 }
 
+function getItemDefinition(item: {
+  coordinate: HideSqueakCoordinate
+} & HideSqueakItemDefinition): HideSqueakItemDefinition {
+  const { coordinate, ...itemDefinition } = item
+  void coordinate
+
+  return itemDefinition
+}
+
 export function generatePuzzleRound({
   boardResult,
   difficulty,
@@ -327,7 +338,29 @@ export function generatePuzzleRound({
     }
 
     const finalCoordinate = path.positions[path.positions.length - 1]
-    const targetItem = getItemAtCoordinate(boardResult.board, finalCoordinate)
+    const initialTargetItem = getItemAtCoordinate(boardResult.board, finalCoordinate)
+
+    if (!initialTargetItem) {
+      continue
+    }
+
+    const contextualBoardResult =
+      boardResult.source === 'generated'
+        ? regenerateBoardItemsForRoundContext({
+            size: boardResult.board.size,
+            difficulty,
+            itemConstraints: boardResult.itemConstraints,
+            itemDefinitions: boardResult.board.items.map(getItemDefinition),
+            startingCoordinate,
+            finalCoordinate,
+            targetItemId: initialTargetItem.id,
+            random,
+          })
+        : boardResult
+    const targetItem = getItemAtCoordinate(
+      contextualBoardResult.board,
+      finalCoordinate,
+    )
 
     if (!targetItem) {
       continue
@@ -335,7 +368,7 @@ export function generatePuzzleRound({
 
     return {
       id: createRoundId(random),
-      board: withStartingCoordinate(boardResult.board, startingCoordinate),
+      board: withStartingCoordinate(contextualBoardResult.board, startingCoordinate),
       difficulty,
       startingCoordinate,
       commands: path.commands,
