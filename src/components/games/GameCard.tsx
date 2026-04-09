@@ -17,6 +17,12 @@ export function GameCard({ game }: GameCardProps) {
           <GamePreview
             src={game.previewImage}
             alt={game.previewAlt}
+            imageFit={game.previewImageFit}
+            imagePosition={game.previewImagePosition}
+            secondaryAlt={game.previewSecondaryAlt}
+            secondaryImageFit={game.previewSecondaryImageFit}
+            secondaryImagePosition={game.previewSecondaryImagePosition}
+            secondarySrc={game.previewSecondaryImage}
             variant={game.previewVariant}
           />
         </div>

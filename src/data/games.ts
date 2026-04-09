@@ -1,5 +1,6 @@
 import pawsThinkGamePreview from '../assets/PawsThinkGamePreview.png'
 import hideSqueakGamePreview from '../assets/HideSqueakGamePreview.png'
+import hideSqueakSettingsPreview from '../assets/HideSqueakSettings.png'
 
 export type Game = {
   detailDescription: string
@@ -7,6 +8,12 @@ export type Game = {
   eyebrow?: string
   previewAlt: string
   previewImage: string
+  previewImageFit?: 'contain' | 'cover'
+  previewImagePosition?: string
+  previewSecondaryAlt?: string
+  previewSecondaryImage?: string
+  previewSecondaryImageFit?: 'contain' | 'cover'
+  previewSecondaryImagePosition?: string
   previewVariant: 'portrait' | 'landscape' | 'square'
   slug: string
   summary: string
@@ -20,6 +27,8 @@ export const games: Game[] = [
     title: 'Paws and Think',
     previewImage: pawsThinkGamePreview,
     previewAlt: 'Paws and Think game preview',
+    previewImageFit: 'cover',
+    previewImagePosition: 'center top',
     previewVariant: 'portrait',
     summary:
       'A quick deduction game built around color logic, visual pattern recognition, and a race against the clock.',
@@ -35,15 +44,21 @@ export const games: Game[] = [
     title: 'Hide & Squeak',
     previewImage: hideSqueakGamePreview,
     previewAlt: 'Hide & Squeak game preview',
+    previewImageFit: 'contain',
+    previewImagePosition: 'center top',
+    previewSecondaryImage: hideSqueakSettingsPreview,
+    previewSecondaryAlt: 'Hide & Squeak settings and board layout',
+    previewSecondaryImageFit: 'contain',
+    previewSecondaryImagePosition: 'center top',
     previewVariant: 'landscape',
     summary:
-      'A coordinate-tracking puzzle where players follow movement commands across a grid and identify the mouse’s final destination.',
+      'A spatial reasoning puzzle where players follow movement commands across a grid and identify the mouse’s final destination.',
     description:
-      'The game blends readable board logic with multiple input modes, hint support, previous-round review, and a timed mode that rewards fast, accurate path tracking.',
+      'The game blends procedural round generation, readable board logic, multiple input modes, hint support, previous-round review, and a timed mode that rewards accurate path tracking.',
     tags: ['React', 'TypeScript', 'Puzzle', 'Accessibility'],
     eyebrow: 'New game',
     detailDescription:
-      'Hide & Squeak is a grid puzzle about tracking a hidden mouse through a generated command sequence. Depending on difficulty, players either click the final board cell, choose from plausible coordinate options, or type the destination directly using A1-style labels.',
+      'Hide & Squeak is a grid puzzle about tracking a hidden mouse through a generated command sequence. Depending on difficulty, players either click the final board cell, choose from plausible coordinate options, or type the destination directly using A1-style labels, while the board generation system balances item density, distractor quality, and visual variety.',
   },
 ]
 
