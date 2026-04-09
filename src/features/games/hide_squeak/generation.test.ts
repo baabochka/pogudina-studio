@@ -189,6 +189,124 @@ describe('Hide & Squeak generation invariants', () => {
     }
   })
 
+  it('allows controlled duplicate families without exceeding two per family', () => {
+    let foundDuplicateFamily = false
+
+    for (const difficulty of ['medium', 'hard', 'super-hard'] as const) {
+      for (const seed of [12, 24, 36, 48, 60, 72, 84, 96]) {
+        const random = createSeededRandom(seed)
+        const size = getBoardSizeForDifficulty(difficulty)
+        const boardResult = generateBoardLayout({
+          size,
+          difficulty,
+          itemConstraints: HIDE_SQUEAK_BOARD_CONSTRAINTS.itemConstraints,
+          definition: createRandomBoardDefinition(size),
+          random,
+        })
+
+        const countsByKind = new Map<string, number>()
+
+        for (const item of boardResult.board.items) {
+          countsByKind.set(item.kind, (countsByKind.get(item.kind) ?? 0) + 1)
+        }
+
+        for (const count of countsByKind.values()) {
+          expect(count).toBeLessThanOrEqual(2)
+        }
+
+        if ([...countsByKind.values()].some((count) => count >= 2)) {
+          foundDuplicateFamily = true
+        }
+      }
+    }
+
+    expect(foundDuplicateFamily).toBe(true)
+  })
+
+  it('prefers different color variants when duplicate families appear', () => {
+    let foundDuplicateWithDifferentColors = false
+
+    for (const difficulty of ['medium', 'hard', 'super-hard'] as const) {
+      for (const seed of [12, 24, 36, 48, 60, 72, 84, 96]) {
+        const random = createSeededRandom(seed)
+        const size = getBoardSizeForDifficulty(difficulty)
+        const boardResult = generateBoardLayout({
+          size,
+          difficulty,
+          itemConstraints: HIDE_SQUEAK_BOARD_CONSTRAINTS.itemConstraints,
+          definition: createRandomBoardDefinition(size),
+          random,
+        })
+
+        const variantsByKind = new Map<string, Set<string>>()
+
+        for (const item of boardResult.board.items) {
+          const variants = variantsByKind.get(item.kind) ?? new Set<string>()
+          variants.add(item.colorVariant ?? 'default')
+          variantsByKind.set(item.kind, variants)
+        }
+
+        for (const [kind, variants] of variantsByKind.entries()) {
+          const countForKind = boardResult.board.items.filter((item) => item.kind === kind).length
+
+          if (countForKind >= 2) {
+            expect(variants.size).toBe(countForKind)
+            foundDuplicateWithDifferentColors = true
+          }
+        }
+      }
+    }
+
+    expect(foundDuplicateWithDifferentColors).toBe(true)
+  })
+
+  it('discourages placing duplicate families directly adjacent to each other', () => {
+    let foundDuplicateFamily = false
+
+    for (const difficulty of ['medium', 'hard', 'super-hard'] as const) {
+      for (const seed of [12, 24, 36, 48, 60, 72, 84, 96]) {
+        const random = createSeededRandom(seed)
+        const size = getBoardSizeForDifficulty(difficulty)
+        const boardResult = generateBoardLayout({
+          size,
+          difficulty,
+          itemConstraints: HIDE_SQUEAK_BOARD_CONSTRAINTS.itemConstraints,
+          definition: createRandomBoardDefinition(size),
+          random,
+        })
+
+        const itemsByKind = new Map<string, HideSqueakItem[]>()
+
+        for (const item of boardResult.board.items) {
+          const items = itemsByKind.get(item.kind) ?? []
+          items.push(item)
+          itemsByKind.set(item.kind, items)
+        }
+
+        for (const items of itemsByKind.values()) {
+          if (items.length < 2) {
+            continue
+          }
+
+          foundDuplicateFamily = true
+
+          for (let index = 0; index < items.length; index += 1) {
+            for (let compareIndex = index + 1; compareIndex < items.length; compareIndex += 1) {
+              expect(
+                getManhattanDistance(
+                  items[index].coordinate,
+                  items[compareIndex].coordinate,
+                ),
+              ).toBeGreaterThan(1)
+            }
+          }
+        }
+      }
+    }
+
+    expect(foundDuplicateFamily).toBe(true)
+  })
+
   it('hard and super-hard boards place some distractor-adjacent items near the answer without over-clustering', () => {
     for (const difficulty of ['hard', 'super-hard'] as const) {
       for (const seed of [211, 311, 411, 511, 611]) {

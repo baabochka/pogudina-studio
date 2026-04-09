@@ -73,6 +73,7 @@ function getRandomArrayItem<T>(items: readonly T[], random: () => number) {
 
 function getRandomizedItemDefinition(
   definition: HideSqueakItemDefinition,
+  usedColorVariantsByFamily: Map<string, Set<string>>,
   random: () => number,
 ): HideSqueakItemDefinition {
   const availableColorVariants = getHideSqueakItemAssetColorVariants(
@@ -84,14 +85,28 @@ function getRandomizedItemDefinition(
     return definition
   }
 
+  const familyKey = `${definition.kind}:${definition.family}`
+  const usedColorVariants = usedColorVariantsByFamily.get(familyKey) ?? new Set<string>()
+  const unusedColorVariants = availableColorVariants.filter(
+    (variant) => !usedColorVariants.has(variant),
+  )
+
   const selectedColorVariant =
-    getRandomArrayItem(availableColorVariants, random) ??
+    getRandomArrayItem(
+      unusedColorVariants.length > 0 ? unusedColorVariants : availableColorVariants,
+      random,
+    ) ??
     definition.colorVariant ??
     null
 
+  if (selectedColorVariant) {
+    usedColorVariants.add(selectedColorVariant)
+    usedColorVariantsByFamily.set(familyKey, usedColorVariants)
+  }
+
   return {
     ...definition,
-    id: `${definition.kind}-${definition.family}-${selectedColorVariant ?? 'default'}`,
+    id: `${definition.id}--${selectedColorVariant ?? 'default'}`,
     colorVariant: selectedColorVariant,
   }
 }
@@ -100,8 +115,10 @@ function getRandomizedItemDefinitions(
   itemDefinitions: readonly HideSqueakItemDefinition[],
   random: () => number,
 ) {
+  const usedColorVariantsByFamily = new Map<string, Set<string>>()
+
   return itemDefinitions.map((definition) =>
-    getRandomizedItemDefinition(definition, random),
+    getRandomizedItemDefinition(definition, usedColorVariantsByFamily, random),
   )
 }
 
@@ -182,6 +199,53 @@ function countNearbyItems(
     nearbyNeighbors,
     orthogonalNeighbors,
   }
+}
+
+function countNearbySameFamilyItems(
+  coordinate: HideSqueakCoordinate,
+  items: readonly HideSqueakItem[],
+  definition: Pick<HideSqueakItemDefinition, 'kind' | 'family'>,
+) {
+  let adjacentMatches = 0
+  let nearbyMatches = 0
+
+  for (const item of items) {
+    if (item.kind !== definition.kind || item.family !== definition.family) {
+      continue
+    }
+
+    const distance = getManhattanDistance(item.coordinate, coordinate)
+
+    if (distance === 0) {
+      continue
+    }
+
+    if (distance === 1) {
+      adjacentMatches += 1
+    }
+
+    if (distance <= 2) {
+      nearbyMatches += 1
+    }
+  }
+
+  return {
+    adjacentMatches,
+    nearbyMatches,
+  }
+}
+
+function hasAdjacentSameFamilyItem(
+  coordinate: HideSqueakCoordinate,
+  items: readonly HideSqueakItem[],
+  definition: Pick<HideSqueakItemDefinition, 'kind' | 'family'>,
+) {
+  return items.some(
+    (item) =>
+      item.kind === definition.kind &&
+      item.family === definition.family &&
+      getManhattanDistance(item.coordinate, coordinate) === 1,
+  )
 }
 
 function pickWeightedItem<T>(
@@ -363,6 +427,7 @@ export function getTargetItemCount(
 function getCandidatePlacementScore({
   coordinate,
   items,
+  definition,
   rowCounts,
   columnCounts,
   difficulty,
@@ -372,6 +437,7 @@ function getCandidatePlacementScore({
 }: {
   coordinate: HideSqueakCoordinate
   items: readonly HideSqueakItem[]
+  definition: Pick<HideSqueakItemDefinition, 'kind' | 'family'>
   rowCounts: ReadonlyMap<number, number>
   columnCounts: ReadonlyMap<number, number>
   difficulty: HideSqueakDifficulty
@@ -386,10 +452,16 @@ function getCandidatePlacementScore({
     coordinate,
     items,
   )
+  const { adjacentMatches, nearbyMatches } = countNearbySameFamilyItems(
+    coordinate,
+    items,
+    definition,
+  )
 
   score /= 1 + rowCount * 0.75
   score /= 1 + columnCount * 0.75
   score /= 1 + nearbyNeighbors * 0.95 + orthogonalNeighbors * 0.9
+  score /= 1 + adjacentMatches * 3.2 + nearbyMatches * 1.15
 
   if (startingCoordinate) {
     const distanceFromStart = getManhattanDistance(coordinate, startingCoordinate)
@@ -519,12 +591,20 @@ function placeItemsWithScoring({
       break
     }
 
+    const spacedCandidates = candidates.filter(
+      (candidate) =>
+        !hasAdjacentSameFamilyItem(candidate, items, nextDefinition),
+    )
+    const eligibleCandidates =
+      spacedCandidates.length > 0 ? spacedCandidates : candidates
+
     const coordinate = pickWeightedItem(
-      candidates,
+      eligibleCandidates,
       (candidate) =>
         getCandidatePlacementScore({
           coordinate: candidate,
           items,
+          definition: nextDefinition,
           rowCounts,
           columnCounts,
           difficulty,

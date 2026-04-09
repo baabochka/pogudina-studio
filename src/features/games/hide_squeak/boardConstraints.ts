@@ -44,6 +44,12 @@ export const HIDE_SQUEAK_BOARD_CONSTRAINTS: HideSqueakBoardConstraints = {
       colorVariant: 'bright-red',
     },
     {
+      id: 'apple-classic-bright-red-2',
+      kind: 'apple',
+      family: 'classic',
+      colorVariant: 'bright-red',
+    },
+    {
       id: 'bagel-classic-toasted',
       kind: 'bagel',
       family: 'classic',
@@ -62,10 +68,22 @@ export const HIDE_SQUEAK_BOARD_CONSTRAINTS: HideSqueakBoardConstraints = {
       colorVariant: 'grape',
     },
     {
+      id: 'candy-classic-grape-2',
+      kind: 'candy',
+      family: 'classic',
+      colorVariant: 'grape',
+    },
+    {
       id: 'cheese-classic-off-white',
       kind: 'cheese',
       family: 'classic',
       colorVariant: 'off-white',
+    },
+    {
+      id: 'cheese-classic-honey-2',
+      kind: 'cheese',
+      family: 'classic',
+      colorVariant: 'honey',
     },
     {
       id: 'comb-classic-coral',
@@ -84,6 +102,12 @@ export const HIDE_SQUEAK_BOARD_CONSTRAINTS: HideSqueakBoardConstraints = {
       kind: 'mug',
       family: 'classic',
       colorVariant: 'blueberry',
+    },
+    {
+      id: 'mug-classic-original-2',
+      kind: 'mug',
+      family: 'classic',
+      colorVariant: 'original',
     },
     {
       id: 'shoe-classic-apple-red',
