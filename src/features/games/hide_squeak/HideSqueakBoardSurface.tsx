@@ -271,6 +271,9 @@ export function HideSqueakBoardSurface({
       : [];
   const targetPawDelay =
     pawTrailSteps.length > 0 ? `${pawTrailSteps.length * 180 + 220}ms` : "0ms";
+  const wrongAnswerPawClassName = "pointer-events-none absolute z-[4] h-[54%] w-[54%] object-contain";
+  const correctAnswerPawClassName = "pointer-events-none absolute z-[4] h-[44%] w-[44%] object-contain";
+  const revealedAnswerPawClassName = "pointer-events-none absolute z-[4] h-[34%] w-[34%] object-contain";
 
   useEffect(() => {
     if (!activeCoordinate) {
@@ -340,7 +343,7 @@ export function HideSqueakBoardSurface({
                   key={step.key}
                   src={correctAnswerPawUrl}
                   alt=""
-                  className="hsHideSqueakPawTrail absolute h-14 w-14 object-contain"
+                  className="hsHideSqueakPawTrail absolute h-12 w-12 object-contain"
                   style={getHideSqueakPawTrailStyle(step)}
                 />
               ))}
@@ -348,7 +351,7 @@ export function HideSqueakBoardSurface({
               <img
                 src={correctAnswerPawUrl}
                 alt=""
-                className="hsHideSqueakPawTarget absolute h-12 w-12 object-contain"
+                className="hsHideSqueakPawTarget absolute h-8 w-8 object-contain"
                 style={{
                   left: `${correctAnswerCenter.x}%`,
                   top: `${correctAnswerCenter.y}%`,
@@ -522,7 +525,7 @@ export function HideSqueakBoardSurface({
                         src={wrongAnswerPawUrl}
                         alt=""
                         aria-hidden="true"
-                        className="pointer-events-none absolute z-[4] h-[48%] w-[48%] object-contain"
+                        className={wrongAnswerPawClassName}
                       />
                     ) : null}
 
@@ -531,7 +534,11 @@ export function HideSqueakBoardSurface({
                         src={correctAnswerPawUrl}
                         alt=""
                         aria-hidden="true"
-                        className="pointer-events-none absolute z-[4] h-[48%] w-[48%] object-contain"
+                        className={
+                          validationResult === "revealed"
+                            ? revealedAnswerPawClassName
+                            : correctAnswerPawClassName
+                        }
                       />
                     ) : null}
 

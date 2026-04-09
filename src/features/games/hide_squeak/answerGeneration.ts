@@ -114,6 +114,10 @@ function getDistractorCoordinates(
   ]
 }
 
+function getItemCoordinateKeys(round: HideSqueakGeneratedRound) {
+  return new Set(round.board.items.map((item) => getCoordinateKey(item.coordinate)))
+}
+
 function createAnswerOption(
   coordinate: HideSqueakCoordinate,
   isCorrect: boolean,
@@ -140,21 +144,34 @@ function createMultipleChoiceOptions(
           random,
         )
   const chosenCoordinates = new Set<string>([getCoordinateKey(round.answer)])
+  const itemCoordinateKeys = getItemCoordinateKeys(round)
+  const prioritizedDistractorCoordinates = getDistractorCoordinates(round, random)
+  const itemBackedDistractorCoordinates = prioritizedDistractorCoordinates.filter(
+    (coordinate) => itemCoordinateKeys.has(getCoordinateKey(coordinate)),
+  )
+  const nonItemDistractorCoordinates = prioritizedDistractorCoordinates.filter(
+    (coordinate) => !itemCoordinateKeys.has(getCoordinateKey(coordinate)),
+  )
   const distractors: HideSqueakCoordinate[] = []
 
-  for (const coordinate of getDistractorCoordinates(round, random)) {
-    if (distractors.length >= choiceCount - 1) {
-      break
+  for (const candidateGroup of [
+    itemBackedDistractorCoordinates,
+    nonItemDistractorCoordinates,
+  ]) {
+    for (const coordinate of candidateGroup) {
+      if (distractors.length >= choiceCount - 1) {
+        break
+      }
+
+      const key = getCoordinateKey(coordinate)
+
+      if (chosenCoordinates.has(key)) {
+        continue
+      }
+
+      distractors.push(coordinate)
+      chosenCoordinates.add(key)
     }
-
-    const key = getCoordinateKey(coordinate)
-
-    if (chosenCoordinates.has(key)) {
-      continue
-    }
-
-    distractors.push(coordinate)
-    chosenCoordinates.add(key)
   }
 
   const options = [

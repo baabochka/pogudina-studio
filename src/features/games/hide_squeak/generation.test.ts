@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { HIDE_SQUEAK_BOARD_CONSTRAINTS } from './boardConstraints'
+import { createAnswerModelForRound } from './answerGeneration'
 import { generateBoardLayout } from './boardGeneration'
 import { generatePuzzleRound } from './roundGeneration'
 import type {
@@ -333,6 +334,28 @@ describe('Hide & Squeak generation invariants', () => {
         expect(plausibleNearbyCount).toBeGreaterThanOrEqual(1)
         expect(immediateNeighborCount).toBeLessThanOrEqual(2)
         expect(nearAnswerClusterCount).toBeLessThanOrEqual(4)
+      }
+    }
+  })
+
+  it('hard multiple-choice answers keep all options on item-backed coordinates when enough items are available', () => {
+    for (const seed of [19, 29, 39, 49, 59, 69]) {
+      const { round } = generateRoundForDifficulty('hard', seed)
+      const answerModel = createAnswerModelForRound(round, createSeededRandom(seed + 1))
+      const itemCoordinateKeys = new Set(
+        round.board.items.map((item) => getCoordinateKey(item.coordinate)),
+      )
+
+      expect(answerModel.kind).toBe('multiple-choice')
+
+      if (answerModel.kind !== 'multiple-choice') {
+        throw new Error('Hard rounds should use multiple-choice answers.')
+      }
+
+      expect(answerModel.options.length).toBeGreaterThan(0)
+
+      for (const option of answerModel.options) {
+        expect(itemCoordinateKeys.has(getCoordinateKey(option.coordinate))).toBe(true)
       }
     }
   })
