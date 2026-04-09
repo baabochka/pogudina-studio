@@ -120,56 +120,61 @@ const pawsAndThinkDetails: GameCaseStudyDetails = {
 const hideSqueakDetails: GameCaseStudyDetails = {
   context: {
     anchor:
-      'Hide & Squeak is built around one simple question: after following a generated path, where does the mouse end up?',
+      'Hide & Squeak is a spatial reasoning puzzle built around a simple player task with a surprisingly broad product surface: follow the mouse path, then identify the final cell with confidence.',
     bullets: [
-      'The core challenge is mental path tracking rather than reaction time, so the board, commands, hints, and answers all need to stay readable under different difficulty modes.',
-      'The game supports visible-mouse and hidden-mouse play, which means the same round model has to feed direct board answers, multiple choice, and typed coordinate entry without duplicating logic.',
-      'Because rounds are generated endlessly, the implementation needed predictable generation rules, failure recovery, and a clean session model before the UI could feel stable.',
+      'The core interaction is mental path tracking rather than speed clicking, so board readability, command phrasing, answer affordances, and review all have to support deliberate reasoning across difficulties.',
+      'The same round model has to power visible-mouse onboarding, hidden-mouse play, direct board selection, review of the previous round, hints, and timed play without branching into separate mini-products.',
+      'Because the board is endlessly generated, the product quality depends as much on generation quality as UI polish: plausible distractors, readable density, and item variety matter directly to how fair the puzzle feels.',
     ],
   },
   constraints: {
     anchor:
-      'The main constraint was keeping the puzzle logic flexible without letting the UI or state model become tangled.',
+      'The main challenge was keeping the generation rules, UI states, and visual system flexible without letting the game collapse into ad hoc exceptions.',
     bullets: [
-      'Command generation has to stay inside bounds, avoid immediate reversals, allow loops, and still force the last move to land on an item.',
-      'Hints, previous-round review, and timed mode all pause or reveal different parts of the experience, so phase-driven state was more reliable than scattered flags.',
-      'The board needed to support click play, keyboard play, and hidden-mouse difficulties while keeping the component tree relatively flat.',
+      'Round generation has to stay bounded, preserve a valid answer, keep the start cell empty, and produce item density that scales sensibly with board size and difficulty.',
+      'Hard and super-hard rounds need stronger distractors, which means the final answer cell must contain an item and nearby placements should feel plausible without overcrowding the board.',
+      'The board surface has to support click interaction, keyboard-compatible flows, hints, answer validation, review overlays, and rules mode while staying visually calm and structurally simple.',
+      'The item art system needed room for recolors and subtle per-variant changes so the board could feel playful and reusable without shipping a pile of one-off static assets.',
     ],
   },
   implementation: {
     anchor:
-      'The implementation is organized as a generated-game pipeline with a small React shell on top.',
+      'I treated the game as a generation and state-management problem first, with the React layer intentionally thin and focused on presentation, interaction, and phase transitions.',
     bullets: [
-      'Board generation, path generation, answer generation, and coordinate utilities all live in separate pure modules so the puzzle rules can evolve independently from rendering.',
-      'Session flow is managed through an explicit reducer that handles phases like round generation, playing, hints, previous-round review, and timed completion.',
-      'The UI is split into a small set of focused regions: the board surface, command panel, answer panel, and review panel.',
+      'Board generation, path generation, answer evaluation, and coordinate utilities live in separate pure modules so I can evolve puzzle rules without coupling them to rendering details.',
+      'I replaced fixed item-count heuristics with board-size-aware occupancy targets, then used weighted placement scoring to preserve spread, respect row and column caps, and bias stronger distractors toward the final region on harder boards.',
+      'For generated boards, I added a contextual post-pass that rebalances items after the round path is known, guaranteeing the final answer cell contains an item on hard and super-hard while still keeping the start cell empty.',
+      'The item asset system moved to token-driven React SVG families with reusable color presets, approved variants, and subtle per-variant transforms, which makes the board more expressive without turning the asset layer into a separate maintenance problem.',
+      'Session flow is managed through an explicit reducer and phase model, while the UI stays split into focused regions like the board surface, command panel, answer panel, and review panel.',
     ],
   },
   tradeoffs: {
     anchor:
-      'Most tradeoffs were about choosing clarity over over-abstraction while the game is still growing.',
+      'Most of the tradeoffs were about building enough system structure to support iteration without over-engineering a still-growing game.',
     bullets: [
-      'I kept the route integration intentionally close to the existing single-game pattern instead of introducing a larger game registry refactor in the same step.',
-      'The detail-page preview metadata is minimal for now so the game can be opened and playtested without blocking on polished promotional assets.',
-      'The item asset system is lightweight on purpose: families and recolors are supported, but it is not trying to become a full illustration framework yet.',
+      'I kept the generation logic understandable on purpose. The placement model uses weighted scoring and a few clear rules instead of a more opaque solver so future tuning stays approachable.',
+      'Duplicate item families are allowed only in a controlled way, with variant randomization and spacing rules, because total uniqueness looked too curated while unrestricted duplicates hurt readability.',
+      'The SVG asset system is intentionally lightweight: families, recolors, and small transform variations are supported, but it is not trying to become a full-blown illustration pipeline.',
+      'I left the route-level game-detail structure relatively simple instead of refactoring the entire games content model in the same pass, which kept the product work moving without widening scope.',
     ],
   },
   impact: {
     anchor:
-      'The result is a playable second game that now runs through the same normal app flow as the rest of the portfolio.',
+      'The result is a game that now feels much closer to a real product surface than a prototype embedded in a portfolio page.',
     bullets: [
-      'Hide & Squeak can now be discovered from the games list and opened directly through its own slug route.',
-      'The game is ready for app-level playtesting across easy, medium, hard, and super-hard modes, including hints, review, and timed play.',
-      'The underlying structure is set up to add more item families, new presets, and presentation polish without rewriting the round engine.',
+      'Hide & Squeak supports easy through super-hard play with hints, previous-round review, timed mode, clearer rules behavior, and stronger round-to-round visual variety.',
+      'Generated boards now feel fairer and more intentional because item counts scale with board size, distractors are more plausible on harder modes, and same-family duplicates are controlled instead of accidental.',
+      'The token-driven item system makes the board feel more colorful and alive while staying reusable, which is a better fit for iterative product polish than shipping static one-off art.',
+      'From an engineering perspective, the game now demonstrates UI architecture, deterministic generation, state modeling, accessibility-aware interaction design, and front-end system thinking rather than just surface polish.',
     ],
   },
   nextSteps: {
     anchor:
-      'The next improvements are mostly about polish and product fit rather than missing technical foundations.',
+      'The next improvements are more about product depth and validation than missing technical foundations.',
     bullets: [
-      'Replace the placeholder preview metadata with a real Hide & Squeak preview image once the visual treatment is final.',
-      'Add a lightweight game registry or detail-content mapping if more games are introduced and the page starts to outgrow a simple slug switch.',
-      'Refine the item art and board styling so the production presentation matches the strength of the generation and input systems.',
+      'Playtest more seeded rounds to tune duplicate-family frequency, distractor strength, and visual spread using real examples instead of intuition alone.',
+      'Add more item families and variant sets now that the asset pipeline can support them without extra static-export work.',
+      'Keep tightening the detail-page storytelling so the project reads clearly as a product and front-end systems case study, not just a playable demo.',
     ],
   },
 }

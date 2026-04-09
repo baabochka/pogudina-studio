@@ -12,13 +12,14 @@ const aboutSections = [
   {
     title: 'About',
     paragraphs: [
-      'I combine technical depth in React, JavaScript, and TypeScript with a background in graphic design and human-computer interaction. That combination helps me build interfaces that are intuitive, accessible, and visually consistent without sacrificing engineering rigor.',
+      'I’m a senior front-end engineer who combines deep React and TypeScript experience with a background in graphic design and human-computer interaction. That combination helps me build interfaces that are intuitive, accessible, visually consistent, and backed by solid engineering decisions.',
     ],
   },
   {
     title: 'Experience',
     paragraphs: [
       'At AWS, I built scalable front-end features for Amazon Connect, partnered across teams to deliver complex functionality, wrote design documents, and focused heavily on WCAG-compliant accessibility, including keyboard navigation and screen reader support.',
+      'My work has consistently been at the intersection of product thinking and UI systems: translating ambiguous product needs into maintainable React architecture, accessible interaction models, and polished user-facing experiences.',
       'Before that, I developed Angular and TypeScript applications at Softheon for state and federal healthcare programs, with an emphasis on reliable, accessible provider workflows.',
     ],
   },
@@ -36,8 +37,8 @@ export function AboutPage() {
       <Container>
         <PageIntro
           eyebrow="About"
-          title="Engineer, designer, and systems thinker."
-          description="I’m a Front-End Engineer with over five years of experience building scalable, accessible, and visually polished web applications."
+          title="Senior Front-End Engineer, designer, and systems thinker."
+          description="I build scalable, accessible, and visually polished web applications, with a focus on turning complex product requirements into clear, resilient front-end systems."
         />
 
         <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10">
@@ -80,7 +81,7 @@ export function AboutPage() {
             <SidebarCard title="Quick facts">
               <dl className="space-y-4 text-sm">
                 <LabeledFact label="Focus">
-                  React, TypeScript, accessibility, UI architecture.
+                  Senior frontend engineering, React, TypeScript, accessibility, UI architecture.
                 </LabeledFact>
                 <LabeledFact label="Education">
                   B.S. Cum Laude in Computer Science and Mathematics from Stony Brook University,
