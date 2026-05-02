@@ -289,7 +289,7 @@ export function GameDetailPage() {
   }
 
   return (
-    <section className="pt-8 pb-12 sm:pt-10 sm:pb-16">
+    <section className="max-w-full overflow-x-clip pt-8 pb-12 sm:pt-10 sm:pb-16">
       <Container className="max-w-6xl">
         <Link
           to="/games"
@@ -298,23 +298,23 @@ export function GameDetailPage() {
           ← Back to games
         </Link>
 
-        <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-10">
-          <div className="max-w-4xl">
-            <header>
+        <div className="mt-8 grid min-w-0 gap-10 lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-10">
+          <div className="min-w-0 max-w-4xl">
+            <header className="min-w-0 max-w-full">
               <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-primary">
                 Games
               </p>
               <h1 className="mb-6 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
                 {game.title}
               </h1>
-              <p className="max-w-[68ch] text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
+              <p className="max-w-[68ch] min-w-0 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
                 {game.summary} {game.description}
               </p>
             </header>
 
-            <div className="mt-8 space-y-10">
+            <div className="mt-8 min-w-0 space-y-10">
               <section id="play">
-                <div className="mb-10 sm:mb-12">
+                <div className="mb-10 min-w-0 sm:mb-12">
                   <Suspense fallback={<GameBoardFallback />}>
                     <GameExperience slug={game.slug} />
                   </Suspense>
@@ -323,7 +323,7 @@ export function GameDetailPage() {
 
               <CaseStudyPageNav
                 activeSectionId={activeSectionId}
-                className="w-full max-w-3xl lg:hidden"
+                className="w-full min-w-0 max-w-3xl lg:hidden"
                 sections={gameSections.map((section) => ({ ...section }))}
                 variant="mobile"
               />

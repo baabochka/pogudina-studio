@@ -96,6 +96,10 @@
     outline-offset: var(--outline-offset-focus);
   }
 
+  .navLinkNoUnderline::after {
+    display: none;
+  }
+
   .inlineLink,
   .utilityLink {
     position: relative;

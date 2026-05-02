@@ -202,6 +202,8 @@ export function HideSqueakBoardSurface({
   mousePose = "looking-up",
   isReviewMode = false,
   isRulesMode = false,
+  isMobileLayout = false,
+  isCompactMobileChrome = false,
   onActiveCoordinateChange,
   onCellSelect,
 }: {
@@ -219,6 +221,8 @@ export function HideSqueakBoardSurface({
   mousePose?: "looking-up" | "standing" | "head";
   isReviewMode?: boolean;
   isRulesMode?: boolean;
+  isMobileLayout?: boolean;
+  isCompactMobileChrome?: boolean;
   onActiveCoordinateChange?: (coordinate: HideSqueakCoordinate) => void;
   onCellSelect?: (coordinate: HideSqueakCoordinate) => void;
 }) {
@@ -261,6 +265,17 @@ export function HideSqueakBoardSurface({
           correctAnswerCoordinate,
         )
       : 0;
+  const coordinateGutterPx = isMobileLayout ? (isCompactMobileChrome ? 21 : 25) : 31;
+  const rowCoordinateClassName = isMobileLayout
+    ? isCompactMobileChrome
+      ? "font-game grid pb-1 text-[1rem] font-semibold leading-none text-hs-coordinate"
+      : "font-game grid pb-1 text-[1.12rem] font-semibold leading-none text-hs-coordinate"
+    : "font-game grid pb-1 text-[1.45rem] font-semibold leading-none text-hs-coordinate";
+  const columnCoordinateClassName = isMobileLayout
+    ? isCompactMobileChrome
+      ? "font-game grid w-full min-w-0 text-[1rem] font-semibold uppercase leading-none text-hs-coordinate"
+      : "font-game grid w-full min-w-0 text-[1.12rem] font-semibold uppercase leading-none text-hs-coordinate"
+    : "font-game grid w-full min-w-0 text-[1.45rem] font-semibold uppercase leading-none text-hs-coordinate";
   const pawTrailSteps =
     wrongAnswerCenter && correctAnswerCenter
       ? createHideSqueakPawTrailSteps(
@@ -271,9 +286,15 @@ export function HideSqueakBoardSurface({
       : [];
   const targetPawDelay =
     pawTrailSteps.length > 0 ? `${pawTrailSteps.length * 180 + 220}ms` : "0ms";
-  const wrongAnswerPawClassName = "pointer-events-none absolute z-[4] h-[54%] w-[54%] object-contain";
-  const correctAnswerPawClassName = "pointer-events-none absolute z-[4] h-[44%] w-[44%] object-contain";
-  const revealedAnswerPawClassName = "pointer-events-none absolute z-[4] h-[34%] w-[34%] object-contain";
+  const wrongAnswerPawClassName = isCompactMobileChrome
+    ? "pointer-events-none absolute z-[4] h-[44%] w-[44%] object-contain"
+    : "pointer-events-none absolute z-[4] h-[54%] w-[54%] object-contain";
+  const correctAnswerPawClassName = isCompactMobileChrome
+    ? "pointer-events-none absolute z-[4] h-[38%] w-[38%] object-contain"
+    : "pointer-events-none absolute z-[4] h-[44%] w-[44%] object-contain";
+  const revealedAnswerPawClassName = isCompactMobileChrome
+    ? "pointer-events-none absolute z-[4] h-[28%] w-[28%] object-contain"
+    : "pointer-events-none absolute z-[4] h-[34%] w-[34%] object-contain";
 
   useEffect(() => {
     if (!activeCoordinate) {
@@ -307,13 +328,13 @@ export function HideSqueakBoardSurface({
   }
 
   return (
-    <div className="space-y-1">
+    <div className="w-full min-w-0 max-w-full space-y-1">
       <div
-        className="grid items-stretch gap-1"
-        style={{ gridTemplateColumns: "31px minmax(0, 1fr)" }}
+        className="grid w-full min-w-0 max-w-full items-stretch gap-1"
+        style={{ gridTemplateColumns: `${coordinateGutterPx}px minmax(0, 1fr)` }}
       >
         <div
-          className="font-game grid pb-1 text-[1.45rem] font-semibold leading-none text-hs-coordinate"
+          className={rowCoordinateClassName}
           style={{ gridTemplateRows: `repeat(${rows.length}, minmax(0, 1fr))` }}
           aria-hidden="true"
         >
@@ -327,7 +348,12 @@ export function HideSqueakBoardSurface({
           ))}
         </div>
 
-        <div className="relative aspect-square rounded-[18px] border-[4px] border-hs-boardBorder bg-hs-board shadow-hs-soft">
+        <div
+          className={[
+            "relative w-full min-w-0 max-w-full aspect-square rounded-[18px] border-[4px] border-hs-boardBorder bg-hs-board shadow-hs-soft",
+            isMobileLayout ? "overflow-hidden" : "",
+          ].join(" ")}
+        >
           <BoardPathOverlay
             steps={pathSteps}
             rows={round.board.size.rows}
@@ -343,7 +369,10 @@ export function HideSqueakBoardSurface({
                   key={step.key}
                   src={correctAnswerPawUrl}
                   alt=""
-                  className="hsHideSqueakPawTrail absolute h-12 w-12 object-contain"
+                  className={[
+                    "hsHideSqueakPawTrail absolute object-contain",
+                    isCompactMobileChrome ? "h-9 w-9" : "h-12 w-12",
+                  ].join(" ")}
                   style={getHideSqueakPawTrailStyle(step)}
                 />
               ))}
@@ -351,7 +380,10 @@ export function HideSqueakBoardSurface({
               <img
                 src={correctAnswerPawUrl}
                 alt=""
-                className="hsHideSqueakPawTarget absolute h-8 w-8 object-contain"
+                className={[
+                  "hsHideSqueakPawTarget absolute object-contain",
+                  isCompactMobileChrome ? "h-6 w-6" : "h-8 w-8",
+                ].join(" ")}
                 style={{
                   left: `${correctAnswerCenter.x}%`,
                   top: `${correctAnswerCenter.y}%`,
@@ -556,13 +588,13 @@ export function HideSqueakBoardSurface({
       </div>
 
       <div
-        className="grid items-center gap-1"
-        style={{ gridTemplateColumns: "31px minmax(0, 1fr)" }}
+        className="grid w-full min-w-0 max-w-full items-center gap-1"
+        style={{ gridTemplateColumns: `${coordinateGutterPx}px minmax(0, 1fr)` }}
         aria-hidden="true"
       >
         <div />
         <div
-          className="font-game grid text-[1.45rem] font-semibold uppercase leading-none text-hs-coordinate"
+          className={columnCoordinateClassName}
           style={{
             gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))`,
           }}

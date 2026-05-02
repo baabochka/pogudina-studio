@@ -2,6 +2,7 @@ import {
   memo,
   useCallback,
   useEffect,
+  useId,
   useReducer,
   useRef,
   useState,
@@ -14,6 +15,7 @@ import type {
 } from "react";
 
 import cheeseDragUrl from "./assets/cheese_drag.svg";
+import DownChevronSvg from "./assets/down-chevron.svg?react";
 import difficultyLadderUrl from "./assets/difficulty_ladder.svg";
 import { DirectionsBubble } from "./DirectionsBubble";
 import MoreInfoSvg from "./assets/more_info.svg?react";
@@ -30,6 +32,7 @@ import ReviewPreviousSvg from "./assets/review_previous.svg?react";
 import restartGameSameBoardUrl from "./assets/restart_game_same_board.svg";
 import restartGameUrl from "./assets/restart_game.svg";
 import SettingsSvg from "./assets/settings.svg?react";
+import UpChevronSvg from "./assets/up-chevron.svg?react";
 import {
   applyAnswerModelToRound,
   validateTypedCoordinateAnswer,
@@ -77,6 +80,8 @@ const TOGGLE_SHELL_CLASS_NAME =
   "inline-flex w-fit rounded-[18px] border-[3px] border-hs-textSecondary bg-hs-highlight p-0.5 shadow-hs-soft";
 const TOGGLE_BUTTON_CLASS_NAME =
   "font-game rounded-[18px] px-3 py-1.5 text-[1rem] leading-none shadow-none transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hs-focus focus-visible:ring-offset-2 focus-visible:ring-offset-hs-panel";
+const MOBILE_DRAWER_BUTTON_CLASS_NAME =
+  "font-game inline-flex items-center gap-1.5 rounded-[15px] border-[3px] border-hs-textSecondary bg-hs-panel px-3 py-1.5 text-[0.9rem] font-semibold leading-none text-hs-textStrong shadow-hs-soft transition duration-150 hover:bg-hs-controlHover active:bg-hs-controlActive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hs-focus focus-visible:ring-offset-2 focus-visible:ring-offset-hs-panel";
 const GAME_CHROME_RADIUS_CLASS_NAME = "rounded-[22px]";
 const GAME_CHROME_TOP_RADIUS_CLASS_NAME = "rounded-t-[22px]";
 const SETTINGS_SECTION_LABEL_CLASS_NAME =
@@ -114,8 +119,10 @@ const DIFFICULTY_BOTTOM_TURN_SETTLE_PAUSE_MS = DIFFICULTY_TURN_SETTLE_PAUSE_MS;
 const DIFFICULTY_SINGLE_STEP_MOVE_DURATION_MS = 260;
 const DIFFICULTY_WHISKER_WIGGLE_DELAY_MS = 50;
 const DIFFICULTY_WHISKER_WIGGLE_DURATION_MS = 200;
+const HIDE_SQUEAK_MOBILE_BREAKPOINT_PX = 500;
 const HIDE_SQUEAK_GAME_BASE_WIDTH_PX = 788;
 const HIDE_SQUEAK_GAME_BASE_HEIGHT_PX = 601;
+const HIDE_SQUEAK_DESKTOP_SCALE_INSET_PX = 24;
 
 type CommandDisplayMode = "symbol" | "text";
 type HideSqueakSettingsDraft = {
@@ -1073,7 +1080,7 @@ function DifficultyLadderSelector({
               onClick={() => onSelect(difficulty)}
               onKeyDown={(event) => handleKeyDown(event, difficulty)}
               className={[
-                "font-game relative flex min-h-[52px] w-full items-center rounded-[14px] px-3 text-left text-[1rem] font-semibold leading-tight transition duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hs-focus focus-visible:ring-offset-2 focus-visible:ring-offset-hs-panel",
+                "difficulty-button font-game relative flex min-h-[52px] w-full items-center rounded-[14px] px-3 text-left text-[1rem] font-semibold leading-tight transition duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hs-focus focus-visible:ring-offset-2 focus-visible:ring-offset-hs-panel",
                 isSelected
                   ? "bg-transparent text-hs-textStrong"
                   : "bg-transparent text-hs-textSecondary hover:bg-hs-controlHover/45 hover:text-hs-textPrimary active:bg-hs-controlActive/55",
@@ -1181,9 +1188,11 @@ function getDifficultyLabel(difficulty: HideSqueakDifficulty) {
 
 function RestartBoardButton({
   isPinned,
+  isCompact = false,
   onClick,
 }: {
   isPinned: boolean;
+  isCompact?: boolean;
   onClick: () => void;
 }) {
   return (
@@ -1197,6 +1206,7 @@ function RestartBoardButton({
         ICON_CONTROL_CLASS_NAME,
         ICON_CONTROL_INTERACTION_CLASS_NAME,
         "relative self-end focus-visible:ring-offset-hs-shell",
+        isCompact ? "h-[30px] w-[30px]" : "",
       ].join(" ")}
     >
       <img
@@ -1205,8 +1215,12 @@ function RestartBoardButton({
         aria-hidden="true"
         className={
           isPinned
-            ? "absolute bottom-[3px] left-[2px] h-[45.3px] w-[41.3px] object-contain"
-            : "h-10 w-10 object-contain"
+            ? isCompact
+              ? "absolute bottom-[2px] left-[2px] h-[31px] w-[28px] object-contain"
+              : "absolute bottom-[3px] left-[2px] h-[45.3px] w-[41.3px] object-contain"
+            : isCompact
+              ? "h-[28px] w-[28px] object-contain"
+              : "h-10 w-10 object-contain"
         }
       />
     </button>
@@ -1258,11 +1272,31 @@ function SettingsButton({
   );
 }
 
+function DirectionsChevron({
+  isOpen,
+  className = "",
+}: {
+  isOpen: boolean;
+  className?: string;
+}) {
+  const ChevronSvg = isOpen ? UpChevronSvg : DownChevronSvg;
+
+  return (
+    <ChevronSvg
+      aria-hidden="true"
+      focusable="false"
+      className={["text-hs-textSecondary", className].join(" ")}
+    />
+  );
+}
+
 function BoardPinButton({
   isPinned,
+  isCompact = false,
   onClick,
 }: {
   isPinned: boolean;
+  isCompact?: boolean;
   onClick: () => void;
 }) {
   const PinSvg = isPinned ? PinnedBoardSvg : PinBoardSvg;
@@ -1275,7 +1309,9 @@ function BoardPinButton({
       className={[
         ICON_CONTROL_CLASS_NAME,
         "absolute z-10 p-0 focus-visible:ring-offset-hs-shell",
-        "bottom-[5px] left-[5px] h-[35px] w-[35px]",
+        isCompact
+          ? "bottom-[2px] left-[1px] h-[28px] w-[28px]"
+          : "bottom-[5px] left-[5px] h-[35px] w-[35px]",
       ].join(" ")}
     >
       <PinSvg
@@ -1296,10 +1332,12 @@ function BoardPinButton({
 function ReviewPreviousButton({
   isReviewOpen,
   hasPreviousRound,
+  isCompact = false,
   onClick,
 }: {
   isReviewOpen: boolean;
   hasPreviousRound: boolean;
+  isCompact?: boolean;
   onClick: () => void;
 }) {
   return (
@@ -1311,6 +1349,7 @@ function ReviewPreviousButton({
       className={[
         ICON_CONTROL_CLASS_NAME,
         "self-end text-hs-topbar focus-visible:ring-offset-hs-shell",
+        isCompact ? "h-[30px] w-[30px]" : "",
         hasPreviousRound
           ? ICON_CONTROL_INTERACTION_CLASS_NAME
           : "cursor-default",
@@ -1321,7 +1360,9 @@ function ReviewPreviousButton({
         aria-hidden="true"
         focusable="false"
         className={[
-          "h-10 w-10 object-contain",
+          isCompact
+            ? "h-[28px] w-[28px] object-contain"
+            : "h-10 w-10 object-contain",
           "[&_#review-arrow]:[transform-box:fill-box]",
           "[&_#review-arrow]:origin-center",
           "[&_#review-arrow]:transition-transform",
@@ -1355,20 +1396,35 @@ const SettingsTimerToggle = memo(function SettingsTimerToggle({
   playMode,
   onSelectTimed,
   onSelectEndless,
+  isNarrowCompactMobile = false,
 }: {
   playMode: "timed" | "endless";
   onSelectTimed: () => void;
   onSelectEndless: () => void;
+  isNarrowCompactMobile?: boolean;
 }) {
   return (
-    <div className="flex w-full flex-col items-start gap-2">
-      <p className={SETTINGS_SECTION_LABEL_CLASS_NAME}>Timer</p>
+    <div
+      className={[
+        "flex w-full flex-row justify-between",
+        isNarrowCompactMobile ? "gap-1.5" : "gap-2",
+      ].join(" ")}
+    >
+      <p
+        className={[
+          SETTINGS_SECTION_LABEL_CLASS_NAME,
+          isNarrowCompactMobile ? "text-[1.02rem]" : "",
+        ].join(" ")}
+      >
+        Timer
+      </p>
       <div className={TOGGLE_SHELL_CLASS_NAME}>
         <button
           type="button"
           onClick={onSelectTimed}
           className={[
             TOGGLE_BUTTON_CLASS_NAME,
+            isNarrowCompactMobile ? "px-2.5 py-1 text-[0.96rem]" : "",
             playMode === "timed"
               ? "scale-[1.02] bg-hs-controlActive text-hs-textStrong shadow-hs-soft"
               : "text-hs-textSecondary hover:bg-hs-controlHover hover:text-hs-textPrimary active:bg-hs-controlActive/80",
@@ -1397,21 +1453,37 @@ const SettingsDirectionsToggle = memo(function SettingsDirectionsToggle({
   commandDisplayMode,
   onSelectText,
   onSelectSymbol,
+  isNarrowCompactMobile = false,
 }: {
   commandDisplayMode: CommandDisplayMode;
   onSelectText: () => void;
   onSelectSymbol: () => void;
+  isNarrowCompactMobile?: boolean;
 }) {
   return (
-    <div className="flex w-full flex-col items-start gap-2">
-      <p className={SETTINGS_SECTION_LABEL_CLASS_NAME}>Directions style</p>
+    <div
+      className={[
+        "flex w-full flex-row justify-between",
+        isNarrowCompactMobile ? "gap-1.5" : "gap-2",
+      ].join(" ")}
+    >
+      <p
+        className={[
+          SETTINGS_SECTION_LABEL_CLASS_NAME,
+          isNarrowCompactMobile ? "text-[1.02rem]" : "",
+        ].join(" ")}
+      >
+        Directions style
+      </p>
       <div className={TOGGLE_SHELL_CLASS_NAME}>
         <button
           type="button"
           onClick={onSelectText}
           className={[
             TOGGLE_BUTTON_CLASS_NAME,
-            "px-2.5 text-[0.98rem]",
+            isNarrowCompactMobile
+              ? "px-2 py-1 text-[0.92rem]"
+              : "px-2.5 text-[0.98rem]",
             commandDisplayMode === "text"
               ? "scale-[1.02] bg-hs-controlActive text-hs-textStrong shadow-hs-soft"
               : "text-hs-textSecondary hover:bg-hs-controlHover hover:text-hs-textPrimary active:bg-hs-controlActive/80",
@@ -1424,7 +1496,9 @@ const SettingsDirectionsToggle = memo(function SettingsDirectionsToggle({
           onClick={onSelectSymbol}
           className={[
             TOGGLE_BUTTON_CLASS_NAME,
-            "px-2.5 text-[1.65rem]",
+            isNarrowCompactMobile
+              ? "px-2 py-1 text-[1.45rem]"
+              : "px-2.5 text-[1.65rem]",
             commandDisplayMode === "symbol"
               ? "scale-[1.02] bg-hs-controlActive text-hs-textStrong shadow-hs-soft"
               : "text-hs-textSecondary hover:bg-hs-controlHover hover:text-hs-textPrimary active:bg-hs-controlActive/80",
@@ -1442,6 +1516,8 @@ const HideSqueakSettingsPanel = memo(function HideSqueakSettingsPanel({
   settingsRef,
   draftSettings,
   settingsDifficultyMouseState,
+  isMobileLayout,
+  isNarrowCompactMobile = false,
   onClose,
   onSelectDifficulty,
   onSettledMouseStateChange,
@@ -1453,6 +1529,8 @@ const HideSqueakSettingsPanel = memo(function HideSqueakSettingsPanel({
   settingsRef: Ref<HTMLDivElement>;
   draftSettings: HideSqueakSettingsDraft;
   settingsDifficultyMouseState: DifficultyMouseVisualState;
+  isMobileLayout: boolean;
+  isNarrowCompactMobile?: boolean;
   onClose: () => void;
   onSelectDifficulty: (difficulty: HideSqueakDifficulty) => void;
   onSettledMouseStateChange: (mouseState: DifficultyMouseVisualState) => void;
@@ -1464,18 +1542,44 @@ const HideSqueakSettingsPanel = memo(function HideSqueakSettingsPanel({
   return (
     <div
       ref={settingsRef}
-      className={`absolute right-0 top-0 z-30 w-[260px] ${GAME_CHROME_RADIUS_CLASS_NAME} border-[3px] border-hs-textSecondary bg-hs-panel px-4 pb-4 pt-5 font-ui text-hs-textPrimary shadow-hs-panel`}
+      className={[
+        "absolute z-50 border-[3px] border-hs-textSecondary bg-hs-panel font-ui text-hs-textPrimary shadow-hs-panel",
+        GAME_CHROME_RADIUS_CLASS_NAME,
+        isMobileLayout
+          ? "right-0 top-0 w-[min(260px,100%)]"
+          : "right-0 top-0 w-[260px]",
+        isNarrowCompactMobile
+          ? "max-h-[calc(100%-8px)] overflow-y-auto px-3.5 pb-3 pt-4"
+          : "px-4 pb-4 pt-5",
+      ].join(" ")}
     >
       <SettingsButton
         label="Close settings"
         outlined
-        className="absolute right-[13px] top-[7px] focus-visible:ring-offset-hs-panel"
+        className="absolute right-[11px] top-[6px] focus-visible:ring-offset-hs-panel"
         onClick={onClose}
       />
 
-      <div className="flex flex-col items-start gap-5 pt-2">
-        <div className="flex w-full flex-col items-start gap-2">
-          <p className={SETTINGS_SECTION_LABEL_CLASS_NAME}>Difficulty</p>
+      <div
+        className={[
+          "flex flex-col items-start",
+          isNarrowCompactMobile ? "gap-3.5 pt-1.5" : "gap-5 pt-2",
+        ].join(" ")}
+      >
+        <div
+          className={[
+            "flex w-full flex-col items-start",
+            isNarrowCompactMobile ? "gap-1.5" : "gap-2",
+          ].join(" ")}
+        >
+          <p
+            className={[
+              SETTINGS_SECTION_LABEL_CLASS_NAME,
+              isNarrowCompactMobile ? "text-[1.02rem]" : "",
+            ].join(" ")}
+          >
+            Difficulty
+          </p>
           <MemoizedDifficultyLadderSelector
             selectedDifficulty={draftSettings.difficulty}
             initialMouseState={settingsDifficultyMouseState}
@@ -1486,12 +1590,14 @@ const HideSqueakSettingsPanel = memo(function HideSqueakSettingsPanel({
 
         <SettingsTimerToggle
           playMode={draftSettings.playMode}
+          isNarrowCompactMobile={isNarrowCompactMobile}
           onSelectTimed={onSelectTimed}
           onSelectEndless={onSelectEndless}
         />
 
         <SettingsDirectionsToggle
           commandDisplayMode={draftSettings.commandDisplayMode}
+          isNarrowCompactMobile={isNarrowCompactMobile}
           onSelectText={onSelectText}
           onSelectSymbol={onSelectSymbol}
         />
@@ -1502,13 +1608,22 @@ const HideSqueakSettingsPanel = memo(function HideSqueakSettingsPanel({
 
 export function HideSqueakGame() {
   const gameViewportRef = useRef<HTMLDivElement | null>(null);
+  const mobileDirectionsDrawerRef = useRef<HTMLDivElement | null>(null);
+  const mobileDirectionsButtonRef = useRef<HTMLButtonElement | null>(null);
+  const rulesAreaRef = useRef<HTMLDivElement | null>(null);
+  const rulesButtonRef = useRef<HTMLButtonElement | null>(null);
+  const [viewportWidth, setViewportWidth] = useState<number | null>(() =>
+    typeof window === "undefined" ? null : window.innerWidth,
+  );
   const [state, dispatch] = useReducer(
     reduceHideSqueakSessionState,
     createHideSqueakSessionState({
       difficulty: "easy",
     }),
   );
-  const [availableWidth, setAvailableWidth] = useState<number | null>(null);
+  const [availableWidth, setAvailableWidth] = useState<number | null>(() =>
+    typeof window === "undefined" ? null : window.innerWidth,
+  );
   const [commandDisplayMode, setCommandDisplayMode] =
     useState<CommandDisplayMode>("text");
   const [boardFocusState, setBoardFocusState] = useState<{
@@ -1519,6 +1634,8 @@ export function HideSqueakGame() {
     coordinate: null,
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isMobileDirectionsDrawerOpen, setIsMobileDirectionsDrawerOpen] =
+    useState(false);
   const [draftSettings, setDraftSettings] = useState<HideSqueakSettingsDraft>({
     commandDisplayMode,
     difficulty: state.difficulty,
@@ -1542,13 +1659,24 @@ export function HideSqueakGame() {
   const timerLastTickAtRef = useRef<number | null>(null);
   const settingsRef = useRef<HTMLDivElement | null>(null);
   const settingsButtonRef = useRef<HTMLButtonElement | null>(null);
+  const mobileDirectionsRegionId = useId();
   const currentRound = state.currentRound;
+  const isMobileLayout =
+    viewportWidth != null && viewportWidth < HIDE_SQUEAK_MOBILE_BREAKPOINT_PX;
+  const isCompactMobileChrome = viewportWidth != null && viewportWidth < 500;
+  const isNarrowCompactMobile = viewportWidth != null && viewportWidth < 415;
+  const useSingleRowCompactAnswers = viewportWidth != null && viewportWidth < 420;
   const isAwaitingNextRound =
     state.phase === "paused" &&
     (state.progress.validationResult === "correct" ||
       state.progress.validationResult === "wrong");
   const isReviewOpen = state.reviewState.isOpen && state.previousRound != null;
   const isRulesOpen = state.phase === "rules";
+  const isMobileDirectionsDrawerForcedOpen =
+    isMobileLayout && isReviewOpen && !isCompactMobileChrome;
+  const isMobileDirectionsDrawerVisible =
+    isMobileDirectionsDrawerForcedOpen || isMobileDirectionsDrawerOpen;
+  const showMobileRulesBubble = isMobileLayout && isRulesOpen;
   const openSettingsPanel = useCallback(() => {
     setDraftSettings({
       commandDisplayMode,
@@ -1631,13 +1759,14 @@ export function HideSqueakGame() {
 
   useEffect(() => {
     const viewportElement = gameViewportRef.current;
+    const measureElement = viewportElement?.parentElement ?? viewportElement;
 
-    if (!viewportElement || typeof ResizeObserver === "undefined") {
+    if (!viewportElement || !measureElement || typeof ResizeObserver === "undefined") {
       return;
     }
 
     const updateAvailableWidth = () => {
-      setAvailableWidth(viewportElement.clientWidth);
+      setAvailableWidth(measureElement.clientWidth);
     };
 
     updateAvailableWidth();
@@ -1646,10 +1775,27 @@ export function HideSqueakGame() {
       updateAvailableWidth();
     });
 
-    observer.observe(viewportElement);
+    observer.observe(measureElement);
 
     return () => {
       observer.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const updateViewportWidth = () => {
+      setViewportWidth(window.innerWidth);
+    };
+
+    updateViewportWidth();
+    window.addEventListener("resize", updateViewportWidth);
+
+    return () => {
+      window.removeEventListener("resize", updateViewportWidth);
     };
   }, []);
 
@@ -1797,6 +1943,98 @@ export function HideSqueakGame() {
     };
   }, [closeSettingsPanel, isSettingsOpen]);
 
+  useEffect(() => {
+    if (!isMobileLayout || !currentRound) {
+      return;
+    }
+
+    setIsMobileDirectionsDrawerOpen(false);
+  }, [currentRound?.id, isMobileLayout]);
+
+  useEffect(() => {
+    if (!isMobileLayout) {
+      return;
+    }
+
+    if (isReviewOpen) {
+      setIsMobileDirectionsDrawerOpen(true);
+    }
+  }, [isMobileLayout, isReviewOpen]);
+
+  useEffect(() => {
+    if (
+      !isMobileLayout ||
+      !isMobileDirectionsDrawerVisible ||
+      isMobileDirectionsDrawerForcedOpen
+    ) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+
+      if (
+        mobileDirectionsDrawerRef.current?.contains(target) ||
+        mobileDirectionsButtonRef.current?.contains(target)
+      ) {
+        return;
+      }
+
+      setIsMobileDirectionsDrawerOpen(false);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsMobileDirectionsDrawerOpen(false);
+      }
+    };
+
+    window.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [
+    isMobileDirectionsDrawerForcedOpen,
+    isMobileDirectionsDrawerVisible,
+    isMobileLayout,
+  ]);
+
+  useEffect(() => {
+    if (!isRulesOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+
+      if (
+        rulesAreaRef.current?.contains(target) ||
+        rulesButtonRef.current?.contains(target)
+      ) {
+        return;
+      }
+
+      dispatch({ type: "close-rules" });
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        dispatch({ type: "close-rules" });
+      }
+    };
+
+    window.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isRulesOpen]);
+
   function clearHintIfOpen() {
     if (state.hintState.isOpen) {
       dispatch({ type: "close-hint" });
@@ -1817,14 +2055,38 @@ export function HideSqueakGame() {
       return next;
     });
   }
-
-  if (!currentRound || !currentRound.answerModel) {
-    return null;
-  }
-
   const reviewSnapshot: HideSqueakPreviousRoundSnapshot | null =
     state.previousRound;
   const reviewStepCount = reviewSnapshot?.round.commandSteps.length ?? 0;
+  const showCompactMobileReviewDropdown =
+    isCompactMobileChrome &&
+    isReviewOpen &&
+    isMobileDirectionsDrawerVisible &&
+    reviewSnapshot != null;
+  const showCompactMobileDirectionsDisclosure =
+    isCompactMobileChrome &&
+    isMobileLayout &&
+    !isReviewOpen &&
+    !isRulesOpen &&
+    isMobileDirectionsDrawerVisible;
+  const useCompactWideDirectionsTrigger =
+    isCompactMobileChrome &&
+    isMobileLayout &&
+    !isReviewOpen &&
+    !isRulesOpen &&
+    isMobileDirectionsDrawerVisible &&
+    (currentRound?.difficulty === "hard" ||
+      currentRound?.difficulty === "super-hard");
+  const useCompactWideDirectionsDisclosure =
+    showCompactMobileDirectionsDisclosure &&
+    (currentRound?.difficulty === "hard" ||
+      currentRound?.difficulty === "super-hard");
+  const showMobileDirectionsDrawer =
+    isMobileLayout &&
+    isMobileDirectionsDrawerVisible &&
+    !isRulesOpen &&
+    !showCompactMobileReviewDropdown &&
+    !showCompactMobileDirectionsDisclosure;
   const boundedReviewStepIndex =
     state.reviewState.selectedStepIndex == null
       ? null
@@ -1862,6 +2124,10 @@ export function HideSqueakGame() {
       ? reviewSnapshot.round.startingCoordinate
       : null;
 
+  if (!currentRound || !currentRound.answerModel) {
+    return null;
+  }
+
   const activeCoordinate =
     boardFocusState.roundId === currentRound.id && boardFocusState.coordinate
       ? boardFocusState.coordinate
@@ -1872,7 +2138,9 @@ export function HideSqueakGame() {
   const showMouseOnBoard =
     HIDE_SQUEAK_DIFFICULTY_PRESETS[currentRound.difficulty].showMouseOnBoard;
   const shouldShowRulesBoardMouse =
-    isRulesOpen && (currentRound.difficulty === "easy" || currentRound.difficulty === "medium");
+    isRulesOpen &&
+    (currentRound.difficulty === "easy" ||
+      currentRound.difficulty === "medium");
   const shouldShowBoardMouse = isReviewOpen
     ? false
     : showMouseOnBoard || shouldShowRulesBoardMouse;
@@ -1915,225 +2183,478 @@ export function HideSqueakGame() {
     (reviewSnapshot.round.difficulty === "hard" ||
       reviewSnapshot.round.difficulty === "super-hard");
   const hasReviewPreviousAccess = state.previousRound != null;
+  const desktopViewportScaleWidth =
+    viewportWidth != null && !isMobileLayout
+      ? Math.max(0, viewportWidth - HIDE_SQUEAK_DESKTOP_SCALE_INSET_PX)
+      : null;
+  const desktopScaleAvailableWidth = !isMobileLayout
+    ? Math.min(
+        availableWidth != null
+          ? Math.max(0, availableWidth - HIDE_SQUEAK_DESKTOP_SCALE_INSET_PX)
+          : Number.POSITIVE_INFINITY,
+        desktopViewportScaleWidth ?? Number.POSITIVE_INFINITY,
+      )
+    : availableWidth;
   const gameScale =
-    availableWidth != null
-      ? Math.min(1, availableWidth / HIDE_SQUEAK_GAME_BASE_WIDTH_PX)
+    desktopScaleAvailableWidth != null && !isMobileLayout
+      ? Math.min(1, desktopScaleAvailableWidth / HIDE_SQUEAK_GAME_BASE_WIDTH_PX)
       : 1;
   const scaledGameWidth = HIDE_SQUEAK_GAME_BASE_WIDTH_PX * gameScale;
   const scaledGameHeight = HIDE_SQUEAK_GAME_BASE_HEIGHT_PX * gameScale;
+  const desktopOuterStyle = isMobileLayout
+    ? undefined
+    : {
+        width: `${scaledGameWidth}px`,
+        height: `${scaledGameHeight}px`,
+      };
+  const desktopShellStyle = isMobileLayout
+    ? undefined
+    : {
+        width: `${HIDE_SQUEAK_GAME_BASE_WIDTH_PX}px`,
+        height: `${HIDE_SQUEAK_GAME_BASE_HEIGHT_PX}px`,
+        transform: `scale(${gameScale})`,
+        transformOrigin: "top left" as const,
+      };
+  const shellContent = (
+    <div className="relative box-border w-full min-w-0 max-w-full">
+      {isMobileLayout &&
+      isMobileDirectionsDrawerVisible &&
+      !showCompactMobileReviewDropdown &&
+      !isCompactMobileChrome ? (
+        <div
+          className="absolute inset-0 z-20 bg-[#0a3d42]/18"
+          aria-hidden="true"
+        />
+      ) : null}
+      {isSettingsOpen ? (
+        <div
+          className={`absolute inset-0 z-40 ${GAME_CHROME_RADIUS_CLASS_NAME} bg-white/45`}
+          aria-hidden="true"
+        />
+      ) : null}
 
-  return (
-    <div ref={gameViewportRef} className="w-full overflow-visible">
       <div
-        className="relative overflow-visible"
-        style={{
-          width: scaledGameWidth ? `${scaledGameWidth}px` : undefined,
-          height: scaledGameHeight ? `${scaledGameHeight}px` : undefined,
-        }}
+        className={`relative z-[1] ${GAME_CHROME_TOP_RADIUS_CLASS_NAME} bg-hs-topbar pl-[25px] pr-3.5 py-[9px]`}
       >
-        <div
-          className={`${GAME_CHROME_RADIUS_CLASS_NAME} bg-hs-shell shadow-hs-panel`}
-          style={{
-            width: `${HIDE_SQUEAK_GAME_BASE_WIDTH_PX}px`,
-            height: `${HIDE_SQUEAK_GAME_BASE_HEIGHT_PX}px`,
-            transform: `scale(${gameScale})`,
-            transformOrigin: "top left",
-          }}
-        >
-      <div className="relative">
-        {isSettingsOpen ? (
-          <div
-            className={`absolute inset-0 z-20 ${GAME_CHROME_RADIUS_CLASS_NAME} bg-white/45`}
-            aria-hidden="true"
-          />
-        ) : null}
-
-        <div
-          className={`relative z-[1] ${GAME_CHROME_TOP_RADIUS_CLASS_NAME} bg-hs-topbar pl-[25px] pr-3.5 py-[9px]`}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-5">
-              {isAppliedTimedMode ? (
-                <TopStat label="Time" value={timeValue} />
-              ) : null}
-              <TopStat label="Score" value={String(state.progress.score)} />
-              <TopStat label="Streak" value={String(state.progress.streak)} />
-            </div>
-
-            <SettingsButton
-              buttonRef={settingsButtonRef}
-              label={isSettingsOpen ? "Close settings" : "Open settings"}
-              outlined={isSettingsOpen}
-              className="h-10 w-10"
-              onClick={handleSettingsButtonClick}
-            />
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-5">
+            {isAppliedTimedMode ? (
+              <TopStat label="Time" value={timeValue} />
+            ) : null}
+            <TopStat label="Score" value={String(state.progress.score)} />
+            <TopStat label="Streak" value={String(state.progress.streak)} />
           </div>
+
+          <SettingsButton
+            buttonRef={settingsButtonRef}
+            label={isSettingsOpen ? "Close settings" : "Open settings"}
+            outlined={isSettingsOpen}
+            className="h-10 w-10"
+            onClick={handleSettingsButtonClick}
+          />
         </div>
+      </div>
 
-        <div className="relative z-[1] px-2.5 pb-3.5 pt-2.5">
-          <div className="grid grid-cols-[minmax(0,1fr)_250px] items-start gap-2.5">
-            <div className="grid gap-1.5">
-              <div className="grid grid-cols-[44px_minmax(0,1fr)_44px] items-end gap-1.5">
-                <ReviewPreviousButton
-                  isReviewOpen={isReviewOpen}
-                  hasPreviousRound={hasReviewPreviousAccess}
-                  onClick={() => {
-                    if (!hasReviewPreviousAccess || !state.previousRound) {
-                      return;
+      <div className="relative z-[1] w-full min-w-0 max-w-full px-2.5 pb-3.5 pt-2.5">
+        <div
+          className={
+            isMobileLayout
+              ? "grid min-w-0 w-full gap-3"
+              : "grid grid-cols-[minmax(0,1fr)_250px] items-start gap-2.5"
+          }
+        >
+          <div className="grid min-w-0 w-full max-w-full gap-1.5">
+            <div
+              className={[
+                "grid min-w-0 w-full items-end gap-1.5",
+                isCompactMobileChrome
+                  ? "grid-cols-[32px_minmax(0,1fr)_32px]"
+                  : "grid-cols-[44px_minmax(0,1fr)_44px]",
+              ].join(" ")}
+            >
+              <ReviewPreviousButton
+                isReviewOpen={isReviewOpen}
+                hasPreviousRound={hasReviewPreviousAccess}
+                isCompact={isCompactMobileChrome}
+                onClick={() => {
+                  if (!hasReviewPreviousAccess || !state.previousRound) {
+                    return;
+                  }
+
+                  dispatch({
+                    type: isReviewOpen ? "close-review" : "open-review",
+                  });
+                }}
+              />
+
+              {isCompactMobileChrome && isMobileLayout && !isRulesOpen ? (
+                <div
+                  className={[
+                    "relative z-30 w-full",
+                  ].join(" ")}
+                >
+                  <button
+                    ref={mobileDirectionsButtonRef}
+                    type="button"
+                    className={[
+                      "relative z-40 box-border font-ui flex h-[40px] min-w-0 items-center justify-between px-3 py-2 text-left text-[0.96rem] font-medium leading-[1.15] text-hs-textSecondary transition duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hs-focus focus-visible:ring-offset-2 focus-visible:ring-offset-hs-shell",
+                      useCompactWideDirectionsTrigger
+                        ? "w-full"
+                        : "mx-auto w-[200px] max-w-full",
+                      isMobileDirectionsDrawerVisible
+                        ? "rounded-t-[18px] rounded-b-none border-[3px] border-b-0 border-hs-textSecondary bg-hs-panel"
+                        : "rounded-[18px] bg-hs-panel hover:bg-hs-controlHover active:bg-hs-controlActive",
+                    ].join(" ")}
+                    aria-expanded={isMobileDirectionsDrawerVisible}
+                    aria-controls={mobileDirectionsRegionId}
+                    onClick={() =>
+                      setIsMobileDirectionsDrawerOpen((current) => !current)
                     }
+                  >
+                    <span className="font-game text-[0.96rem] font-semibold text-hs-textStrong">
+                      {isReviewOpen
+                        ? isMobileDirectionsDrawerVisible
+                          ? "Close Review"
+                          : "Review Steps"
+                        : isMobileDirectionsDrawerVisible
+                          ? "Close Directions"
+                          : "Open Directions"}
+                    </span>
+                    <DirectionsChevron
+                      isOpen={isMobileDirectionsDrawerVisible}
+                      className="h-[9px] w-[15px] shrink-0"
+                    />
+                  </button>
 
-                    dispatch({
-                      type: isReviewOpen ? "close-review" : "open-review",
-                    });
-                  }}
-                />
+                  {showCompactMobileReviewDropdown ? (
+                    <div
+                      ref={(element) => {
+                        mobileDirectionsDrawerRef.current = element;
+                      }}
+                      id={mobileDirectionsRegionId}
+                      role="dialog"
+                      aria-modal="false"
+                      aria-label="Review path"
+                      className="absolute left-1/2 top-full z-30 w-[200px] -translate-x-1/2"
+                    >
+                      <div
+                        className={[
+                          "max-h-[170px] overflow-y-auto rounded-b-[20px] rounded-t-none border-[3px] border-t-0 border-hs-textSecondary bg-hs-panel px-3.5 pb-3 pt-0",
+                          "pr-1.5 [scrollbar-color:rgba(48,105,112,0.9)_transparent] [scrollbar-width:thin]",
+                          "[&::-webkit-scrollbar]:w-2",
+                          "[&::-webkit-scrollbar-thumb]:rounded-full",
+                          "[&::-webkit-scrollbar-thumb]:bg-hs-textSecondary/70",
+                          "[&::-webkit-scrollbar-track]:bg-transparent",
+                        ].join(" ")}
+                      >
+                        <div className="pr-1">
+                          <HideSqueakReviewPanel
+                            snapshot={reviewSnapshot}
+                            visibility={state.reviewState.visibility}
+                            selectedStepIndex={boundedReviewStepIndex}
+                            onSelectStep={(stepIndex) =>
+                              dispatch({
+                                type: "set-review-step",
+                                stepIndex,
+                              })
+                            }
+                            onVisibilityChange={(visibility) =>
+                              dispatch({
+                                type: "set-review-visibility",
+                                visibility,
+                              })
+                            }
+                            isCompactMobile
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
 
-                <div className="font-ui mx-auto flex min-h-[36px] w-auto max-w-[400px] items-center justify-center rounded-[18px] bg-hs-panel px-5 py-2 text-center text-[1rem] font-medium leading-[1.15] text-hs-textSecondary">
+                  {showCompactMobileDirectionsDisclosure ? (
+                    <div
+                      ref={(element) => {
+                        mobileDirectionsDrawerRef.current = element;
+                      }}
+                      id={mobileDirectionsRegionId}
+                      role="dialog"
+                      aria-modal="false"
+                      aria-label="Directions"
+                      className={
+                        useCompactWideDirectionsDisclosure
+                          ? "absolute left-0 top-full z-30 w-full"
+                          : "absolute left-1/2 top-full z-30 w-[200px] -translate-x-1/2"
+                      }
+                    >
+                      <div
+                        className={[
+                          "rounded-b-[20px] rounded-t-none border-[3px] border-t-0 border-hs-textSecondary bg-hs-panel",
+                          useCompactWideDirectionsDisclosure
+                            ? "p-0"
+                            : [
+                                "max-h-[400px] overflow-y-auto px-3.5 pb-3 pt-2.5",
+                                "pr-1.5 [scrollbar-color:rgba(48,105,112,0.9)_transparent] [scrollbar-width:thin]",
+                                "[&::-webkit-scrollbar]:w-2",
+                                "[&::-webkit-scrollbar-thumb]:rounded-full",
+                                "[&::-webkit-scrollbar-thumb]:bg-hs-textSecondary/70",
+                                "[&::-webkit-scrollbar-track]:bg-transparent",
+                              ].join(" "),
+                        ].join(" ")}
+                      >
+                        <div
+                          className={
+                            useCompactWideDirectionsDisclosure
+                              ? "space-y-1.5 px-3 pb-2.5 pt-0.5"
+                              : "space-y-2 pr-1"
+                          }
+                        >
+                          <HideSqueakCommandPanel
+                            round={currentRound}
+                            displayMode={commandDisplayMode}
+                          />
+                          <HideSqueakAnswerPanel
+                            key={currentRound.id}
+                            round={currentRound}
+                            validationResult={state.progress.validationResult}
+                            isWaitingForNextRound={isAwaitingNextRound}
+                            isCompactMobile={useCompactWideDirectionsDisclosure}
+                            isNarrowCompactMobile={isNarrowCompactMobile}
+                            useCompactSingleRowAnswers={useSingleRowCompactAnswers}
+                            onInteraction={clearHintIfOpen}
+                            onCoordinateSelect={(coordinate) => {
+                              if (
+                                state.phase !== "playing" &&
+                                state.phase !== "hint"
+                              ) {
+                                return;
+                              }
+
+                              clearHintIfOpen();
+                              dispatch({
+                                type: "submit-coordinate-answer",
+                                coordinate,
+                              });
+                            }}
+                            onTypedSubmit={(input) => {
+                              const validation = validateTypedCoordinateAnswer(
+                                input,
+                                {
+                                  answer: currentRound.answer,
+                                  board: currentRound.board,
+                                },
+                              );
+
+                              if (validation.isValidFormat) {
+                                clearHintIfOpen();
+                                dispatch({
+                                  type: "submit-typed-answer",
+                                  input,
+                                });
+                              }
+
+                              return validation;
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <div
+                  className={[
+                    "font-ui mx-auto flex min-w-0 w-full max-w-[400px] rounded-[18px] bg-hs-panel text-center font-medium leading-[1.15] text-hs-textSecondary",
+                    "min-h-[36px] items-center justify-center px-5 py-2 text-[1rem]",
+                  ].join(" ")}
+                >
                   {isReviewOpen
                     ? "You can review the previous round here"
                     : "Figure out which item the mouse found."}
                 </div>
+              )}
 
-                <RestartBoardButton
-                  isPinned={isBoardPinned}
-                  onClick={() => {
-                    if (state.phase === "finished") {
-                      dispatch({ type: "restart-session" });
-                      return;
-                    }
-
-                    dispatch({ type: "start-round-generation" });
-                  }}
-                />
-              </div>
-
-              <div className="relative pr-[35px]">
-                <HideSqueakBoardSurface
-                  round={displayRound}
-                  showMouse={shouldShowBoardMouse}
-                  visibleMouseCoordinate={null}
-                  pathSteps={isReviewOpen ? reviewVisibleSteps : []}
-                  activeCoordinate={
-                    isReviewOpen
-                      ? reviewBoardActiveCoordinate
-                      : activeCoordinate
+              <RestartBoardButton
+                isPinned={isBoardPinned}
+                isCompact={isCompactMobileChrome}
+                onClick={() => {
+                  if (state.phase === "finished") {
+                    dispatch({ type: "restart-session" });
+                    return;
                   }
-                  selectedCoordinate={
-                    isReviewOpen ? null : state.progress.selectedAnswer
-                  }
-                  validationResult={
-                    isReviewOpen ? "idle" : state.progress.validationResult
-                  }
-                  isInteractive={
-                    (isReviewOpen &&
-                      state.reviewState.visibility === "step-by-step" &&
-                      boundedReviewStepIndex == null) ||
-                    (!isReviewOpen &&
-                      !isRulesOpen &&
-                      (state.phase === "playing" || state.phase === "hint") &&
-                      isBoardClickMode)
-                  }
-                  correctAnswerCoordinate={
-                    isReviewOpen && reviewSnapshot
-                      ? reviewAnswerRevealed
-                        ? reviewSnapshot.round.answer
-                        : null
-                      : correctAnswerCoordinate
-                  }
-                  wrongAnswerCoordinate={
-                    isReviewOpen
-                      ? reviewWrongCoordinate
-                      : selectedWrongCoordinate
-                  }
-                  showStartLabel={
-                    isReviewOpen
-                      ? true
-                      : HIDE_SQUEAK_DIFFICULTY_PRESETS[currentRound.difficulty]
-                          .showMouseOnBoard && !isRulesOpen
-                  }
-                  mousePose={isReviewOpen ? "standing" : "head"}
-                  isReviewMode={isReviewOpen}
-                  isRulesMode={isRulesOpen}
-                  onActiveCoordinateChange={(coordinate) => {
-                    if (isReviewOpen) {
-                      return;
-                    }
 
-                    clearHintIfOpen();
-                    setBoardFocusState({
-                      roundId: currentRound.id,
-                      coordinate,
-                    });
-                  }}
-                  onCellSelect={(coordinate) => {
-                    if (isReviewOpen) {
-                      if (
-                        reviewSnapshot &&
-                        state.reviewState.visibility === "step-by-step" &&
-                        boundedReviewStepIndex == null &&
-                        coordinate.row ===
-                          reviewSnapshot.round.startingCoordinate.row &&
-                        coordinate.column ===
-                          reviewSnapshot.round.startingCoordinate.column
-                      ) {
-                        dispatch({
-                          type: "set-review-step",
-                          stepIndex: 0,
-                        });
-                      }
-                      return;
-                    }
-
-                    if (
-                      isRulesOpen ||
-                      (state.phase !== "playing" && state.phase !== "hint") ||
-                      !isBoardClickMode
-                    ) {
-                      return;
-                    }
-
-                    clearHintIfOpen();
-                    dispatch({
-                      type: "submit-coordinate-answer",
-                      coordinate,
-                    });
-                  }}
-                />
-
-                <BoardPinButton
-                  isPinned={isBoardPinned}
-                  onClick={toggleBoardPin}
-                />
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    dispatch({
-                      type: isRulesOpen ? "close-rules" : "open-rules",
-                    });
-                  }}
-                  aria-label={isRulesOpen ? "Close rules" : "Open rules"}
-                  className={[
-                    ICON_CONTROL_CLASS_NAME,
-                    ICON_CONTROL_INTERACTION_CLASS_NAME,
-                    "absolute bottom-0 right-[-10px] z-10 focus-visible:ring-offset-hs-shell",
-                    isRulesOpen
-                      ? "text-hs-controlSelected/84 opacity-88 drop-shadow-[0_1px_3px_rgb(31_74_80_/_0.06)]"
-                      : "text-hs-topbar",
-                  ].join(" ")}
-                >
-                  <MoreInfoSvg
-                    aria-hidden="true"
-                    focusable="false"
-                    className={[
-                      "h-10 w-10 object-contain transition-colors duration-150",
-                      "text-inherit",
-                    ].join(" ")}
-                  />
-                </button>
-              </div>
+                  dispatch({ type: "start-round-generation" });
+                }}
+              />
             </div>
 
+            <div
+              className={
+                isMobileLayout
+                  ? isCompactMobileChrome
+                    ? "relative min-w-0 w-full pr-[18px]"
+                    : "relative min-w-0 w-full"
+                  : "relative pr-[35px]"
+              }
+            >
+              <HideSqueakBoardSurface
+                round={displayRound}
+                showMouse={shouldShowBoardMouse}
+                visibleMouseCoordinate={null}
+                pathSteps={isReviewOpen ? reviewVisibleSteps : []}
+                activeCoordinate={
+                  isReviewOpen ? reviewBoardActiveCoordinate : activeCoordinate
+                }
+                selectedCoordinate={
+                  isReviewOpen ? null : state.progress.selectedAnswer
+                }
+                validationResult={
+                  isReviewOpen ? "idle" : state.progress.validationResult
+                }
+                isInteractive={
+                  (isReviewOpen &&
+                    state.reviewState.visibility === "step-by-step" &&
+                    boundedReviewStepIndex == null) ||
+                  (!isReviewOpen &&
+                    !isRulesOpen &&
+                    (state.phase === "playing" || state.phase === "hint") &&
+                    isBoardClickMode)
+                }
+                correctAnswerCoordinate={
+                  isReviewOpen && reviewSnapshot
+                    ? reviewAnswerRevealed
+                      ? reviewSnapshot.round.answer
+                      : null
+                    : correctAnswerCoordinate
+                }
+                wrongAnswerCoordinate={
+                  isReviewOpen ? reviewWrongCoordinate : selectedWrongCoordinate
+                }
+                showStartLabel={
+                  isReviewOpen
+                    ? true
+                    : HIDE_SQUEAK_DIFFICULTY_PRESETS[currentRound.difficulty]
+                        .showMouseOnBoard && !isRulesOpen
+                }
+                mousePose={isReviewOpen ? "standing" : "head"}
+                isReviewMode={isReviewOpen}
+                isRulesMode={isRulesOpen}
+                isMobileLayout={isMobileLayout}
+                isCompactMobileChrome={isCompactMobileChrome}
+                onActiveCoordinateChange={(coordinate) => {
+                  if (isReviewOpen) {
+                    return;
+                  }
+
+                  clearHintIfOpen();
+                  setBoardFocusState({
+                    roundId: currentRound.id,
+                    coordinate,
+                  });
+                }}
+                onCellSelect={(coordinate) => {
+                  if (isReviewOpen) {
+                    if (
+                      reviewSnapshot &&
+                      state.reviewState.visibility === "step-by-step" &&
+                      boundedReviewStepIndex == null &&
+                      coordinate.row ===
+                        reviewSnapshot.round.startingCoordinate.row &&
+                      coordinate.column ===
+                        reviewSnapshot.round.startingCoordinate.column
+                    ) {
+                      dispatch({
+                        type: "set-review-step",
+                        stepIndex: 0,
+                      });
+                    }
+                    return;
+                  }
+
+                  if (
+                    isRulesOpen ||
+                    (state.phase !== "playing" && state.phase !== "hint") ||
+                    !isBoardClickMode
+                  ) {
+                    return;
+                  }
+
+                  clearHintIfOpen();
+                  dispatch({
+                    type: "submit-coordinate-answer",
+                    coordinate,
+                  });
+                }}
+              />
+
+              {isMobileLayout &&
+              !isReviewOpen &&
+              !isRulesOpen &&
+              !isCompactMobileChrome ? (
+                <button
+                  ref={mobileDirectionsButtonRef}
+                  type="button"
+                  className="absolute right-2 top-2 z-10"
+                  aria-expanded={isMobileDirectionsDrawerVisible}
+                  aria-controls={mobileDirectionsRegionId}
+                  onClick={() =>
+                    setIsMobileDirectionsDrawerOpen((current) => !current)
+                  }
+                >
+                  <span
+                    className={`${MOBILE_DRAWER_BUTTON_CLASS_NAME} w-[120px] justify-between`}
+                  >
+                    <span>Directions</span>
+                    <DirectionsChevron
+                      isOpen={isMobileDirectionsDrawerVisible}
+                      className="h-[10px] w-[16px] shrink-0"
+                    />
+                  </span>
+                </button>
+              ) : null}
+
+              <BoardPinButton
+                isPinned={isBoardPinned}
+                isCompact={isCompactMobileChrome}
+                onClick={toggleBoardPin}
+              />
+
+              <button
+                ref={rulesButtonRef}
+                type="button"
+                onClick={() => {
+                  dispatch({
+                    type: isRulesOpen ? "close-rules" : "open-rules",
+                  });
+                }}
+                aria-label={isRulesOpen ? "Close rules" : "Open rules"}
+                className={[
+                  ICON_CONTROL_CLASS_NAME,
+                  ICON_CONTROL_INTERACTION_CLASS_NAME,
+                  isCompactMobileChrome
+                    ? "absolute bottom-[-5px] right-[-15px] z-10 h-8 w-8 focus-visible:ring-offset-hs-shell"
+                    : isMobileLayout
+                      ? "absolute bottom-0 right-0 z-10 focus-visible:ring-offset-hs-shell"
+                      : "absolute bottom-0 right-[-10px] z-10 focus-visible:ring-offset-hs-shell",
+                  isRulesOpen
+                    ? "text-hs-controlSelected/84 opacity-88 drop-shadow-[0_1px_3px_rgb(31_74_80_/_0.06)]"
+                    : "text-hs-topbar",
+                ].join(" ")}
+              >
+                <MoreInfoSvg
+                  aria-hidden="true"
+                  focusable="false"
+                  className={[
+                    isCompactMobileChrome
+                      ? "h-7 w-7 object-contain transition-colors duration-150"
+                      : "h-10 w-10 object-contain transition-colors duration-150",
+                    "text-inherit",
+                  ].join(" ")}
+                />
+              </button>
+            </div>
+          </div>
+
+          {isMobileLayout ? null : (
             <DirectionsBubble
               MouseSvg={isReviewOpen ? MouseRunningSvg : MouseStandingSvg}
               showTail={!isReviewOpen}
@@ -2147,14 +2668,18 @@ export function HideSqueakGame() {
                 isDenseReviewBubbleMode
                   ? "box-border w-[220px] min-w-[220px] max-w-[220px] px-3.5 pb-4 pt-4"
                   : isWideBubbleMode
-                  ? "box-border w-[285px] min-w-[285px] max-w-[285px] pb-5"
-                  : ""
+                    ? "box-border w-[285px] min-w-[285px] max-w-[285px] pb-5"
+                    : ""
               }
               mouseClassName={
-                isDenseReviewBubbleMode || isWideBubbleMode ? "h-[88px] w-[88px]" : ""
+                isDenseReviewBubbleMode || isWideBubbleMode
+                  ? "h-[88px] w-[88px]"
+                  : ""
               }
               tailClassName={
-                isDenseReviewBubbleMode || isWideBubbleMode ? "right-[80px]" : ""
+                isDenseReviewBubbleMode || isWideBubbleMode
+                  ? "right-[80px]"
+                  : ""
               }
             >
               {isReviewOpen && reviewSnapshot ? (
@@ -2177,11 +2702,17 @@ export function HideSqueakGame() {
                 />
               ) : (
                 <>
-                  <HideSqueakCommandPanel
-                    round={currentRound}
-                    displayMode={commandDisplayMode}
-                    isRules={isRulesOpen}
-                  />
+                  <div
+                    ref={(element) => {
+                      rulesAreaRef.current = isRulesOpen ? element : null;
+                    }}
+                  >
+                    <HideSqueakCommandPanel
+                      round={currentRound}
+                      displayMode={commandDisplayMode}
+                      isRules={isRulesOpen}
+                    />
+                  </div>
                   {!isRulesOpen ? (
                     <HideSqueakAnswerPanel
                       key={currentRound.id}
@@ -2227,26 +2758,172 @@ export function HideSqueakGame() {
                 </>
               )}
             </DirectionsBubble>
+          )}
+        </div>
+      </div>
+
+      {showMobileRulesBubble ? (
+        <div
+          ref={(element) => {
+            rulesAreaRef.current = element;
+          }}
+          role="dialog"
+          aria-modal="false"
+          aria-labelledby={`${mobileDirectionsRegionId}-title`}
+          className="absolute bottom-[45px] right-[30px] z-30"
+        >
+          <DirectionsBubble
+            MouseSvg={MouseStandingSvg}
+            isMobileLayout
+            showMouse
+            showTail
+            rootClassName="!h-auto !w-auto overflow-visible"
+            bubbleWrapperClassName="mb-[30px] mr-[24px] max-w-[180px]"
+            bubbleClassName="min-h-0 !min-w-0 max-w-[180px] rounded-[20px] px-3.5 pb-4 pt-3.5"
+            mouseClassName="bottom-[-4px] right-[2px] h-[50px] w-[50px]"
+            tailClassName="bottom-[-20px] right-[28px] h-[24px] w-[26px]"
+          >
+            <div>
+              <h2 id={`${mobileDirectionsRegionId}-title`} className="sr-only">
+                Rules
+              </h2>
+              <HideSqueakCommandPanel
+                round={currentRound}
+                displayMode={commandDisplayMode}
+                isRules
+              />
+            </div>
+          </DirectionsBubble>
+        </div>
+      ) : null}
+
+      {showMobileDirectionsDrawer ? (
+        <div
+          ref={(element) => {
+            mobileDirectionsDrawerRef.current = element;
+          }}
+          id={mobileDirectionsRegionId}
+          role="dialog"
+          aria-modal="false"
+          aria-label={
+            isReviewOpen ? "Review path" : isRulesOpen ? "Rules" : "Directions"
+          }
+          className={
+            "absolute bottom-2 right-2 top-2 z-30 w-[min(18rem,calc(100%-0.75rem))] rounded-[20px] border-[3px] border-hs-textSecondary bg-hs-panel px-4 pb-4 pt-4 shadow-hs-panel"
+          }
+        >
+          <div className="max-h-full overflow-y-auto pr-1">
+            {isReviewOpen && reviewSnapshot ? (
+              <HideSqueakReviewPanel
+                snapshot={reviewSnapshot}
+                visibility={state.reviewState.visibility}
+                selectedStepIndex={boundedReviewStepIndex}
+                onSelectStep={(stepIndex) =>
+                  dispatch({
+                    type: "set-review-step",
+                    stepIndex,
+                  })
+                }
+                onVisibilityChange={(visibility) =>
+                  dispatch({
+                    type: "set-review-visibility",
+                    visibility,
+                  })
+                }
+              />
+            ) : (
+              <div className="space-y-2">
+                <HideSqueakCommandPanel
+                  round={currentRound}
+                  displayMode={commandDisplayMode}
+                  isRules={isRulesOpen}
+                />
+                {!isRulesOpen ? (
+                  <HideSqueakAnswerPanel
+                    key={currentRound.id}
+                    round={currentRound}
+                    validationResult={state.progress.validationResult}
+                    isWaitingForNextRound={isAwaitingNextRound}
+                    onInteraction={clearHintIfOpen}
+                    onCoordinateSelect={(coordinate) => {
+                      if (state.phase !== "playing" && state.phase !== "hint") {
+                        return;
+                      }
+
+                      clearHintIfOpen();
+                      dispatch({
+                        type: "submit-coordinate-answer",
+                        coordinate,
+                      });
+                    }}
+                    onTypedSubmit={(input) => {
+                      const validation = validateTypedCoordinateAnswer(input, {
+                        answer: currentRound.answer,
+                        board: currentRound.board,
+                      });
+
+                      if (validation.isValidFormat) {
+                        clearHintIfOpen();
+                        dispatch({
+                          type: "submit-typed-answer",
+                          input,
+                        });
+                      }
+
+                      return validation;
+                    }}
+                  />
+                ) : null}
+              </div>
+            )}
           </div>
         </div>
+      ) : null}
 
-        {isSettingsOpen ? (
-          <HideSqueakSettingsPanel
-            settingsRef={settingsRef}
-            draftSettings={draftSettings}
-            settingsDifficultyMouseState={settingsDifficultyMouseState}
-            onClose={closeSettingsPanel}
-            onSelectDifficulty={handleSelectDraftDifficulty}
-            onSettledMouseStateChange={setSettingsDifficultyMouseState}
-            onSelectTimed={handleSelectTimedPlayMode}
-            onSelectEndless={handleSelectEndlessPlayMode}
-            onSelectText={handleSelectTextDirections}
-            onSelectSymbol={handleSelectSymbolDirections}
-          />
-        ) : null}
-      </div>
+      {isSettingsOpen ? (
+        <HideSqueakSettingsPanel
+          settingsRef={settingsRef}
+          draftSettings={draftSettings}
+          settingsDifficultyMouseState={settingsDifficultyMouseState}
+          isMobileLayout={isMobileLayout}
+          isNarrowCompactMobile={isNarrowCompactMobile}
+          onClose={closeSettingsPanel}
+          onSelectDifficulty={handleSelectDraftDifficulty}
+          onSettledMouseStateChange={setSettingsDifficultyMouseState}
+          onSelectTimed={handleSelectTimedPlayMode}
+          onSelectEndless={handleSelectEndlessPlayMode}
+          onSelectText={handleSelectTextDirections}
+          onSelectSymbol={handleSelectSymbolDirections}
+        />
+      ) : null}
+    </div>
+  );
+
+  return (
+    <div
+      ref={gameViewportRef}
+      className={
+        isMobileLayout
+          ? "mx-auto box-border w-full min-w-[365px] max-w-[calc(100vw-24px)] pr-3 overflow-x-clip overflow-y-visible"
+          : "box-border w-full pr-3 overflow-visible"
+      }
+    >
+      {isMobileLayout ? (
+        <div
+          className={`${GAME_CHROME_RADIUS_CLASS_NAME} box-border w-full min-w-0 max-w-full overflow-hidden bg-hs-shell shadow-hs-panel`}
+        >
+          {shellContent}
         </div>
-      </div>
+      ) : (
+        <div className="relative mx-auto overflow-visible" style={desktopOuterStyle}>
+          <div
+            className={`${GAME_CHROME_RADIUS_CLASS_NAME} bg-hs-shell shadow-hs-panel`}
+            style={desktopShellStyle}
+          >
+            {shellContent}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

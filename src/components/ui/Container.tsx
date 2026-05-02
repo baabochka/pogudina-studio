@@ -8,7 +8,7 @@ export function Container({ children, className = '', ...props }: ContainerProps
   return (
     <div
       className={[
-        'mx-auto w-full max-w-6xl px-[var(--space-container-inline)] sm:px-[var(--space-container-inline-md)] lg:px-[var(--space-container-inline-lg)]',
+        'mx-auto w-full min-w-0 max-w-full px-[var(--space-container-inline)] sm:px-[var(--space-container-inline-md)] lg:px-[var(--space-container-inline-lg)]',
         className,
       ]
         .join(' ')

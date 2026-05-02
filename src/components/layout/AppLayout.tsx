@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useId, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 
 import vpLogo from "../../assets/VP_logo.svg";
@@ -21,6 +21,8 @@ function ScrollToTop({ pathname }: { pathname: string }) {
 
 export function AppLayout() {
   const location = useLocation();
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const mobileNavId = useId();
 
   const handleLogoClick = () => {
     if (location.pathname === "/") {
@@ -28,8 +30,12 @@ export function AppLayout() {
     }
   };
 
+  useEffect(() => {
+    setIsMobileNavOpen(false);
+  }, [location.pathname]);
+
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
+    <div className="flex min-h-screen min-w-0 max-w-full flex-col overflow-x-clip bg-background text-foreground">
       <ScrollToTop pathname={location.pathname} />
       <a
         href="#main-content"
@@ -37,25 +43,40 @@ export function AppLayout() {
       >
         Skip to main content
       </a>
-      <header className="sticky top-0 z-40 border-b border-[color:var(--header-bg)] bg-[color:color-mix(in_srgb,var(--header-bg)_88%,transparent)] text-white backdrop-blur-[10px]">
-        <Container className="flex h-14 items-center justify-between gap-4 md:h-16">
+      <header className="sticky top-0 z-40 max-w-full overflow-x-clip border-b border-[color:var(--header-bg)] bg-[color:color-mix(in_srgb,var(--header-bg)_88%,transparent)] text-white backdrop-blur-[10px]">
+        <Container className="relative flex h-11 min-w-0 max-w-full items-center justify-between gap-2 px-3 sm:h-12 sm:gap-2 sm:px-4 md:h-16 md:gap-4 md:px-[var(--space-container-inline-md)] lg:px-[var(--space-container-inline-lg)]">
           <Link
             to="/"
             aria-label="Valentina Pogudina homepage"
             onClick={handleLogoClick}
-            className="logo inline-flex w-fit items-center rounded-md py-2"
+            className="logo inline-flex shrink-0 items-center rounded-md py-1.5 sm:py-2"
           >
-            <img src={vpLogo} alt="" className="h-7 w-auto md:h-6" />
+            <img src={vpLogo} alt="" className="h-4.5 w-auto sm:h-5 md:h-6" />
           </Link>
-          <nav aria-label="Primary navigation" className="nav ml-auto">
-            <ul className="flex flex-wrap items-center gap-6 md:gap-8">
+
+          <button
+            type="button"
+            className="navLink ml-auto inline-flex items-center rounded-md px-2 py-1.5 text-[0.78rem] font-medium tracking-[0.08px] text-[rgba(255,255,255,0.9)] hover:text-white focus-visible:text-white sm:hidden"
+            aria-expanded={isMobileNavOpen}
+            aria-controls={mobileNavId}
+            aria-label={isMobileNavOpen ? "Close navigation menu" : "Open navigation menu"}
+            onClick={() => setIsMobileNavOpen((current) => !current)}
+          >
+            Menu
+          </button>
+
+          <nav
+            aria-label="Primary navigation"
+            className="nav ml-auto hidden min-w-0 max-w-full sm:block"
+          >
+            <ul className="flex min-w-0 max-w-full flex-wrap items-center justify-end gap-4 md:gap-8">
               {navItems.map((item) => (
                 <li key={item.to}>
                   <NavLink
                     to={item.to}
                     className={({ isActive }) =>
                       [
-                        "navLink px-1 py-2 text-sm tracking-[0.2px]",
+                        "navLink px-1 py-2 text-[0.82rem] tracking-[0.1px] md:text-sm md:tracking-[0.2px]",
                         isActive
                           ? "text-white"
                           : "text-[rgba(255,255,255,0.85)] hover:text-white focus-visible:text-white",
@@ -79,10 +100,40 @@ export function AppLayout() {
               </li>
             </ul>
           </nav>
+
+          <div
+            id={mobileNavId}
+            className={[
+              "absolute left-3 right-3 top-[calc(100%-4px)] rounded-2xl border border-white/12 bg-[color:color-mix(in_srgb,var(--header-bg)_96%,black)] p-2 shadow-[0_16px_40px_rgba(0,0,0,0.22)] sm:hidden",
+              isMobileNavOpen ? "block" : "hidden",
+            ].join(" ")}
+          >
+            <nav aria-label="Mobile primary navigation">
+              <ul className="grid gap-1">
+                {navItems.map((item) => (
+                  <li key={item.to}>
+                    <NavLink
+                      to={item.to}
+                      className={({ isActive }) =>
+                        [
+                          "navLink navLinkNoUnderline block rounded-xl px-3 py-2 text-sm font-medium",
+                          isActive
+                            ? "bg-white/12 text-white"
+                            : "text-[rgba(255,255,255,0.88)] hover:bg-white/8 hover:text-white focus-visible:bg-white/8 focus-visible:text-white",
+                        ].join(" ")
+                      }
+                    >
+                      {item.label}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
         </Container>
       </header>
 
-      <main id="main-content" className="flex-1">
+      <main id="main-content" className="min-w-0 max-w-full flex-1 overflow-x-clip">
         <Outlet />
       </main>
 

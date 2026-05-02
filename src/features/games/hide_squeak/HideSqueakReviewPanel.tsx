@@ -37,12 +37,14 @@ export function HideSqueakReviewPanel({
   selectedStepIndex,
   onSelectStep,
   onVisibilityChange,
+  isCompactMobile = false,
 }: {
   snapshot: HideSqueakPreviousRoundSnapshot
   visibility: HideSqueakReviewVisibility
   selectedStepIndex: number | null
   onSelectStep: (stepIndex: number) => void
   onVisibilityChange: (visibility: HideSqueakReviewVisibility) => void
+  isCompactMobile?: boolean
 }) {
   const isStartActive = visibility === 'step-by-step' && selectedStepIndex == null
   const isStartReached =
@@ -53,6 +55,14 @@ export function HideSqueakReviewPanel({
     selectedStepIndex === snapshot.round.commandSteps.length - 1
   const useDenseStepSpacing =
     snapshot.round.difficulty === 'hard' || snapshot.round.difficulty === 'super-hard'
+  const useTwoColumnOverview = !isCompactMobile && snapshot.round.commandSteps.length > 8
+  const splitIndex = Math.ceil(snapshot.round.commandSteps.length / 2)
+  const reviewColumns = useTwoColumnOverview
+    ? [
+        snapshot.round.commandSteps.slice(0, splitIndex),
+        snapshot.round.commandSteps.slice(splitIndex),
+      ]
+    : [snapshot.round.commandSteps]
   const startChevronOpacity = getRevealChevronOpacity({
     revealIndex: 0,
     selectedStepIndex,
@@ -61,88 +71,100 @@ export function HideSqueakReviewPanel({
 
   return (
     <div className={useDenseStepSpacing ? 'space-y-2 text-left text-hs-textPrimary' : 'space-y-4 text-left text-hs-textPrimary'}>
-      <ol className={useDenseStepSpacing ? 'space-y-1' : 'space-y-2'}>
-        <li>
-          <button
-            type="button"
-            className={[
-              REVIEW_STEP_BUTTON_CLASS_NAME,
-              useDenseStepSpacing ? 'rounded-[16px] px-3.5' : '',
-              isStartActive
-                ? 'bg-hs-highlight text-hs-textStrong shadow-hs-soft'
-                : 'bg-hs-control/48 text-hs-textPrimary hover:bg-hs-controlHover/75 active:bg-hs-controlActive/70',
-            ].join(' ')}
-            onClick={() => onVisibilityChange('step-by-step')}
-            aria-pressed={isStartActive}
+      <div className={useDenseStepSpacing ? 'space-y-1.5' : 'space-y-2'}>
+        <button
+          type="button"
+          className={[
+            REVIEW_STEP_BUTTON_CLASS_NAME,
+            isCompactMobile ? 'justify-start gap-1.5' : '',
+            useDenseStepSpacing ? 'rounded-[16px] px-3.5' : '',
+            isStartActive
+              ? 'bg-hs-highlight text-hs-textStrong shadow-hs-soft'
+              : 'bg-hs-control/48 text-hs-textPrimary hover:bg-hs-controlHover/75 active:bg-hs-controlActive/70',
+          ].join(' ')}
+          onClick={() => onVisibilityChange('step-by-step')}
+          aria-pressed={isStartActive}
           >
-            <span className={useDenseStepSpacing ? 'text-[0.92rem] font-semibold leading-none' : 'text-[0.98rem] font-semibold leading-none'}>
-              Start: {formatDisplayCoordinate(snapshot.round.startingCoordinate)}
-            </span>
-            <span
-              className={useDenseStepSpacing ? 'text-[0.9rem] leading-none text-hs-textSecondary/88' : 'text-[1rem] leading-none text-hs-textSecondary/90'}
-              style={
-                isStartActive || isStartReached
-                  ? startChevronOpacity != null
-                    ? { opacity: startChevronOpacity }
-                    : undefined
+          <span className={useDenseStepSpacing ? 'text-[0.92rem] font-semibold leading-none' : 'text-[0.98rem] font-semibold leading-none'}>
+            Start: {formatDisplayCoordinate(snapshot.round.startingCoordinate)}
+          </span>
+          <span
+            className={[
+              useDenseStepSpacing ? 'text-[0.9rem] leading-none text-hs-textSecondary/88' : 'text-[1rem] leading-none text-hs-textSecondary/90',
+              isCompactMobile ? 'shrink-0' : '',
+            ].join(' ')}
+            style={
+              isStartActive || isStartReached
+                ? startChevronOpacity != null
+                  ? { opacity: startChevronOpacity }
                   : undefined
-              }
-            >
-              {isStartActive || isStartReached ? '▸' : '▹'}
-            </span>
-          </button>
-        </li>
+                : undefined
+            }
+          >
+            {isStartActive || isStartReached ? '▸' : '▹'}
+          </span>
+        </button>
 
-        {snapshot.round.commandSteps.map((step) => {
-          const isActive = visibility === 'step-by-step' && selectedStepIndex === step.index
-          const isReached =
-            visibility === 'full-path' ||
-            (visibility === 'step-by-step' &&
-              selectedStepIndex != null &&
-              step.index <= selectedStepIndex)
-          const chevronOpacity = getRevealChevronOpacity({
-            revealIndex: step.index + 1,
-            selectedStepIndex,
-            totalSteps: snapshot.round.commandSteps.length,
-          })
+        <div className={useTwoColumnOverview ? 'grid grid-cols-2 gap-1.5' : ''}>
+          {reviewColumns.map((column, columnIndex) => (
+            <ol key={`review-column-${columnIndex}`} className={useDenseStepSpacing ? 'space-y-1' : 'space-y-2'}>
+              {column.map((step) => {
+                const isActive = visibility === 'step-by-step' && selectedStepIndex === step.index
+                const isReached =
+                  visibility === 'full-path' ||
+                  (visibility === 'step-by-step' &&
+                    selectedStepIndex != null &&
+                    step.index <= selectedStepIndex)
+                const chevronOpacity = getRevealChevronOpacity({
+                  revealIndex: step.index + 1,
+                  selectedStepIndex,
+                  totalSteps: snapshot.round.commandSteps.length,
+                })
 
-          return (
-            <li key={`${step.index}-${step.command.direction}-${step.command.steps}`}>
-              <button
-                type="button"
-                className={[
-                  REVIEW_STEP_BUTTON_CLASS_NAME,
-                  useDenseStepSpacing ? 'rounded-[16px] px-3.5' : '',
-                  isActive
-                    ? 'bg-hs-highlight text-hs-textStrong shadow-hs-soft'
-                    : 'bg-hs-control/48 text-hs-textPrimary hover:bg-hs-controlHover/75 active:bg-hs-controlActive/70',
-                ].join(' ')}
-                onClick={() => {
-                  onVisibilityChange('step-by-step')
-                  onSelectStep(step.index)
-                }}
-                aria-pressed={isActive}
-              >
-                <span className={useDenseStepSpacing ? 'text-[0.92rem] font-semibold leading-none' : 'text-[0.98rem] font-semibold leading-none'}>
-                  {formatDirectionText(step.command.direction, step.command.steps)}
-                </span>
-                <span
-                  className={useDenseStepSpacing ? 'text-[0.9rem] leading-none text-hs-textSecondary/88' : 'text-[1rem] leading-none text-hs-textSecondary/90'}
-                  style={
-                    isActive || isReached
-                      ? chevronOpacity != null
-                        ? { opacity: chevronOpacity }
-                        : undefined
-                      : undefined
-                  }
-                >
-                  {isActive || isReached ? '▸' : '▹'}
-                </span>
-              </button>
-            </li>
-          )
-        })}
-      </ol>
+                return (
+                  <li key={`${step.index}-${step.command.direction}-${step.command.steps}`}>
+                    <button
+                      type="button"
+                      className={[
+                        REVIEW_STEP_BUTTON_CLASS_NAME,
+                        isCompactMobile ? 'justify-start gap-1.5' : '',
+                        useDenseStepSpacing ? 'rounded-[16px] px-3.5' : '',
+                        isActive
+                          ? 'bg-hs-highlight text-hs-textStrong shadow-hs-soft'
+                          : 'bg-hs-control/48 text-hs-textPrimary hover:bg-hs-controlHover/75 active:bg-hs-controlActive/70',
+                      ].join(' ')}
+                      onClick={() => {
+                        onVisibilityChange('step-by-step')
+                        onSelectStep(step.index)
+                      }}
+                      aria-pressed={isActive}
+                    >
+                      <span className={useDenseStepSpacing ? 'text-[0.92rem] font-semibold leading-none' : 'text-[0.98rem] font-semibold leading-none'}>
+                        {formatDirectionText(step.command.direction, step.command.steps)}
+                      </span>
+                      <span
+                        className={[
+                          useDenseStepSpacing ? 'text-[0.9rem] leading-none text-hs-textSecondary/88' : 'text-[1rem] leading-none text-hs-textSecondary/90',
+                          isCompactMobile ? 'shrink-0' : '',
+                        ].join(' ')}
+                        style={
+                          isActive || isReached
+                            ? chevronOpacity != null
+                              ? { opacity: chevronOpacity }
+                              : undefined
+                            : undefined
+                        }
+                      >
+                        {isActive || isReached ? '▸' : '▹'}
+                      </span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ol>
+          ))}
+        </div>
+      </div>
 
       <div className={useDenseStepSpacing ? 'space-y-2 pt-0.5' : 'space-y-2.5 pt-1'}>
         <button

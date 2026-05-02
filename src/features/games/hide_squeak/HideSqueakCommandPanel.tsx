@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 import { formatDisplayCoordinate } from './coordinateUtils'
 import type { HideSqueakGeneratedRound } from './types'
 
@@ -19,10 +21,12 @@ export function HideSqueakCommandPanel({
   round,
   displayMode,
   isRules = false,
+  headerAction,
 }: {
   round: HideSqueakGeneratedRound
   displayMode: 'symbol' | 'text'
   isRules?: boolean
+  headerAction?: ReactNode
 }) {
   if (isRules) {
     const rulesCopy =
@@ -35,8 +39,10 @@ export function HideSqueakCommandPanel({
     return (
       <div className="font-ui text-left text-hs-textPrimary">
         <div className="space-y-2">
-          <h3 className="font-game text-[1.5rem] font-semibold leading-none text-center">Rules:</h3>
-          <p className="text-[0.98rem] leading-[1.4rem] text-hs-textPrimary/88">
+          <h3 className="font-game text-center text-[1.24rem] font-semibold leading-none sm:text-[1.5rem]">
+            Rules:
+          </h3>
+          <p className="text-[0.92rem] leading-[1.28rem] text-hs-textPrimary/88 sm:text-[0.98rem] sm:leading-[1.4rem]">
             {rulesCopy}
           </p>
         </div>
@@ -60,11 +66,16 @@ export function HideSqueakCommandPanel({
     : [stepEntries]
 
   return (
-    <div className={['text-left text-hs-textPrimary', useWideBubbleLayout ? 'w-full' : ''].filter(Boolean).join(' ')}>
+    <div
+      className={['min-w-0 max-w-full text-left text-hs-textPrimary', useWideBubbleLayout ? 'w-full' : ''].filter(Boolean).join(' ')}
+    >
       <div className="space-y-3">
-        <p className="font-game text-[15px] font-semibold leading-tight text-hs-textPrimary/95">
-          I started on <span className="font-bold">{formatDisplayCoordinate(round.startingCoordinate)}</span>.
-        </p>
+        <div className="flex items-start justify-between gap-3">
+          <p className="font-game text-[15px] font-semibold leading-tight text-hs-textPrimary/95">
+            I started on <span className="font-bold">{formatDisplayCoordinate(round.startingCoordinate)}</span>.
+          </p>
+          {headerAction ? <div className="shrink-0">{headerAction}</div> : null}
+        </div>
 
         <div>
           <p className="font-game text-sm leading-tight text-hs-textPrimary">
@@ -74,14 +85,14 @@ export function HideSqueakCommandPanel({
           <div
             className={[
               useTwoColumnLayout ? 'grid grid-cols-2 gap-x-1.5 gap-y-1.5' : 'space-y-1.5',
-              'pb-1',
+              'min-w-0 pb-1',
             ].join(' ')}
           >
             {columns.map((column, columnIndex) => (
               <ol
                 key={`column-${columnIndex}`}
                 className={[
-                  'space-y-1.5',
+                  'min-w-0 space-y-1.5',
                   useTwoColumnLayout && columnIndex === 0
                     ? 'border-r border-hs-panelMuted/60 pr-1.5'
                     : '',
@@ -93,14 +104,18 @@ export function HideSqueakCommandPanel({
                 {column.map((step) => (
                   <li
                     key={step.id}
-                    className={useTwoColumnLayout ? 'flex items-baseline gap-2 whitespace-nowrap' : 'whitespace-nowrap text-[1rem]'}
+                    className={
+                      useTwoColumnLayout
+                        ? 'flex min-w-0 items-baseline gap-2 whitespace-normal sm:whitespace-nowrap'
+                        : 'min-w-0 whitespace-normal text-[1rem] sm:whitespace-nowrap'
+                    }
                   >
                     {useTwoColumnLayout ? (
                       <span className="font-ui min-w-5 text-right text-[0.9rem] text-hs-textSecondary/75">
                         {step.index + 1}.
                       </span>
                     ) : null}
-                    <span className="font-game whitespace-nowrap text-[15px] font-medium leading-none text-hs-textPrimary">
+                    <span className="font-game min-w-0 whitespace-normal text-[15px] font-medium leading-none text-hs-textPrimary sm:whitespace-nowrap">
                       {step.label}
                     </span>
                   </li>
